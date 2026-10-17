@@ -69,11 +69,11 @@ class PaymentService extends BaseService
 
         $transactionCode = $inputData['vnp_TxnRef'] ?? '';
         $vnpAmount = $inputData['vnp_Amount'] ?? 0;
-        $responseCode = $inputData['vnp_ResponseCode'] ?? '';
+        $succeeded = VNPayService::isSuccessful($inputData);
 
         $failedOrder = null;
 
-        $result = DB::transaction(function () use ($transactionCode, $vnpAmount, $responseCode, $inputData, &$failedOrder) {
+        $result = DB::transaction(function () use ($transactionCode, $vnpAmount, $succeeded, $inputData, &$failedOrder) {
             // 2. Find Order via Payment
             // Sử dụng lockForUpdate để chống race condition nếu IPN gọi 2 lần cùng lúc
             $payment = Payment::where('transaction_code', $transactionCode)->lockForUpdate()->first();
@@ -85,17 +85,27 @@ class PaymentService extends BaseService
             $order = $payment->order;
 
             // 3. Kiểm tra số tiền (VNPay nhân 100)
-            if ((int) $payment->amount * 100 !== (int) $vnpAmount) {
+            if (! is_numeric($vnpAmount) || (int) $payment->amount * 100 !== (int) $vnpAmount) {
                 return ['RspCode' => '04', 'Message' => 'Invalid amount'];
             }
 
             // 4. Kiểm tra giao dịch đã xử lý chưa (Idempotency)
             if ($payment->status !== 'pending') {
+                // Khách trả tiền cho đơn đã hủy/hết hạn → không mở lại đơn, ghi vết để admin hoàn tiền
+                if ($succeeded && $payment->status === 'failed') {
+                    AuditService::log('payment_refund_required', 'Payment', $payment->id, [
+                        'transaction_code' => $transactionCode,
+                        'amount' => $payment->amount,
+                        'order_id' => $payment->order_id,
+                        'vnp_TransactionNo' => $inputData['vnp_TransactionNo'] ?? null,
+                    ]);
+                }
+
                 return ['RspCode' => '02', 'Message' => 'Order already confirmed'];
             }
 
-            // 5. Kiểm tra vnp_ResponseCode
-            if ($responseCode === '00') {
+            // 5. Kiểm tra kết quả giao dịch (vnp_ResponseCode + vnp_TransactionStatus)
+            if ($succeeded) {
                 // 6. Update Payment
                 $payment->update([
                     'status' => 'paid',

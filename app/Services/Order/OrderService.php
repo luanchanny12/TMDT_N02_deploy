@@ -235,6 +235,12 @@ class OrderService extends BaseService
             $oldStatus = $locked->status;
             $locked->update(array_merge(['status' => 'cancelled'], $extra));
 
+            // Vô hiệu giao dịch VNPay đang chờ: IPN đến sau sẽ không đánh dấu đơn đã hủy là "đã thanh toán"
+            Payment::where('order_id', $locked->id)
+                ->where('method', 'vnpay')
+                ->where('status', 'pending')
+                ->update(['status' => 'failed']);
+
             foreach ($locked->items as $item) {
                 if ($item->variant_id) {
                     ProductVariant::where('id', $item->variant_id)

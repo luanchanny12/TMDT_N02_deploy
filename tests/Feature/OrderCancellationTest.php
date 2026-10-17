@@ -43,6 +43,7 @@ class OrderCancellationTest extends TestCase
 
     private function sign(array $data): array
     {
+        $data += ['vnp_TmnCode' => config('vnpay.tmn_code')];
         ksort($data);
         $hashData = collect($data)
             ->map(fn ($v, $k) => urlencode($k).'='.urlencode($v))
