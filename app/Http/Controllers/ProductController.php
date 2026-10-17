@@ -75,7 +75,52 @@ class ProductController extends Controller
             ->orderBy('brand')
             ->pluck('brand');
 
-        return view('products.index', compact('products', 'categories', 'brands'));
+        $suggestedProducts = $products->isEmpty()
+            ? $this->suggestionsFor((string) $search)
+            : collect();
+
+        return view('products.index', compact('products', 'categories', 'brands', 'suggestedProducts'));
+    }
+
+    /**
+     * Gợi ý khi tìm kiếm không có kết quả: ưu tiên sản phẩm khớp một phần từ khóa
+     * (tên, mô tả, danh mục), sau đó bổ sung sản phẩm được xem nhiều nhất.
+     */
+    private function suggestionsFor(string $search, int $limit = 8)
+    {
+        $words = collect(preg_split('/\s+/u', mb_strtolower(trim($search))))
+            ->filter(fn ($w) => mb_strlen($w) >= 2)
+            ->take(5);
+
+        $base = fn () => Product::with('category')->withCardData()->where('status', 'active');
+
+        $matches = collect();
+        if ($words->isNotEmpty()) {
+            $matches = $base()
+                ->where(function ($q) use ($words) {
+                    foreach ($words as $word) {
+                        $q->orWhere('name', 'like', "%{$word}%")
+                            ->orWhere('description', 'like', "%{$word}%")
+                            ->orWhereHas('category', fn ($c) => $c->where('name', 'like', "%{$word}%"));
+                    }
+                })
+                ->orderByDesc('views_count')
+                ->limit($limit)
+                ->get();
+        }
+
+        if ($matches->count() < $limit) {
+            $popular = $base()
+                ->whereNotIn('id', $matches->pluck('id'))
+                ->orderByDesc('views_count')
+                ->latest()
+                ->limit($limit - $matches->count())
+                ->get();
+
+            $matches = $matches->concat($popular);
+        }
+
+        return $matches;
     }
 
     public function category(Request $request, Category $category)

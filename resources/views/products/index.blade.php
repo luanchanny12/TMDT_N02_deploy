@@ -105,6 +105,17 @@
                             Xóa bộ lọc &amp; xem tất cả
                         </a>
                     </div>
+
+                    @if($suggestedProducts->isNotEmpty())
+                        <div class="mt-4" data-testid="search-suggestions">
+                            <h3 class="font-serif text-lg font-semibold text-[#3d3d3d] mb-4">Có thể bạn sẽ thích</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                @foreach($suggestedProducts as $product)
+                                    <x-product-card :product="$product" />
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 @endif
             </div>
         </div>
