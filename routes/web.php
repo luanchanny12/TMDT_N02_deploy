@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\AnalyticsController as AdminAnalyticsController;
 use App\Http\Controllers\Admin\AuditLogController as AdminAuditLogController;
+use App\Http\Controllers\Admin\CampaignController as AdminCampaignController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\ChatbotFaqController;
 use App\Http\Controllers\Admin\CouponController as AdminCouponController;
@@ -169,6 +171,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Audit logs
     Route::get('/audit-logs', [AdminAuditLogController::class, 'index'])->name('audit-logs.index');
+
+    // Phân tích dữ liệu (lượt truy cập, chuyển đổi, ROAS) và chiến dịch quảng cáo UTM
+    Route::get('/analytics', [AdminAnalyticsController::class, 'index'])->name('analytics.index');
+    Route::resource('campaigns', AdminCampaignController::class)->except(['show']);
 
     // Cài đặt cửa hàng (thuế VAT, phí vận chuyển)
     Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings.index');

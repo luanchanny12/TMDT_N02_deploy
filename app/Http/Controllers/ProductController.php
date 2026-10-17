@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\Analytics\AnalyticsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -175,6 +176,7 @@ class ProductController extends Controller
         }
 
         Product::whereKey($product->id)->increment('views_count');
+        app(AnalyticsService::class)->track('product_view', ['product_id' => $product->id]);
         $product->views_count = (int) $product->views_count + 1;
 
         $product->load([

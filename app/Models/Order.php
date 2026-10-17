@@ -10,7 +10,7 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'order_code', 'subtotal', 'discount', 'shipping_fee', 'tax_rate', 'tax_amount', 'total',
+        'user_id', 'campaign_id', 'traffic_source', 'order_code', 'subtotal', 'discount', 'shipping_fee', 'tax_rate', 'tax_amount', 'total',
         'status', 'payment_method', 'payment_status',
         'shipping_name', 'shipping_phone', 'shipping_address', 'note',
     ];
@@ -30,6 +30,11 @@ class Order extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function campaign()
+    {
+        return $this->belongsTo(Campaign::class);
     }
 
     public function items()

@@ -16,6 +16,7 @@
                     <li><strong class="text-[#3d3d3d]">Dữ liệu tài khoản:</strong> mật khẩu (lưu dạng băm bcrypt — không lưu mật khẩu thô);</li>
                     <li><strong class="text-[#3d3d3d]">Lịch sử giao dịch:</strong> đơn hàng, sản phẩm đã mua, đánh giá sản phẩm;</li>
                     <li><strong class="text-[#3d3d3d]">Dữ liệu kỹ thuật:</strong> cookie phiên đăng nhập/giỏ hàng; cookie giới thiệu <code>ref</code> (mã referral — không chứa dữ liệu cá nhân nhạy cảm);</li>
+                    <li><strong class="text-[#3d3d3d]">Dữ liệu thống kê truy cập:</strong> trang đã xem, sản phẩm đã xem/thêm vào giỏ, nguồn truy cập (tham số UTM của chiến dịch quảng cáo hoặc trang giới thiệu) — gắn với mã phiên ngẫu nhiên, <strong class="text-[#3d3d3d]">không lưu địa chỉ IP</strong>; cookie <code>sc_attribution</code> giữ nguồn chiến dịch tối đa 30 ngày;</li>
                     <li>Site <strong class="text-[#3d3d3d]">không lưu trữ</strong> số thẻ ngân hàng hay thông tin thẻ tín dụng.</li>
                 </ul>
             </section>
@@ -26,7 +27,7 @@
                     <li>Tạo và quản lý tài khoản; xác thực đăng nhập;</li>
                     <li>Xử lý đơn hàng, giao hàng, thanh toán (COD / VNPay);</li>
                     <li>Hỗ trợ khách hàng, xử lý đổi trả và khiếu nại;</li>
-                    <li>Cải thiện trải nghiệm và nội dung website;</li>
+                    <li>Cải thiện trải nghiệm và nội dung website; thống kê hiệu quả chiến dịch quảng cáo (tỷ lệ chuyển đổi, ROAS) ở dạng tổng hợp;</li>
                     <li>Chống gian lận, bảo mật hệ thống — ghi vết thao tác quan trọng (audit log: đăng nhập, tạo đơn, thay đổi trạng thái…);</li>
                     <li>Gửi thông báo đơn hàng (email).</li>
                 </ul>

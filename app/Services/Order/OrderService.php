@@ -13,6 +13,7 @@ use App\Models\Payment;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
+use App\Services\Analytics\AnalyticsService;
 use App\Services\AuditService;
 use App\Services\BaseService;
 use App\Services\Cart\CartService;
@@ -29,7 +30,8 @@ class OrderService extends BaseService
         private CartService $cartService,
         private CouponService $couponService,
         private ReferralService $referralService,
-        private PricingService $pricingService
+        private PricingService $pricingService,
+        private AnalyticsService $analytics
     ) {}
 
     /**
@@ -122,9 +124,12 @@ class OrderService extends BaseService
             $shippingFee = $pricing['shipping_fee'];
             $total = $pricing['total'];
 
-            // 5. Tạo Order
+            // 5. Tạo Order (gắn nguồn truy cập / chiến dịch quảng cáo đưa khách tới — last-click)
+            $attribution = $this->analytics->attribution();
             $order = Order::create([
                 'user_id' => $user->id,
+                'campaign_id' => $attribution['campaign_id'],
+                'traffic_source' => $attribution['source'],
                 'order_code' => 'ORD-'.date('Ymd').'-'.strtoupper(Str::random(4)),
                 'subtotal' => $subtotal,
                 'discount' => $discount,
@@ -171,6 +176,7 @@ class OrderService extends BaseService
                 'order_code' => $order->order_code,
                 'total' => $order->total,
             ]);
+            $this->analytics->track('purchase', ['order_id' => $order->id, 'value' => $order->total]);
 
             // 11. Xóa coupon khỏi session
             session()->forget('coupon_code');

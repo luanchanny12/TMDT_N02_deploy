@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exceptions\CartException;
 use App\Models\Coupon;
 use App\Models\ProductVariant;
+use App\Services\Analytics\AnalyticsService;
 use App\Services\Cart\CartService;
 use App\Services\Order\PricingService;
 use Illuminate\Http\Request;
@@ -57,6 +58,7 @@ class CartController extends Controller
                     (int) ($request->quantity ?? 1),
                     $variantId
                 );
+                $this->trackAddToCart($request);
 
                 if ($request->wantsJson()) {
                     return response()->json([
@@ -74,6 +76,7 @@ class CartController extends Controller
                 (int) ($request->quantity ?? 1),
                 $variantId
             );
+            $this->trackAddToCart($request);
 
             if ($request->wantsJson()) {
                 return response()->json([
@@ -90,6 +93,14 @@ class CartController extends Controller
 
             return redirect()->back()->with('error', $e->getMessage());
         }
+    }
+
+    private function trackAddToCart(Request $request): void
+    {
+        app(AnalyticsService::class)->track('add_to_cart', [
+            'product_id' => (int) $request->product_id,
+            'value' => (int) ($request->quantity ?? 1),
+        ]);
     }
 
     public function update(Request $request)
