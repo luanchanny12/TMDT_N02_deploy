@@ -7,6 +7,7 @@ use App\Exceptions\OrderException;
 use App\Models\Coupon;
 use App\Services\Cart\CartService;
 use App\Services\Order\OrderService;
+use App\Services\Order\PricingService;
 use App\Services\Payment\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -91,8 +92,12 @@ class OrderController extends Controller
             }
         }
 
-        $shippingFee = $cartTotal >= 500000 ? 0 : 30000;
-        $total = $cartTotal - $discount + $shippingFee;
+        $pricing = app(PricingService::class)->breakdown((int) $cartTotal, (int) $discount);
+        $shippingFee = $pricing['shipping_fee'];
+        $taxAmount = $pricing['tax_amount'];
+        $taxRate = $pricing['tax_rate'];
+        $taxLabel = app(PricingService::class)->taxLabel();
+        $total = $pricing['total'];
 
         return view('checkout.review', compact(
             'checkout',
@@ -101,6 +106,9 @@ class OrderController extends Controller
             'couponCode',
             'discount',
             'shippingFee',
+            'taxAmount',
+            'taxRate',
+            'taxLabel',
             'total'
         ));
     }

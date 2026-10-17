@@ -147,6 +147,11 @@
                                 <span x-text="shippingFee > 0 ? formatCurrency(shippingFee) : 'Miễn phí'" :class="shippingFee === 0 ? 'text-green-600' : ''"></span>
                             </div>
 
+                            <div x-show="pricing.taxRate > 0" x-cloak class="flex justify-between text-sm" data-testid="tax-line">
+                                <span class="text-gray-600" x-text="pricing.taxLabel + ' (' + pricing.taxRate + '%)'"></span>
+                                <span x-text="formatCurrency(taxAmount)"></span>
+                            </div>
+
                             <div class="flex justify-between text-lg font-bold border-t pt-2">
                                 <span>Tổng cộng</span>
                                 <span class="text-[#b8847e]" x-text="formatCurrency(finalTotal)"></span>
@@ -183,12 +188,18 @@
                     return {{ $cartTotal }};
                 },
 
+                pricing: @js($pricingConfig),
+
                 get shippingFee() {
-                    return this.cartTotal >= 500000 ? 0 : 30000;
+                    return this.cartTotal >= this.pricing.freeShippingThreshold ? 0 : this.pricing.shippingFee;
+                },
+
+                get taxAmount() {
+                    return Math.round(Math.max(0, this.cartTotal - this.discount) * this.pricing.taxRate / 100);
                 },
 
                 get finalTotal() {
-                    return Math.max(0, this.cartTotal - this.discount + this.shippingFee);
+                    return Math.max(0, this.cartTotal - this.discount + this.shippingFee + this.taxAmount);
                 },
 
                 formatCurrency(amount) {

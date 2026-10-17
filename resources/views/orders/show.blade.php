@@ -113,6 +113,12 @@
                             <span class="text-gray-600">Phí vận chuyển:</span>
                             <span>{{ number_format($order->shipping_fee, 0, ',', '.') }} ₫</span>
                         </div>
+                        @if($order->tax_amount > 0)
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Thuế VAT ({{ rtrim(rtrim(number_format($order->tax_rate, 2, ',', ''), '0'), ',') }}%):</span>
+                                <span>{{ number_format($order->tax_amount, 0, ',', '.') }} ₫</span>
+                            </div>
+                        @endif
                         <div class="flex justify-between text-lg font-bold border-t pt-2">
                             <span>Tổng cộng:</span>
                             <span class="text-[#b8847e]">{{ number_format($order->total, 0, ',', '.') }} ₫</span>

@@ -127,6 +127,13 @@
                                 @endif
                             </div>
 
+                            @if($taxAmount > 0)
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">{{ $taxLabel }} ({{ rtrim(rtrim(number_format($taxRate, 2, ',', ''), '0'), ',') }}%)</span>
+                                    <span class="font-medium">{{ number_format($taxAmount, 0, ',', '.') }} ₫</span>
+                                </div>
+                            @endif
+
                             <div class="flex justify-between text-lg font-bold border-t pt-3">
                                 <span>Tổng cộng</span>
                                 <span class="text-[#b8847e]">{{ number_format($total, 0, ',', '.') }} ₫</span>

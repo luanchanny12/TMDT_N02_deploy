@@ -6,6 +6,7 @@ use App\Exceptions\CartException;
 use App\Models\Coupon;
 use App\Models\ProductVariant;
 use App\Services\Cart\CartService;
+use App\Services\Order\PricingService;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
@@ -178,7 +179,8 @@ class CartController extends Controller
         }
 
         $total = $cartTotal - $discount;
+        $pricingConfig = app(PricingService::class)->clientConfig();
 
-        return view('checkout.index', compact('cartItems', 'cartTotal', 'couponCode', 'discount', 'total'));
+        return view('checkout.index', compact('cartItems', 'cartTotal', 'couponCode', 'discount', 'total', 'pricingConfig'));
     }
 }

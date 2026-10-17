@@ -10,7 +10,7 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'order_code', 'subtotal', 'discount', 'shipping_fee', 'total',
+        'user_id', 'order_code', 'subtotal', 'discount', 'shipping_fee', 'tax_rate', 'tax_amount', 'total',
         'status', 'payment_method', 'payment_status',
         'shipping_name', 'shipping_phone', 'shipping_address', 'note',
     ];
@@ -21,6 +21,8 @@ class Order extends Model
             'subtotal' => 'integer',
             'discount' => 'integer',
             'shipping_fee' => 'integer',
+            'tax_rate' => 'float',
+            'tax_amount' => 'integer',
             'total' => 'integer',
         ];
     }

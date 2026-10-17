@@ -28,7 +28,8 @@ class OrderService extends BaseService
     public function __construct(
         private CartService $cartService,
         private CouponService $couponService,
-        private ReferralService $referralService
+        private ReferralService $referralService,
+        private PricingService $pricingService
     ) {}
 
     /**
@@ -116,10 +117,10 @@ class OrderService extends BaseService
                 }
             }
 
-            // 4. Tính phí ship (freeship khi subtotal >= 500k, không áp dụng cho discount)
-            $freeShippingThreshold = 500000;
-            $shippingFee = $subtotal >= $freeShippingThreshold ? 0 : 30000;
-            $total = $subtotal - $discount + $shippingFee;
+            // 4. Phí ship + VAT theo cấu hình Admin → Cài đặt (freeship xét trên tạm tính, VAT trên giá trị sau giảm giá)
+            $pricing = $this->pricingService->breakdown($subtotal, $discount);
+            $shippingFee = $pricing['shipping_fee'];
+            $total = $pricing['total'];
 
             // 5. Tạo Order
             $order = Order::create([
@@ -128,6 +129,8 @@ class OrderService extends BaseService
                 'subtotal' => $subtotal,
                 'discount' => $discount,
                 'shipping_fee' => $shippingFee,
+                'tax_rate' => $pricing['tax_rate'],
+                'tax_amount' => $pricing['tax_amount'],
                 'total' => $total,
                 'status' => 'pending',
                 'payment_method' => $data['payment_method'],

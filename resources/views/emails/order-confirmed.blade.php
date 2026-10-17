@@ -46,8 +46,14 @@
                 </tbody>
             </table>
             
+            <p style="text-align: right; margin: 10px 0 0;">
+                Tạm tính: {{ number_format($order->subtotal, 0, ',', '.') }}₫<br>
+                @if($order->discount > 0)Giảm giá: -{{ number_format($order->discount, 0, ',', '.') }}₫<br>@endif
+                Phí vận chuyển: {{ $order->shipping_fee > 0 ? number_format($order->shipping_fee, 0, ',', '.').'₫' : 'Miễn phí' }}<br>
+                @if($order->tax_amount > 0)Thuế VAT ({{ rtrim(rtrim(number_format($order->tax_rate, 2, ',', ''), '0'), ',') }}%): {{ number_format($order->tax_amount, 0, ',', '.') }}₫@endif
+            </p>
             <div class="total">
-                Tổng cộng: {{ number_format($order->total_amount, 0, ',', '.') }}₫
+                Tổng cộng: {{ number_format($order->total, 0, ',', '.') }}₫
             </div>
             
             <p>Phương thức thanh toán: {{ $order->payment_method === 'cod' ? 'Thanh toán khi nhận hàng' : 'VNPay' }}</p>
