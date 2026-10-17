@@ -33,6 +33,9 @@ services:
       VNPAY_RETURN_URL: ${APP_URL:-http://localhost:8081}/payment/vnpay/return
       GOOGLE_REDIRECT_URI: ${APP_URL:-http://localhost:8081}/auth/google/callback
       FACEBOOK_REDIRECT_URI: ${APP_URL:-http://localhost:8081}/auth/facebook/callback
+      # Chatbot gọi microservice ai-service qua mạng nội bộ Docker
+      AI_SERVICE_URL: http://ai-service:3000
+      AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN:-local-dev-ai-token}
     depends_on:
       mysql:
         condition: service_healthy
@@ -177,6 +180,19 @@ services:
         condition: service_healthy
       app:
         condition: service_started
+
+  # Microservice chatbot AI (Node.js) — giữ khóa Gemini, không mở cổng ra ngoài
+  ai-service:
+    build:
+      context: ./services/ai-service
+    image: socialshop-ai-service:1.0
+    container_name: socialshop-ai-service
+    restart: unless-stopped
+    environment:
+      AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN:-local-dev-ai-token}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.5-flash}
+      RATE_LIMIT_PER_MINUTE: "120"
 
 volumes:
   vendor_volume:
