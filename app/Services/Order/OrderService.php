@@ -60,7 +60,7 @@ class OrderService extends BaseService
             $itemsToCreate = [];
 
             $productIds = $cart->items->pluck('product_id');
-            $products = Product::whereIn('id', $productIds)->lockForUpdate()->get()->keyBy('id');
+            $products = Product::whereIn('id', $productIds)->withCount('variants')->lockForUpdate()->get()->keyBy('id');
 
             $variantIds = $cart->items->pluck('variant_id')->filter();
             $variants = ! $variantIds->isEmpty()
@@ -75,6 +75,11 @@ class OrderService extends BaseService
 
                 if (! $product || $product->status !== 'active') {
                     throw new OrderException("Sản phẩm \"{$cartItem->product->name}\" hiện không còn kinh doanh.");
+                }
+
+                // Giỏ cũ / giỏ khách vãng lai có thể chứa sản phẩm (nay) có size/màu nhưng chưa chọn biến thể
+                if (! $variant && $product->variants_count > 0) {
+                    throw new OrderException("Vui lòng chọn size/màu cho \"{$product->name}\": xóa sản phẩm khỏi giỏ và thêm lại từ trang sản phẩm.");
                 }
 
                 $availableStock = $variant ? $variant->stock : $product->stock;

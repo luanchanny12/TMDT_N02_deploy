@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\Review;
 use App\Models\Setting;
 use App\Models\User;
@@ -93,6 +94,19 @@ class AdminNotifier
                     $p->name.' còn '.$p->stock.' sản phẩm.',
                     route('admin.products.edit', $p),
                     $p->stock > 0 ? 'warning' : 'danger'
+                ));
+
+            // Từng size/màu vừa bán cũng có thể sắp hết dù tổng tồn kho sản phẩm còn nhiều
+            ProductVariant::with('product:id,name,slug')
+                ->whereIn('id', $order->items()->whereNotNull('variant_id')->pluck('variant_id'))
+                ->where('stock', '<=', $threshold)
+                ->get()
+                ->each(fn (ProductVariant $v) => $v->product && $this->send(
+                    'low_stock',
+                    $v->stock > 0 ? 'Sắp hết size/màu' : 'Hết size/màu',
+                    $v->product->name.' ('.$v->label().') còn '.$v->stock.' sản phẩm.',
+                    route('admin.products.edit', $v->product),
+                    $v->stock > 0 ? 'warning' : 'danger'
                 ));
         });
     }

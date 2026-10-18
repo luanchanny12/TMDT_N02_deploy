@@ -45,8 +45,15 @@ class NotificationController extends Controller
 
         $url = $notification->data['url'] ?? null;
 
-        // Chỉ chuyển hướng nội bộ
-        return $url && str_starts_with($url, url('/'))
+        // Chỉ chuyển hướng nội bộ: cùng scheme + host + port với website (chặn kiểu localhost.evil.com)
+        $site = parse_url(url('/'));
+        $target = is_string($url) ? parse_url($url) : false;
+        $internal = $target
+            && ($target['scheme'] ?? null) === ($site['scheme'] ?? null)
+            && ($target['host'] ?? null) === ($site['host'] ?? null)
+            && ($target['port'] ?? null) === ($site['port'] ?? null);
+
+        return $internal
             ? redirect()->to($url)
             : redirect()->route('admin.notifications.index');
     }

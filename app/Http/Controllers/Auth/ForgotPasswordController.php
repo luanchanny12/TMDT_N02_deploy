@@ -54,6 +54,12 @@ class ForgotPasswordController extends Controller
         ));
 
         if ($status === Password::PASSWORD_RESET) {
+            // Đang đăng nhập đúng tài khoản vừa đặt mật khẩu (khách vãng lai sau checkout) → ở lại phiên hiện tại
+            if (auth()->check() && strcasecmp(auth()->user()->email, $request->email) === 0) {
+                return redirect()->route('orders.index')
+                    ->with('success', 'Đã đặt mật khẩu. Lần sau bạn có thể đăng nhập bằng email và mật khẩu này.');
+            }
+
             return redirect()->route('login')
                 ->with('success', 'Mật khẩu đã được đặt lại. Vui lòng đăng nhập.');
         }

@@ -89,8 +89,6 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/forgot-password', [ForgotPasswordController::class, 'showForm'])->name('password.request');
     Route::post('/forgot-password', [ForgotPasswordController::class, 'sendLink'])->middleware('throttle:password')->name('password.email');
-    Route::get('/reset-password/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
-    Route::post('/reset-password', [ForgotPasswordController::class, 'resetPassword'])->name('password.update');
 
     Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('auth.google');
     Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('auth.google.callback');
@@ -98,6 +96,11 @@ Route::middleware('guest')->group(function () {
     Route::get('/auth/facebook', [FacebookController::class, 'redirect'])->name('auth.facebook');
     Route::get('/auth/facebook/callback', [FacebookController::class, 'callback'])->name('auth.facebook.callback');
 });
+
+// Đặt lại mật khẩu bằng token email — mở cả khi đang đăng nhập (khách vãng lai được đăng nhập tự động
+// sau checkout rồi mới bấm link "đặt mật khẩu" trong email)
+Route::get('/reset-password/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
+Route::post('/reset-password', [ForgotPasswordController::class, 'resetPassword'])->middleware('throttle:password')->name('password.update');
 
 // Cart (guest allowed — session cart)
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');

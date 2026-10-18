@@ -175,9 +175,12 @@ class ProductController extends Controller
             abort(404);
         }
 
-        Product::whereKey($product->id)->increment('views_count');
+        // Admin xem cửa hàng không tính vào lượt xem (giống trang Phân tích dữ liệu)
+        if (auth()->user()?->role !== 'admin') {
+            Product::whereKey($product->id)->increment('views_count');
+            $product->views_count = (int) $product->views_count + 1;
+        }
         app(AnalyticsService::class)->track('product_view', ['product_id' => $product->id]);
-        $product->views_count = (int) $product->views_count + 1;
 
         $product->load([
             'category',
