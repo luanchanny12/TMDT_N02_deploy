@@ -27,6 +27,19 @@ class HomeController extends Controller
             ->where('status', 'active')
             ->get();
 
-        return view('pages.home', compact('featuredProducts', 'newProducts', 'categories'));
+        // Flash sale: Sản phẩm đang có giá khuyến mãi lớn nhất
+        $flashSaleProducts = Product::with('category')->withCardData()
+            ->where('status', 'active')
+            ->whereNotNull('sale_price')
+            ->whereColumn('sale_price', '<', 'price')
+            ->orderByRaw('(price - sale_price) / price DESC')
+            ->limit(4)
+            ->get();
+
+        if ($flashSaleProducts->isEmpty()) {
+            $flashSaleProducts = $featuredProducts->take(4);
+        }
+
+        return view('pages.home', compact('featuredProducts', 'newProducts', 'categories', 'flashSaleProducts'));
     }
 }

@@ -67,7 +67,7 @@
         .nav-link:hover { color: var(--rose-deep) !important; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col pb-16 md:pb-0">
 
     <script>
         document.addEventListener('alpine:init', () => {
@@ -75,6 +75,9 @@
                 count: {{ auth()->check()
                     ? app(\App\Services\Cart\CartService::class)->getItemCount(auth()->id())
                     : app(\App\Services\Cart\CartService::class)->getGuestItemCount() }}
+            });
+            Alpine.store('wishlist', {
+                count: {{ auth()->check() && auth()->user()->wishlist ? auth()->user()->wishlist->items()->count() : 0 }}
             });
         });
 
@@ -96,37 +99,55 @@
         });
     </script>
 
+    {{-- Top Announcement Bar --}}
+    <div class="bg-gradient-to-r from-[#b8847e] via-[#c9a9a6] to-[#b8847e] text-white py-2 px-4 text-xs font-medium tracking-wide">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-2 mx-auto sm:mx-0">
+                <span class="bg-white/20 px-2 py-0.5 rounded text-[11px] font-bold tracking-wider">ƯU ĐÃI</span>
+                <span>✨ Miễn phí vận chuyển cho đơn hàng từ 500K • Nhập mã <strong class="underline decoration-white/60 font-bold">WELCOME10</strong> giảm ngay 10%</span>
+            </div>
+            <div class="hidden sm:flex items-center gap-4 text-white/90 text-xs">
+                @auth
+                    <a href="{{ route('orders.index') }}" class="hover:text-white transition-colors">Tra cứu đơn hàng</a>
+                @endauth
+                <span>•</span>
+                <a href="tel:1900xxxx" class="hover:text-white transition-colors">Hotline: 1900-xxxx</a>
+            </div>
+        </div>
+    </div>
+
     {{-- Header --}}
     <header class="sticky top-0 z-[60] bg-[#faf7f4]/95 backdrop-blur-md border-b border-[#efe8e3]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
+            <div class="flex justify-between items-center h-20">
                 {{-- Logo --}}
                 <div class="flex-shrink-0">
-                    <a href="{{ route('home') }}" class="text-2xl font-serif font-bold text-[#3d3d3d] tracking-wider">
-                        SocialShop
+                    <a href="{{ route('home') }}" class="flex flex-col group">
+                        <span class="text-2xl sm:text-[28px] font-serif font-bold text-[#2c2a28] tracking-wider leading-none group-hover:text-[#b8847e] transition-colors">SocialShop</span>
+                        <span class="text-[9px] tracking-[3px] uppercase text-[#b8847e] font-semibold mt-0.5">DK Social Commerce</span>
                     </a>
                 </div>
 
                 {{-- Search Bar --}}
-                <div class="hidden md:flex flex-1 max-w-lg mx-8">
+                <div class="hidden md:flex flex-1 max-w-md lg:max-w-lg mx-6 lg:mx-8">
                     <form action="{{ route('products.index') }}" method="GET" class="w-full">
                         <div class="relative">
                             <input type="text" name="search" value="{{ request('search') }}" id="site-search"
-                                   placeholder="Tìm sản phẩm..." aria-keyshortcuts="/ Control+K"
-                                   class="w-full pl-10 pr-20 py-2 border border-[#efe8e3] rounded-lg bg-white focus:ring-2 focus:ring-[#c9a9a6] focus:border-transparent transition-all text-sm">
-                            <svg class="absolute left-3 top-2.5 h-4 w-4 text-[#9a9490]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                   placeholder="Tìm váy dạ hội, áo blazer, phụ kiện..." aria-keyshortcuts="/ Control+K"
+                                   class="w-full pl-10 pr-20 py-2.5 border border-[#efe8e3] rounded-full bg-white focus:outline-none focus:ring-2 focus:ring-[#b8847e]/50 focus:border-transparent transition-all text-xs text-[#3d3d3d] shadow-sm">
+                            <svg class="absolute left-3.5 top-3 h-4 w-4 text-[#9a9490]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                             </svg>
-                            <span class="pointer-events-none absolute right-3 top-2 hidden lg:flex items-center gap-1 text-[11px] text-[#9a9490]" title="Phím tắt tìm kiếm">
-                                <kbd class="px-1.5 py-0.5 rounded border border-[#efe8e3] bg-[#faf7f5] font-sans">Ctrl</kbd>
-                                <kbd class="px-1.5 py-0.5 rounded border border-[#efe8e3] bg-[#faf7f5] font-sans">K</kbd>
+                            <span class="pointer-events-none absolute right-3.5 top-2.5 hidden lg:flex items-center gap-1 text-[10px] text-[#9a9490] bg-[#faf7f4] px-1.5 py-0.5 rounded border border-[#efe8e3]" title="Phím tắt tìm kiếm">
+                                <kbd class="font-sans">Ctrl</kbd>
+                                <kbd class="font-sans">K</kbd>
                             </span>
                         </div>
                     </form>
                 </div>
 
                 {{-- Navigation --}}
-                <nav class="flex items-center space-x-1">
+                <nav class="flex items-center space-x-1 sm:space-x-2">
                     {{-- Category menu (desktop hover + mobile accordion) --}}
                     {{-- Mobile: không "relative" để dropdown căn theo header (sticky), tránh tràn mép trái --}}
                     <div class="md:relative group"
@@ -250,30 +271,41 @@
                         </div>
                     </div>
 
-                    @auth
-                        {{-- Cart --}}
-                        <a href="{{ route('cart.index') }}"
-                           class="relative nav-link px-3 py-2">
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/>
-                            </svg>
-                            <span x-data x-show="$store.cart.count > 0" x-cloak
-                                  x-text="$store.cart.count > 99 ? '99+' : $store.cart.count"
-                                  class="absolute -top-0.5 -right-1 bg-[#c9a9a6] text-white text-[10px] font-bold rounded-full h-4 min-w-[16px] flex items-center justify-center px-1"></span>
-                        </a>
+                    {{-- Wishlist (Sản phẩm yêu thích) --}}
+                    <a href="{{ route('wishlist.index') }}" title="Sản phẩm yêu thích"
+                       class="relative nav-link p-2 sm:px-2.5 rounded-full hover:bg-white text-[#3d3d3d] hover:text-[#b8847e] transition-all flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                        </svg>
+                        <span x-data x-show="$store.wishlist.count > 0" x-cloak
+                              x-text="$store.wishlist.count > 99 ? '99+' : $store.wishlist.count"
+                              class="absolute -top-0.5 -right-0.5 bg-[#b8847e] text-white text-[10px] font-bold rounded-full h-4 min-w-[16px] flex items-center justify-center px-1 shadow-sm"></span>
+                    </a>
 
+                    {{-- Cart (Giỏ hàng cho cả khách & thành viên) --}}
+                    <a href="{{ route('cart.index') }}" title="Giỏ hàng"
+                       class="relative nav-link p-2 sm:px-2.5 rounded-full hover:bg-white text-[#3d3d3d] hover:text-[#b8847e] transition-all flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                        </svg>
+                        <span x-data x-show="$store.cart.count > 0" x-cloak
+                              x-text="$store.cart.count > 99 ? '99+' : $store.cart.count"
+                              class="absolute -top-0.5 -right-0.5 bg-[#b8847e] text-white text-[10px] font-bold rounded-full h-4 min-w-[16px] flex items-center justify-center px-1 shadow-sm"></span>
+                    </a>
+
+                    @auth
                         {{-- User Menu --}}
                         <div class="relative" x-data="{ open: false }">
                             <button @click="open = !open"
-                                    class="flex items-center space-x-1.5 nav-link px-2 py-1.5 rounded-lg hover:bg-[#f5f0ec] transition-all">
+                                    class="flex items-center space-x-1.5 nav-link pl-1 pr-2 py-1.5 rounded-full hover:bg-white transition-all border border-transparent hover:border-[#efe8e3]">
                                 @if(Auth::user()->avatar)
                                     <img src="{{ Auth::user()->avatar }}" alt="{{ Auth::user()->name }}" class="h-7 w-7 rounded-full object-cover border border-[#efe8e3]">
                                 @else
-                                    <div class="h-7 w-7 rounded-full bg-[#b8847e] flex items-center justify-center">
-                                        <span class="text-white text-xs font-semibold">{{ substr(Auth::user()->name, 0, 1) }}</span>
+                                    <div class="h-7 w-7 rounded-full bg-gradient-to-tr from-[#b8847e] to-[#c9a9a6] flex items-center justify-center text-white font-bold text-xs shadow-sm">
+                                        {{ substr(Auth::user()->name, 0, 1) }}
                                     </div>
                                 @endif
-                                <svg class="h-3.5 w-3.5 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="h-3.5 w-3.5 transition-transform text-[#9a9490]" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                 </svg>
                             </button>
@@ -286,37 +318,38 @@
                                  x-transition:leave-start="opacity-100 scale-100"
                                  x-transition:leave-end="opacity-0 scale-95"
                                  @click.away="open = false"
-                                 class="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-lg border border-[#efe8e3] py-1 z-50">
-                                <div class="px-4 py-2.5 border-b border-[#efe8e3]">
-                                    <p class="font-semibold text-[#3d3d3d] text-sm">{{ Auth::user()->name }}</p>
-                                    <p class="text-[#9a9490] text-xs mt-0.5">{{ Auth::user()->email }}</p>
+                                 class="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-[#efe8e3] py-1.5 z-50">
+                                <div class="px-4 py-3 border-b border-[#efe8e3]">
+                                    <p class="font-semibold text-[#3d3d3d] text-sm truncate">{{ Auth::user()->name }}</p>
+                                    <p class="text-[#9a9490] text-xs mt-0.5 truncate">{{ Auth::user()->email }}</p>
                                 </div>
                                 <a href="{{ route('profile') }}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-[#3d3d3d] hover:bg-[#faf7f4] hover:text-[#b8847e] transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                                    Tài khoản
+                                    <svg class="w-4 h-4 text-[#9a9490]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                    Tài khoản của tôi
                                 </a>
                                 <a href="{{ route('orders.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-[#3d3d3d] hover:bg-[#faf7f4] hover:text-[#b8847e] transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                                    Đơn hàng
+                                    <svg class="w-4 h-4 text-[#9a9490]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                    Lịch sử đơn hàng
                                 </a>
                                 <a href="{{ route('wishlist.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-[#3d3d3d] hover:bg-[#faf7f4] hover:text-[#b8847e] transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-                                    Yêu thích
+                                    <svg class="w-4 h-4 text-[#9a9490]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                                    Sản phẩm yêu thích
                                 </a>
                                 <a href="{{ route('compare.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-[#3d3d3d] hover:bg-[#faf7f4] hover:text-[#b8847e] transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
-                                    So sánh
+                                    <svg class="w-4 h-4 text-[#9a9490]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
+                                    So sánh sản phẩm
                                 </a>
                                 @if(Auth::user()->isAdmin())
-                                    <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-[#3d3d3d] hover:bg-[#faf7f4] hover:text-[#b8847e] transition-colors">
+                                    <div class="border-t border-[#efe8e3] my-1"></div>
+                                    <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-[#b8847e] font-semibold hover:bg-[#faf7f4] transition-colors">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                        Quản trị
+                                        Trang quản trị (Admin)
                                     </a>
                                 @endif
                                 <div class="border-t border-[#efe8e3] mt-1 pt-1">
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
-                                        <button type="submit" class="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-[#b8847e] hover:bg-[#faf7f4] transition-colors">
+                                        <button type="submit" class="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                                             Đăng xuất
                                         </button>
@@ -325,9 +358,9 @@
                             </div>
                         </div>
                     @else
-                        <a href="{{ route('login') }}" class="nav-link px-3 py-2">Đăng nhập</a>
+                        <a href="{{ route('login') }}" class="nav-link px-3 py-2 text-sm">Đăng nhập</a>
                         <a href="{{ route('register') }}"
-                           class="bg-[#b8847e] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#a6736d] transition-colors">
+                           class="bg-[#b8847e] text-white px-4 py-2 rounded-full text-xs font-semibold hover:bg-[#a6736d] transition-colors shadow-sm">
                             Đăng ký
                         </a>
                     @endauth
@@ -359,66 +392,105 @@
     </main>
 
     {{-- Footer --}}
-    <footer id="contact" class="bg-[#2c2a28] text-[#c9c4be] mt-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {{-- Contact --}}
-                <div>
-                    <h5 class="font-serif text-[#faf7f4] text-lg font-semibold mb-4 flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                        Liên hệ chúng tôi
-                    </h5>
-                    <p class="text-sm mb-2">📍 123 Đường Thời Trang, Quận 1, TP.HCM</p>
-                    <p class="text-sm mb-2">📞 <a href="tel:1900xxxx" class="hover:text-[#e8c4c4] transition-colors">1900-xxxx-xxx</a></p>
-                    <p class="text-sm mb-2">✉️ <a href="mailto:support@socialshop.vn" class="hover:text-[#e8c4c4] transition-colors">support@socialshop.vn</a></p>
-                    <p class="text-sm">🕐 Thứ 2 - Chủ nhật: 8:00 - 21:00</p>
-                </div>
+    <footer id="contact" class="bg-[#242220] text-[#c9c4be] pt-16 pb-12 mt-20 border-t border-[#3d3a37]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-                {{-- Social --}}
-                <div>
-                    <h5 class="font-serif text-[#faf7f4] text-lg font-semibold mb-4 flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-                        Kết nối với chúng tôi
-                    </h5>
-                    <div class="flex gap-2 mb-4">
-                        <a href="#" class="w-9 h-9 rounded-full bg-[#3d3a37] flex items-center justify-center hover:bg-[#b8847e] transition-colors" title="Facebook">
-                            <svg class="h-4 w-4 fill-current text-[#faf7f4]" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                        </a>
-                        <a href="#" class="w-9 h-9 rounded-full bg-[#3d3a37] flex items-center justify-center hover:bg-[#b8847e] transition-colors" title="Instagram">
-                            <svg class="h-4 w-4 fill-current text-[#faf7f4]" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-                        </a>
-                        <a href="#" class="w-9 h-9 rounded-full bg-[#3d3a37] flex items-center justify-center hover:bg-[#b8847e] transition-colors" title="TikTok">
-                            <svg class="h-4 w-4 fill-current text-[#faf7f4]" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0010.86 4.48V13a8.28 8.28 0 005.58 2.17v-3.44a4.85 4.85 0 01-2-.92v.92z"/></svg>
-                        </a>
-                    </div>
-                    <p class="text-xs text-[#9a9490]">Theo dõi SocialShop để cập nhật xu hướng thời trang mới nhất và ưu đãi hấp dẫn.</p>
+            {{-- Newsletter VIP Banner --}}
+            <div class="rounded-3xl bg-gradient-to-r from-[#2c2a28] to-[#383330] border border-white/10 p-6 sm:p-10 mb-14 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
+                <div class="space-y-1.5 text-center md:text-left">
+                    <span class="text-[10px] uppercase tracking-[3px] text-[#e8c4c4] font-bold">BẢN TIN SOCIALSHOP</span>
+                    <h3 class="font-serif text-2xl sm:text-3xl font-bold text-white">Nhận Ngay Voucher 100K</h3>
+                    <p class="text-xs text-white/70 max-w-md">Đăng ký để nhận sớm các xu hướng thời trang mùa mới và ưu đãi độc quyền dành riêng cho bạn.</p>
                 </div>
-
-                {{-- Links --}}
-                <div>
-                    <h5 class="font-serif text-[#faf7f4] text-lg font-semibold mb-4 flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-                        Hỗ trợ
-                    </h5>
-                    <ul class="space-y-2 text-sm">
-                        <li><a href="{{ route('pages.terms') }}" class="hover:text-[#e8c4c4] transition-colors">Điều Kiện Giao Dịch</a></li>
-                        <li><a href="{{ route('pages.about') }}" class="hover:text-[#e8c4c4] transition-colors">Thông Tin Người Bán</a></li>
-                        <li><a href="{{ route('pages.buying-guide') }}" class="hover:text-[#e8c4c4] transition-colors">Hướng dẫn mua hàng</a></li>
-                        <li><a href="{{ route('pages.return-policy') }}" class="hover:text-[#e8c4c4] transition-colors">Chính sách đổi trả</a></li>
-                        <li><a href="{{ route('pages.privacy') }}" class="hover:text-[#e8c4c4] transition-colors">Chính sách bảo mật</a></li>
-                        <li><a href="{{ route('pages.faq') }}" class="hover:text-[#e8c4c4] transition-colors">FAQ</a></li>
-                    </ul>
+                <div class="flex w-full md:w-auto max-w-md gap-2" x-data="{ email: '', subscribed: false }">
+                    <input type="email" x-model="email" placeholder="Nhập địa chỉ email của bạn..."
+                           class="w-full px-5 py-3 rounded-full bg-white/10 border border-white/20 text-xs text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#b8847e] transition-all">
+                    <button type="button" @click="if(email) { subscribed = true; window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Đăng ký nhận bản tin thành công! Mã 100K đã gửi vào email.', type: 'success' } })); email = ''; }"
+                            class="px-6 py-3 rounded-full bg-[#b8847e] hover:bg-[#a6736d] text-white text-xs font-bold whitespace-nowrap transition-all shadow-md flex-shrink-0">
+                        Đăng ký
+                    </button>
                 </div>
             </div>
 
-            <hr class="border-[#3d3a37] my-8">
+            {{-- Footer Columns --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 sm:gap-10 pb-12 border-b border-white/10">
+                {{-- Col 1: Brand Info --}}
+                <div class="lg:col-span-2 space-y-4">
+                    <a href="{{ route('home') }}" class="flex flex-col">
+                        <span class="font-serif text-3xl font-bold text-white tracking-wider">SocialShop</span>
+                        <span class="text-[9px] tracking-[3px] uppercase text-[#e8c4c4] font-semibold">DK Haute Couture</span>
+                    </a>
+                    <p class="text-xs text-[#9a9490] leading-relaxed max-w-sm">
+                        Nền tảng thương mại điện tử tích hợp mạng xã hội, mang đến trải nghiệm mua sắm thời trang thanh lịch, tinh tế và kết nối phong cách sống hiện đại.
+                    </p>
+                    <div class="space-y-1.5 text-xs text-white/80">
+                        <p class="flex items-center gap-2"><span>📍</span> 123 Đường Thời Trang, Quận 1, TP. Hồ Chí Minh</p>
+                        <p class="flex items-center gap-2"><span>📞</span> Hotline: <a href="tel:1900xxxx" class="hover:text-[#e8c4c4] transition-colors font-bold">1900-8888</a> (8:00 - 21:00)</p>
+                        <p class="flex items-center gap-2"><span>✉️</span> Email: <a href="mailto:support@socialshop.vn" class="hover:text-[#e8c4c4] transition-colors">support@socialshop.vn</a></p>
+                    </div>
+                </div>
 
-            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-                <p class="text-xs text-[#9a9490]">&copy; {{ date('Y') }} SocialShop. Hệ thống quản lý bán hàng thời trang.</p>
-                <div class="flex items-center gap-2">
-                    <span class="text-xs text-[#9a9490]">Thanh toán:</span>
-                    <span class="bg-[#3d3a37] text-[10px] font-bold px-2 py-0.5 rounded text-[#c9c4be]">COD</span>
-                    <span class="bg-[#3d3a37] text-[10px] font-bold px-2 py-0.5 rounded text-[#c9c4be]">VNPAY</span>
+                {{-- Col 2: Categories --}}
+                <div class="space-y-3">
+                    <h5 class="font-serif text-base font-bold text-white uppercase tracking-wider">Danh Mục</h5>
+                    <ul class="space-y-2 text-xs text-white/70">
+                        <li><a href="{{ route('products.index') }}" class="hover:text-white transition-colors">Bộ sưu tập 2026</a></li>
+                        <li><a href="{{ route('products.index', ['category' => 2]) }}" class="hover:text-white transition-colors">Thời trang nữ</a></li>
+                        <li><a href="{{ route('products.index', ['category' => 1]) }}" class="hover:text-white transition-colors">Thời trang nam</a></li>
+                        <li><a href="{{ route('products.index', ['category' => 3]) }}" class="hover:text-white transition-colors">Giày dép cao cấp</a></li>
+                        <li><a href="{{ route('products.index', ['category' => 4]) }}" class="hover:text-white transition-colors">Túi xách & Phụ kiện</a></li>
+                    </ul>
+                </div>
+
+                {{-- Col 3: Support & Policy --}}
+                <div class="space-y-3">
+                    <h5 class="font-serif text-base font-bold text-white uppercase tracking-wider">Hỗ Trợ Khách Hàng</h5>
+                    <ul class="space-y-2 text-xs text-white/70">
+                        <li><a href="{{ route('pages.buying-guide') }}" class="hover:text-white transition-colors">Hướng dẫn mua hàng</a></li>
+                        <li><a href="{{ route('pages.return-policy') }}" class="hover:text-white transition-colors">Chính sách đổi trả 7 ngày</a></li>
+                        <li><a href="{{ route('pages.terms') }}" class="hover:text-white transition-colors">Điều kiện giao dịch chung</a></li>
+                        <li><a href="{{ route('pages.privacy') }}" class="hover:text-white transition-colors">Chính sách bảo mật</a></li>
+                        <li><a href="{{ route('pages.faq') }}" class="hover:text-white transition-colors">Câu hỏi thường gặp (FAQ)</a></li>
+                    </ul>
+                </div>
+
+                {{-- Col 4: Social & Payments --}}
+                <div class="space-y-4">
+                    <h5 class="font-serif text-base font-bold text-white uppercase tracking-wider">Kết Nối Với Chúng Tôi</h5>
+                    <div class="flex items-center gap-2">
+                        <a href="#" class="w-9 h-9 rounded-full bg-white/10 hover:bg-[#b8847e] text-white flex items-center justify-center transition-colors text-xs font-bold" title="Facebook">
+                            FB
+                        </a>
+                        <a href="#" class="w-9 h-9 rounded-full bg-white/10 hover:bg-[#b8847e] text-white flex items-center justify-center transition-colors text-xs font-bold" title="Instagram">
+                            IG
+                        </a>
+                        <a href="#" class="w-9 h-9 rounded-full bg-white/10 hover:bg-[#b8847e] text-white flex items-center justify-center transition-colors text-xs font-bold" title="TikTok">
+                            TT
+                        </a>
+                        <a href="#" class="w-9 h-9 rounded-full bg-white/10 hover:bg-[#b8847e] text-white flex items-center justify-center transition-colors text-xs font-bold" title="Zalo">
+                            ZL
+                        </a>
+                    </div>
+                    <div class="pt-2">
+                        <p class="text-[11px] text-[#9a9490] mb-2 font-medium">Phương thức thanh toán an toàn:</p>
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <span class="bg-white/10 text-white text-[10px] font-bold px-2 py-1 rounded">VNPAY</span>
+                            <span class="bg-white/10 text-white text-[10px] font-bold px-2 py-1 rounded">COD</span>
+                            <span class="bg-white/10 text-white text-[10px] font-bold px-2 py-1 rounded">ATM / VISA</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Bottom Bar --}}
+            <div class="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[#9a9490]">
+                <p>&copy; {{ date('Y') }} SocialShop. Hệ thống thời trang &amp; Social Commerce bản quyền.</p>
+                <div class="flex items-center gap-4 text-[11px]">
+                    <a href="{{ route('pages.privacy') }}" class="hover:text-white transition-colors">Bảo mật</a>
+                    <span>•</span>
+                    <a href="{{ route('pages.terms') }}" class="hover:text-white transition-colors">Điều khoản</a>
+                    <span>•</span>
+                    <a href="{{ route('pages.about') }}" class="hover:text-white transition-colors">Giới thiệu</a>
                 </div>
             </div>
         </div>
@@ -441,7 +513,7 @@
          x-transition:leave="transition ease-in duration-200"
          x-transition:leave-start="opacity-100 translate-y-0"
          x-transition:leave-end="opacity-0 translate-y-3"
-         class="fixed bottom-5 right-5 z-[100] max-w-xs sm:max-w-sm">
+         class="fixed bottom-20 md:bottom-5 right-5 z-[100] max-w-xs sm:max-w-sm">
         <div class="flex items-center gap-3 px-4 py-3.5 rounded-xl shadow-2xl"
              :class="type === 'error' ? 'bg-red-600' : 'bg-[#3d3d3d]'">
             <svg x-show="type !== 'error'" class="w-5 h-5 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -452,6 +524,34 @@
             </svg>
             <span class="text-sm font-medium text-white" x-text="message"></span>
         </div>
+    </div>
+
+    {{-- Mobile Bottom Navigation Bar --}}
+    <div class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#faf7f4]/95 backdrop-blur-md border-t border-[#efe8e3] py-2 px-3 flex items-center justify-around shadow-lg">
+        <a href="{{ route('home') }}" class="flex flex-col items-center gap-0.5 {{ request()->routeIs('home') ? 'text-[#b8847e] font-semibold' : 'text-[#6b6560]' }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            <span class="text-[10px]">Trang chủ</span>
+        </a>
+        <a href="{{ route('products.index') }}" class="flex flex-col items-center gap-0.5 {{ request()->routeIs('products.*') || request()->routeIs('categories.*') ? 'text-[#b8847e] font-semibold' : 'text-[#6b6560]' }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
+            <span class="text-[10px]">Sản phẩm</span>
+        </a>
+        <a href="{{ route('wishlist.index') }}" class="relative flex flex-col items-center gap-0.5 {{ request()->routeIs('wishlist.*') ? 'text-[#b8847e] font-semibold' : 'text-[#6b6560]' }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            <span x-data x-show="$store.wishlist.count > 0" x-cloak x-text="$store.wishlist.count"
+                  class="absolute -top-1 right-2 bg-[#b8847e] text-white text-[9px] font-bold rounded-full h-3.5 min-w-[14px] flex items-center justify-center px-0.5"></span>
+            <span class="text-[10px]">Yêu thích</span>
+        </a>
+        <a href="{{ route('cart.index') }}" class="relative flex flex-col items-center gap-0.5 {{ request()->routeIs('cart.*') ? 'text-[#b8847e] font-semibold' : 'text-[#6b6560]' }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+            <span x-data x-show="$store.cart.count > 0" x-cloak x-text="$store.cart.count"
+                  class="absolute -top-1 right-2 bg-[#b8847e] text-white text-[9px] font-bold rounded-full h-3.5 min-w-[14px] flex items-center justify-center px-0.5"></span>
+            <span class="text-[10px]">Giỏ hàng</span>
+        </a>
+        <a href="{{ auth()->check() ? route('profile') : route('login') }}" class="flex flex-col items-center gap-0.5 {{ request()->routeIs('profile') || request()->routeIs('login') ? 'text-[#b8847e] font-semibold' : 'text-[#6b6560]' }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            <span class="text-[10px]">{{ auth()->check() ? 'Tài khoản' : 'Đăng nhập' }}</span>
+        </a>
     </div>
 
     {{-- Chatbot Widget --}}

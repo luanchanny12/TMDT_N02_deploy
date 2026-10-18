@@ -95,6 +95,9 @@
                             wishlistLoading = false;
                             if (data.success) {
                                 wishlisted = data.is_wishlisted;
+                                if (data.wishlist_count !== undefined && window.Alpine && window.Alpine.store('wishlist')) {
+                                    window.Alpine.store('wishlist').count = data.wishlist_count;
+                                }
                                 window.dispatchEvent(new CustomEvent('toast', {
                                     detail: { message: data.message, type: 'success' }
                                 }));

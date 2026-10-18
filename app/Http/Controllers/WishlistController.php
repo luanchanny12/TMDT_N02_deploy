@@ -46,9 +46,12 @@ class WishlistController extends Controller
             $message = 'Đã thêm vào yêu thích';
         }
 
+        $wishlistCount = $wishlist->items()->count();
+
         return response()->json([
             'success' => true,
             'is_wishlisted' => $isWishlisted,
+            'wishlist_count' => $wishlistCount,
             'message' => $message,
         ]);
     }

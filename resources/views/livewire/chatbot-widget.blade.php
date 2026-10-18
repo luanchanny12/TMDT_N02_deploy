@@ -1,4 +1,4 @@
-<div class="fixed bottom-6 right-6 z-50">
+<div class="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-50">
     {{-- Toggle Button --}}
     <button wire:click="toggle"
             class="w-14 h-14 rounded-full bg-gradient-to-br from-[#b8847e] to-[#c9a9a6] text-white flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow relative">
@@ -10,7 +10,7 @@
 
     {{-- Chat Window: dung @if($isOpen) thay vi @entangle de tranh conflict Alpine --}}
     @if($isOpen)
-    <div class="fixed bottom-24 right-6 w-[320px] max-h-[440px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-[#efe8e3]">
+    <div class="fixed bottom-36 md:bottom-24 right-4 sm:right-6 w-[320px] max-h-[440px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-[#efe8e3]">
 
         {{-- Header --}}
         <div class="bg-gradient-to-br from-[#b8847e] to-[#c9a9a6] text-white px-4 py-3 flex justify-between items-center flex-shrink-0">

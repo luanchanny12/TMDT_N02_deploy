@@ -1,23 +1,75 @@
 <x-layouts.app>
-    {{-- Hero --}}
-    <section class="relative" style="background: linear-gradient(135deg, rgba(250,247,244,.86) 0%, rgba(243,235,230,.84) 50%, rgba(232,223,216,.86) 100%), url('https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1600&h=900&fit=crop&q=85') center/cover no-repeat;">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20 text-center relative z-10">
-            <p class="text-[11px] uppercase tracking-[3px] text-[#b8847e] mb-3 font-medium">Bộ sưu tập 2026</p>
-            <h1 class="font-serif text-4xl md:text-5xl lg:text-[3.5rem] font-semibold text-[#3d3d3d] leading-tight mb-4">
-                Thời trang<br><em class="italic text-[#b8847e]">dịu nhẹ</em> mỗi ngày
-            </h1>
-            <p class="text-[#6b6560] text-base md:text-lg max-w-lg mx-auto mb-8">
-                Khám phá phong cách thanh lịch — từ áo thun basic đến váy dự tiệc, giá tốt &amp; ưu đãi đến 40%
-            </p>
-            <div class="flex gap-3 justify-center flex-wrap">
-                <a href="{{ route('products.index') }}"
-                   class="bg-[#b8847e] text-white px-7 py-3 rounded-lg font-medium text-sm hover:bg-[#a6736d] transition-colors">
-                    Tất cả sản phẩm
-                </a>
-                <a href="{{ route('products.index', ['featured' => 1]) }}"
-                   class="border border-[#c9a9a6] text-[#b8847e] bg-transparent px-7 py-3 rounded-lg font-medium text-sm hover:bg-[#e8c4c4] hover:text-[#3d3d3d] hover:border-[#e8c4c4] transition-colors">
-                    Sản phẩm nổi bật
-                </a>
+    {{-- Hero Section (Editorial Boutique Lookbook) --}}
+    <section class="relative overflow-hidden bg-gradient-to-b from-[#faf7f4] via-[#f7f0ea] to-[#faf7f4] py-10 md:py-16 border-b border-[#efe8e3]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+                {{-- Hero Copy --}}
+                <div class="lg:col-span-7 space-y-5 text-center lg:text-left z-10 animate-fade-in-up">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-[#efe8e3] text-xs font-semibold text-[#b8847e] shadow-sm">
+                        <span class="w-2 h-2 rounded-full bg-[#b8847e] animate-ping"></span>
+                        <span class="uppercase tracking-wider text-[11px]">BỘ SƯU TẬP MỚI • XUÂN HÈ 2026</span>
+                    </div>
+
+                    <h1 class="font-serif text-4xl sm:text-5xl lg:text-[3.5rem] font-bold tracking-tight text-[#2c2a28] leading-[1.15]">
+                        Vẻ Đẹp Thanh Lịch<br>
+                        <span class="italic font-normal text-[#b8847e]">Dịu Nhẹ</span> Từng Đường Nét
+                    </h1>
+
+                    <p class="text-sm sm:text-base text-[#6b6560] max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                        Khám phá tủ đồ mùa mới với các chất liệu tự nhiên, phom dáng chuẩn mực tôn vinh cá tính thời trang hiện đại cùng ưu đãi ra mắt lên đến <strong>40%</strong>.
+                    </p>
+
+                    <div class="flex flex-wrap items-center justify-center lg:justify-start gap-3.5 pt-2">
+                        <a href="{{ route('products.index') }}"
+                           class="px-7 py-3.5 rounded-full bg-[#b8847e] hover:bg-[#a6736d] text-white text-sm font-semibold tracking-wide transition-all shadow-lg shadow-[#b8847e]/25 flex items-center gap-2 group">
+                            <span>Khám phá bộ sưu tập</span>
+                            <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                        </a>
+                        <a href="{{ route('products.index', ['sort' => 'price_desc']) }}"
+                           class="px-7 py-3.5 rounded-full bg-white hover:bg-[#faf7f4] border border-[#efe8e3] text-[#2c2a28] text-sm font-semibold tracking-wide transition-all shadow-sm">
+                            Sản phẩm nổi bật
+                        </a>
+                    </div>
+
+                    {{-- Social Proof Strip --}}
+                    <div class="pt-6 border-t border-[#efe8e3]/80 flex items-center justify-center lg:justify-start gap-6">
+                        <div class="flex -space-x-2">
+                            <img class="w-8 h-8 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop" alt="Khách hàng 1">
+                            <img class="w-8 h-8 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop" alt="Khách hàng 2">
+                            <img class="w-8 h-8 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop" alt="Khách hàng 3">
+                            <div class="w-8 h-8 rounded-full border-2 border-white bg-[#b8847e] text-white text-[11px] font-bold flex items-center justify-center">+5K</div>
+                        </div>
+                        <div class="text-left text-xs">
+                            <div class="flex text-amber-400 text-xs">★★★★★</div>
+                            <span class="text-[#6b6560]">Hơn <strong>5.000+</strong> quý cô tin chọn</span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Hero Visual Lookbook --}}
+                <div class="lg:col-span-5 relative">
+                    <div class="relative mx-auto max-w-sm sm:max-w-md lg:max-w-none">
+                        <div class="absolute -inset-4 bg-gradient-to-tr from-[#e8c4c4]/60 to-[#c9a9a6]/30 rounded-3xl blur-2xl -z-10 transform -rotate-3"></div>
+
+                        <div class="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white aspect-[3/4] bg-[#f5f0ec]">
+                            <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&h=1060&fit=crop&q=85"
+                                 alt="Lookbook thời trang SocialShop"
+                                 class="w-full h-full object-cover">
+
+                            {{-- Floating Lookbook Pill --}}
+                            <div class="absolute bottom-5 left-5 right-5 p-3.5 sm:p-4 rounded-xl bg-white/95 backdrop-blur-md border border-white/40 shadow-lg flex items-center justify-between">
+                                <div>
+                                    <p class="text-[10px] uppercase tracking-wider text-[#b8847e] font-bold">Lookbook Độc Quyền</p>
+                                    <p class="text-xs sm:text-sm font-serif font-bold text-[#2c2a28]">Váy Lụa Satin Cao Cấp</p>
+                                    <p class="text-[11px] text-[#6b6560]">Ưu đãi ra mắt trong hôm nay</p>
+                                </div>
+                                <a href="{{ route('products.index') }}" class="text-xs font-bold bg-[#b8847e] text-white px-3 py-1.5 rounded-full hover:bg-[#a6736d] transition-colors">
+                                    Xem ngay
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -27,102 +79,195 @@
         $pricing = app(\App\Services\Order\PricingService::class);
         $freeFrom = $pricing->nationwideFreeShippingThreshold();
     @endphp
-    <section class="bg-[#3d3a37] text-white" data-testid="shop-benefits">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="flex items-center gap-3">
-                <svg class="h-8 w-8 flex-shrink-0 text-[#e8c4c4]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zm10 0a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
-                <div>
-                    <p class="text-sm font-semibold">Freeship toàn quốc</p>
-                    <p class="text-xs text-white/70">Cho đơn từ {{ number_format($freeFrom, 0, ',', '.') }}₫</p>
+    {{-- Trust & Value Strip (4 Cam kết) --}}
+    <section class="border-b border-[#efe8e3] bg-white py-6" data-testid="shop-benefits">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#faf7f4] border border-[#efe8e3] flex items-center justify-center flex-shrink-0 text-[#b8847e]">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-[#2c2a28] uppercase tracking-wider">Freeship toàn quốc</h4>
+                        <p class="text-[11px] text-[#9a9490]">Cho đơn từ {{ number_format($freeFrom, 0, ',', '.') }}₫</p>
+                    </div>
                 </div>
-            </div>
-            <div class="flex items-center gap-3">
-                <svg class="h-8 w-8 flex-shrink-0 text-[#e8c4c4]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                <div>
-                    <p class="text-sm font-semibold">Đổi trả 7 ngày</p>
-                    <p class="text-xs text-white/70"><a href="{{ route('pages.return-policy') }}" class="underline decoration-white/30 hover:text-white">Xem chính sách</a></p>
+
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#faf7f4] border border-[#efe8e3] flex items-center justify-center flex-shrink-0 text-[#b8847e]">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-[#2c2a28] uppercase tracking-wider">Đổi trả 7 ngày</h4>
+                        <p class="text-[11px] text-[#9a9490]">Đổi size & mẫu tận nơi tiện lợi</p>
+                    </div>
                 </div>
-            </div>
-            <div class="flex items-center gap-3">
-                <svg class="h-8 w-8 flex-shrink-0 text-[#e8c4c4]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                <div>
-                    <p class="text-sm font-semibold">COD &amp; VNPay</p>
-                    <p class="text-xs text-white/70">Kiểm tra hàng rồi thanh toán</p>
+
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#faf7f4] border border-[#efe8e3] flex items-center justify-center flex-shrink-0 text-[#b8847e]">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-[#2c2a28] uppercase tracking-wider">Thanh toán an toàn</h4>
+                        <p class="text-[11px] text-[#9a9490]">VNPay Sandbox & COD tiền mặt</p>
+                    </div>
                 </div>
-            </div>
-            <div class="flex items-center gap-3">
-                <svg class="h-8 w-8 flex-shrink-0 text-[#e8c4c4]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-                <div>
-                    <p class="text-sm font-semibold">Tư vấn 24/7</p>
-                    <p class="text-xs text-white/70">Trợ lý AI &amp; hotline 077123456</p>
+
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#faf7f4] border border-[#efe8e3] flex items-center justify-center flex-shrink-0 text-[#b8847e]">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-[#2c2a28] uppercase tracking-wider">Trợ lý AI 24/7</h4>
+                        <p class="text-[11px] text-[#9a9490]">Tư vấn size & phối đồ tức thì</p>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
 
-        {{-- Categories --}}
+        {{-- Categories Showcase (Visual Circular Cards) --}}
         @if($categories->count())
-            <div class="text-center mb-6">
-                <h2 class="font-serif text-2xl font-semibold text-[#3d3d3d]">Danh mục nổi bật</h2>
-                <p class="text-[#9a9490] text-sm mt-1">Chọn phong cách của bạn</p>
+            <div class="text-center mb-8">
+                <p class="text-[11px] uppercase tracking-[3px] text-[#b8847e] font-semibold mb-1">DANH MỤC NỔI BẬT</p>
+                <h2 class="font-serif text-2xl sm:text-3xl font-bold text-[#2c2a28]">Khám Phá Phong Cách Của Bạn</h2>
+                <div class="w-12 h-0.5 bg-[#b8847e] mx-auto mt-2.5"></div>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-12">
-                @foreach($categories->take(8) as $category)
+
+            @php
+                $categoryImages = [
+                    'thoi-trang-nam' => 'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?w=240&h=240&fit=crop',
+                    'thoi-trang-nu' => 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=240&h=240&fit=crop',
+                    'giay-dep' => 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=240&h=240&fit=crop',
+                    'tui-vi' => 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=240&h=240&fit=crop',
+                    'my-pham-nuoc-hoa' => 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=240&h=240&fit=crop',
+                ];
+                $topCategories = $categories->whereNull('parent_id')->take(6);
+                if($topCategories->isEmpty()) {
+                    $topCategories = $categories->take(6);
+                }
+            @endphp
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-14">
+                @foreach($topCategories as $category)
+                    @php
+                        $img = $category->image ?? ($categoryImages[$category->slug] ?? 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=240&h=240&fit=crop');
+                    @endphp
                     <a href="{{ route('categories.show', $category) }}"
-                       class="block text-center bg-white border border-[#efe8e3] rounded-xl py-3.5 px-4 text-[#3d3d3d] font-medium text-sm hover:bg-[#e8c4c4] hover:border-[#e8c4c4] hover:text-[#3d3d3d] transition-colors">
-                        {{ $category->name }}
+                       class="group flex flex-col items-center p-3.5 rounded-2xl bg-white border border-[#efe8e3] hover-lift text-center transition-all">
+                        <div class="w-20 h-20 sm:w-22 sm:h-22 rounded-full overflow-hidden p-1 bg-[#faf7f4] border-2 border-[#efe8e3] group-hover:border-[#b8847e] transition-colors mb-2.5">
+                            <img src="{{ $img }}"
+                                 alt="{{ $category->name }}"
+                                 class="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-300">
+                        </div>
+                        <span class="text-xs sm:text-sm font-bold text-[#2c2a28] group-hover:text-[#b8847e] transition-colors line-clamp-1">
+                            {{ $category->name }}
+                        </span>
+                        <span class="text-[11px] text-[#9a9490] mt-0.5">
+                            {{ $category->products_count ?? $category->products->count() }} sản phẩm
+                        </span>
                     </a>
                 @endforeach
             </div>
         @endif
 
-        {{-- Featured Products --}}
+        {{-- Flash Sale Deals with Live Countdown Clock --}}
+        @if(!empty($flashSaleProducts) && $flashSaleProducts->count())
+            <div class="mb-14 rounded-3xl bg-gradient-to-r from-[#fff5f5] via-[#fff0f3] to-[#faf7f4] border border-red-100 p-5 sm:p-8"
+                 x-data="{
+                     hours: 2,
+                     minutes: 45,
+                     seconds: 30,
+                     init() {
+                         setInterval(() => {
+                             if (this.seconds > 0) {
+                                 this.seconds--;
+                             } else {
+                                 this.seconds = 59;
+                                 if (this.minutes > 0) {
+                                     this.minutes--;
+                                 } else {
+                                     this.minutes = 59;
+                                     if (this.hours > 0) this.hours--;
+                                 }
+                             }
+                         }, 1000);
+                     }
+                 }">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <span class="inline-flex items-center gap-1.5 bg-red-600 text-white font-extrabold text-xs px-3.5 py-1.5 rounded-full tracking-wider uppercase shadow-md shadow-red-200">
+                            <span>🔥 FLASH SALE GIỜ VÀNG</span>
+                        </span>
+                        <div class="flex items-center gap-1.5 text-xs font-bold text-[#2c2a28]">
+                            <span class="text-[#9a9490] font-normal mr-1">Kết thúc sau:</span>
+                            <span class="bg-[#2c2a28] text-white px-2 py-1 rounded font-mono" x-text="hours < 10 ? '0' + hours : hours">02</span>:
+                            <span class="bg-[#2c2a28] text-white px-2 py-1 rounded font-mono" x-text="minutes < 10 ? '0' + minutes : minutes">45</span>:
+                            <span class="bg-[#2c2a28] text-white px-2 py-1 rounded font-mono" x-text="seconds < 10 ? '0' + seconds : seconds">30</span>
+                        </div>
+                    </div>
+                    <a href="{{ route('products.index', ['sort' => 'price_asc']) }}" class="text-xs font-bold text-[#b8847e] hover:text-[#a6736d] flex items-center gap-1 group">
+                        <span>Xem tất cả ưu đãi</span>
+                        <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </a>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    @foreach($flashSaleProducts as $product)
+                        <x-product-card :product="$product" />
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+        {{-- Featured Products (Gợi ý hôm nay) --}}
         @if($featuredProducts->count())
             <div class="flex justify-between items-end mb-6">
                 <div>
-                    <h2 class="font-serif text-2xl font-semibold text-[#3d3d3d]">Gợi ý hôm nay</h2>
-                    <p class="text-[#9a9490] text-sm mt-0.5">Sản phẩm nổi bật &amp; đang giảm giá</p>
+                    <h2 class="font-serif text-2xl sm:text-3xl font-bold text-[#2c2a28]">Gợi ý hôm nay</h2>
+                    <p class="text-[#9a9490] text-xs sm:text-sm mt-0.5">Sản phẩm nổi bật &amp; được yêu thích nhất</p>
                 </div>
-                <a href="{{ route('products.index') }}" class="text-[#b8847e] text-sm font-semibold hover:text-[#a6736d] transition-colors">
-                    Xem tất cả →
+                <a href="{{ route('products.index') }}" class="text-[#b8847e] text-xs sm:text-sm font-semibold hover:text-[#a6736d] transition-colors flex items-center gap-1">
+                    <span>Xem tất cả</span>
+                    <span>→</span>
                 </a>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-14">
                 @foreach($featuredProducts as $product)
                     <x-product-card :product="$product" />
                 @endforeach
             </div>
         @endif
-    </div>
 
-    {{-- Referral Banner --}}
-    @auth
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
-            <div class="bg-[#f5f0ec] border border-[#efe8e3] rounded-2xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                <div>
-                    <h3 class="font-serif text-2xl font-semibold text-[#3d3d3d] mb-2">Giới thiệu bạn bè, nhận thưởng</h3>
-                    <p class="text-[#6b6560] text-sm max-w-lg">Chia sẻ mã giới thiệu của bạn và nhận ngay ưu đãi khi bạn bè mua hàng thành công!</p>
+        {{-- Referral VIP Club Banner --}}
+        @auth
+            <div class="mb-14">
+                <div class="bg-gradient-to-r from-[#f5f0ec] via-[#faf7f4] to-[#f5f0ec] border border-[#efe8e3] rounded-3xl p-6 sm:p-10 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+                    <div class="space-y-1.5 text-center md:text-left">
+                        <span class="inline-block px-3 py-1 bg-white border border-[#efe8e3] text-[#b8847e] text-[10px] font-bold rounded-full uppercase tracking-wider">CHƯƠNG TRÌNH ĐẶC QUYỀN</span>
+                        <h3 class="font-serif text-2xl sm:text-3xl font-bold text-[#2c2a28]">Giới thiệu bạn bè, nhận thưởng ngay</h3>
+                        <p class="text-[#6b6560] text-xs sm:text-sm max-w-lg">Chia sẻ mã giới thiệu của bạn và nhận ngay voucher ưu đãi hấp dẫn khi bạn bè mua sắm thành công!</p>
+                    </div>
+                    <a href="{{ route('profile') }}"
+                       class="bg-[#b8847e] text-white px-7 py-3 rounded-full font-semibold text-xs sm:text-sm hover:bg-[#a6736d] transition-all shadow-md shadow-[#b8847e]/20 whitespace-nowrap flex-shrink-0">
+                        Lấy mã giới thiệu ngay
+                    </a>
                 </div>
-                <a href="{{ route('profile') }}"
-                   class="bg-[#b8847e] text-white px-6 py-3 rounded-lg font-medium text-sm hover:bg-[#a6736d] transition-colors whitespace-nowrap flex-shrink-0">
-                    Lấy mã giới thiệu
-                </a>
             </div>
-        </div>
-    @endauth
+        @endauth
 
-    {{-- New Products --}}
-    @if($newProducts->count())
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
+        {{-- New Products (Sản phẩm mới nhất) --}}
+        @if($newProducts->count())
             <div class="flex justify-between items-end mb-6">
                 <div>
-                    <h2 class="font-serif text-2xl font-semibold text-[#3d3d3d]">Sản phẩm mới nhất</h2>
-                    <p class="text-[#9a9490] text-sm mt-0.5">Cập nhật xu hướng thời trang</p>
+                    <h2 class="font-serif text-2xl sm:text-3xl font-bold text-[#2c2a28]">Sản phẩm mới nhất</h2>
+                    <p class="text-[#9a9490] text-xs sm:text-sm mt-0.5">Đón đầu xu hướng thời trang cùng SocialShop</p>
                 </div>
-                <a href="{{ route('products.index') }}" class="text-[#b8847e] text-sm font-semibold hover:text-[#a6736d] transition-colors">
-                    Xem tất cả →
+                <a href="{{ route('products.index', ['sort' => 'latest']) }}" class="text-[#b8847e] text-xs sm:text-sm font-semibold hover:text-[#a6736d] transition-colors flex items-center gap-1">
+                    <span>Xem tất cả</span>
+                    <span>→</span>
                 </a>
             </div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -130,6 +275,6 @@
                     <x-product-card :product="$product" />
                 @endforeach
             </div>
-        </div>
-    @endif
+        @endif
+    </div>
 </x-layouts.app>
