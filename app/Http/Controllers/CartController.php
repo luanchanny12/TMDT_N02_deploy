@@ -64,7 +64,12 @@ class CartController extends Controller
                     return response()->json([
                         'success' => true,
                         'cartCount' => $this->cartService->getGuestItemCount(),
+                        'redirect' => $request->boolean('buy_now') ? route('checkout.index') : null,
                     ]);
+                }
+
+                if ($request->boolean('buy_now')) {
+                    return redirect()->route('checkout.index');
                 }
 
                 return redirect()->route('cart.index')->with('success', 'Đã thêm sản phẩm vào giỏ hàng!');
@@ -82,7 +87,12 @@ class CartController extends Controller
                 return response()->json([
                     'success' => true,
                     'cartCount' => $this->cartService->getItemCount(auth()->id()),
+                    'redirect' => $request->boolean('buy_now') ? route('checkout.index') : null,
                 ]);
+            }
+
+            if ($request->boolean('buy_now')) {
+                return redirect()->route('checkout.index');
             }
 
             return redirect()->route('cart.index')->with('success', 'Đã thêm sản phẩm vào giỏ hàng!');

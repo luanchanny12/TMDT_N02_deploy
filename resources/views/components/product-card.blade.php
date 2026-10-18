@@ -119,6 +119,20 @@
                     <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                 </svg>
             </button>
+        @else
+            <a href="{{ route('login') }}"
+               @click.prevent="
+                   window.dispatchEvent(new CustomEvent('toast', {
+                       detail: { message: 'Vui lòng đăng nhập để lưu sản phẩm vào danh sách yêu thích nhé!', type: 'info' }
+                   }));
+                   setTimeout(() => { window.location.href = '{{ route('login') }}'; }, 800);
+               "
+               title="Đăng nhập để thêm vào yêu thích"
+               class="absolute bottom-3 right-3 z-10 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-md hover:bg-white text-[#9a9490] hover:text-[#b8847e] transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+            </a>
         @endauth
     </a>
 
@@ -181,16 +195,56 @@
             </div>
         @endif
 
-        {{-- Add to Cart Button (AJAX) — sản phẩm có size/màu thì chọn ở trang chi tiết --}}
+        {{-- Action Buttons: Mua ngay & Thêm vào giỏ --}}
         @if($product->stock > 0 && ($product->variants_count ?? 0) > 0)
-            <div class="card-action mt-auto pt-2">
+            <div class="card-action mt-auto pt-2 grid grid-cols-2 gap-1.5">
                 <a href="{{ route('products.show', $product->slug) }}"
-                   class="w-full bg-[#3d3a37] text-white text-sm font-semibold py-2 rounded-lg hover:bg-[#b8847e] transition-all flex items-center justify-center gap-2">
-                    Chọn size/màu
+                   class="bg-gradient-to-r from-[#b8847e] to-[#a6736d] text-white text-xs font-bold py-2 rounded-lg hover:shadow-md transition-all flex items-center justify-center gap-1 btn-shine">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <span>Mua ngay</span>
+                </a>
+                <a href="{{ route('products.show', $product->slug) }}"
+                   class="border border-[#efe8e3] text-[#3d3d3d] hover:border-[#b8847e] hover:text-[#b8847e] bg-white text-xs font-semibold py-2 rounded-lg transition-all flex items-center justify-center gap-1">
+                    <span>Chọn size</span>
                 </a>
             </div>
         @elseif($product->stock > 0)
-            <div class="card-action mt-auto pt-2">
+            <div class="card-action mt-auto pt-2 grid grid-cols-2 gap-1.5" x-data="{ buyNowLoading: false }">
+                <button type="button"
+                        @click="
+                            buyNowLoading = true;
+                            fetch('{{ route('cart.add') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    product_id: {{ $product->id }},
+                                    quantity: 1,
+                                    buy_now: 1
+                                })
+                            })
+                            .then(r => r.json())
+                            .then(data => {
+                                if (data.redirect) {
+                                    window.location.href = data.redirect;
+                                } else {
+                                    window.location.href = '{{ route('checkout.index') }}';
+                                }
+                            })
+                            .catch(() => {
+                                buyNowLoading = false;
+                                window.location.href = '{{ route('checkout.index') }}';
+                            })
+                        "
+                        :disabled="buyNowLoading"
+                        class="bg-gradient-to-r from-[#b8847e] to-[#a6736d] text-white text-xs font-bold py-2 rounded-lg hover:shadow-md transition-all flex items-center justify-center gap-1 btn-shine cursor-pointer disabled:opacity-60">
+                    <svg x-show="!buyNowLoading" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <svg x-show="buyNowLoading" x-cloak class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                    <span x-text="buyNowLoading ? '...' : 'Mua ngay'"></span>
+                </button>
                 <button type="button"
                         @click="
                             cartLoading = true;
@@ -229,15 +283,11 @@
                             })
                         "
                         :disabled="cartLoading"
-                        class="w-full bg-[#b8847e] text-white text-sm font-semibold py-2 rounded-lg hover:bg-[#a6736d] transition-all btn-shine flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
-                    <svg x-show="!cartLoading" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/>
-                    </svg>
-                    <svg x-show="cartLoading" x-cloak class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                    </svg>
-                    <span x-text="cartLoading ? 'Đang thêm...' : 'Thêm vào giỏ'"></span>
+                        title="Thêm vào giỏ"
+                        class="border border-[#b8847e] text-[#b8847e] bg-[#faf7f4] hover:bg-[#b8847e] hover:text-white text-xs font-semibold py-2 rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer disabled:opacity-60">
+                    <svg x-show="!cartLoading" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+                    <svg x-show="cartLoading" x-cloak class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                    <span x-text="cartLoading ? '...' : '+ Giỏ'"></span>
                 </button>
             </div>
         @endif

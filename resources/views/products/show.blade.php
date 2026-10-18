@@ -67,6 +67,62 @@
                                     </div>
                                 @endif
 
+                                {{-- Wishlist Floating Button on Main Image --}}
+                                @auth
+                                    @php
+                                        $isWishlisted = auth()->user()->wishlist ? auth()->user()->wishlist->items()->where('product_id', $product->id)->exists() : false;
+                                    @endphp
+                                    <button type="button"
+                                            x-data="{ wishlisted: {{ $isWishlisted ? 'true' : 'false' }}, loading: false }"
+                                            @click="
+                                                loading = true;
+                                                fetch('{{ route('wishlist.toggle', $product) }}', {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Content-Type': 'application/json',
+                                                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                                        'Accept': 'application/json'
+                                                    }
+                                                })
+                                                .then(r => r.json())
+                                                .then(data => {
+                                                    loading = false;
+                                                    if (data.success) {
+                                                        wishlisted = data.is_wishlisted;
+                                                        if (data.wishlist_count !== undefined && window.Alpine && window.Alpine.store('wishlist')) {
+                                                            window.Alpine.store('wishlist').count = data.wishlist_count;
+                                                        }
+                                                        window.dispatchEvent(new CustomEvent('toast', { detail: { message: data.message, type: 'success' } }));
+                                                    }
+                                                })
+                                                .catch(() => { loading = false; })
+                                            "
+                                            :disabled="loading"
+                                            class="absolute top-4 right-4 z-10 w-11 h-11 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-lg hover:bg-white transition-all text-[#9a9490] hover:text-[#b8847e] cursor-pointer"
+                                            title="Yêu thích">
+                                        <svg x-show="!wishlisted" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                        </svg>
+                                        <svg x-show="wishlisted" x-cloak class="w-6 h-6 text-[#b8847e]" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                        </svg>
+                                    </button>
+                                @else
+                                    <a href="{{ route('login') }}"
+                                       @click.prevent="
+                                           window.dispatchEvent(new CustomEvent('toast', {
+                                               detail: { message: 'Vui lòng đăng nhập để lưu sản phẩm yêu thích nhé!', type: 'info' }
+                                           }));
+                                           setTimeout(() => { window.location.href = '{{ route('login') }}'; }, 800);
+                                       "
+                                       class="absolute top-4 right-4 z-10 w-11 h-11 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-lg hover:bg-white transition-all text-[#9a9490] hover:text-[#b8847e] cursor-pointer"
+                                       title="Đăng nhập để thêm vào yêu thích">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                        </svg>
+                                    </a>
+                                @endauth
+
                                 {{-- Authenticity Tag --}}
                                 <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-lg text-[11px] font-semibold text-[#2c2a28] border border-[#efe8e3]/80 flex items-center gap-1.5 shadow-sm">
                                     <svg class="w-3.5 h-3.5 text-[#b8847e]" fill="currentColor" viewBox="0 0 20 20">
@@ -299,57 +355,137 @@
                                         </span>
                                     </div>
 
-                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-                                        {{-- Add to Cart Button --}}
-                                        <button type="submit"
-                                                class="sm:col-span-2 bg-gradient-to-r from-[#b8847e] to-[#a6736d] text-white py-4 px-6 rounded-2xl font-bold hover:shadow-lg hover:shadow-[#b8847e]/30 transition-all text-sm flex items-center justify-center gap-2 btn-shine">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                                            </svg>
-                                            <span>Thêm vào giỏ hàng</span>
-                                        </button>
-
-                                        {{-- Compare Button --}}
-                                        <div x-data="{ compareLoading: false }" class="sm:col-span-1">
-                                            <button type="button"
-                                                    @click="
-                                                        compareLoading = true;
-                                                        fetch('{{ route('compare.add', $product) }}', {
-                                                            method: 'POST',
-                                                            headers: {
-                                                                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
-                                                                'Accept': 'application/json'
-                                                            }
-                                                        })
-                                                        .then(r => r.json().then(data => ({ ok: r.ok, data })))
-                                                        .then(({ ok, data }) => {
-                                                            compareLoading = false;
-                                                            window.dispatchEvent(new CustomEvent('toast', {
-                                                                detail: {
-                                                                    message: data.message || (ok ? 'Đã thêm vào danh sách so sánh!' : 'Không thể thêm vào so sánh.'),
-                                                                    type: ok ? 'success' : 'error'
-                                                                }
-                                                            }));
-                                                            if (ok) window.dispatchEvent(new CustomEvent('compare-updated', { detail: data.compare_count }));
-                                                        })
-                                                        .catch(() => {
-                                                            compareLoading = false;
-                                                            window.dispatchEvent(new CustomEvent('toast', {
-                                                                detail: { message: 'Có lỗi xảy ra, thử lại sau.', type: 'error' }
-                                                            }));
-                                                        })
-                                                    "
-                                                    :disabled="compareLoading"
-                                                    class="w-full h-full border border-[#efe8e3] bg-white text-[#2c2a28] py-3.5 px-4 rounded-2xl font-medium hover:border-[#b8847e] hover:text-[#b8847e] transition-colors text-xs flex items-center justify-center gap-1.5 disabled:opacity-60 shadow-sm">
-                                                <svg x-show="!compareLoading" class="w-4 h-4 text-[#b8847e]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                    <div class="space-y-3 pt-2">
+                                        {{-- Row 1: Hai nút chính Mua Ngay & Thêm vào giỏ --}}
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            {{-- MUA NGAY (Ưu tiên số 1: Đi thẳng vào Checkout không cần qua Cart) --}}
+                                            <button type="submit" name="buy_now" value="1"
+                                                    class="w-full bg-gradient-to-r from-[#b8847e] via-[#ab746e] to-[#a6736d] text-white py-4 px-6 rounded-2xl font-bold hover:shadow-xl hover:shadow-[#b8847e]/35 transition-all text-sm flex items-center justify-center gap-2 btn-shine cursor-pointer group">
+                                                <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                                                 </svg>
-                                                <svg x-show="compareLoading" x-cloak class="w-4 h-4 animate-spin text-[#b8847e]" fill="none" viewBox="0 0 24 24">
-                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                                                </svg>
-                                                <span x-text="compareLoading ? 'Đang thêm...' : 'So sánh'"></span>
+                                                <span class="tracking-wide">MUA NGAY</span>
                                             </button>
+
+                                            {{-- Thêm vào giỏ hàng --}}
+                                            <button type="submit"
+                                                    class="w-full border-2 border-[#b8847e] text-[#b8847e] bg-white hover:bg-[#faf7f4] py-4 px-6 rounded-2xl font-bold transition-all text-sm flex items-center justify-center gap-2 shadow-sm cursor-pointer group">
+                                                <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                                                </svg>
+                                                <span>Thêm vào giỏ hàng</span>
+                                            </button>
+                                        </div>
+
+                                        {{-- Row 2: Yêu thích & So sánh --}}
+                                        <div class="grid grid-cols-2 gap-3">
+                                            {{-- Wishlist Button --}}
+                                            @auth
+                                                @php
+                                                    $isWishlisted = auth()->user()->wishlist ? auth()->user()->wishlist->items()->where('product_id', $product->id)->exists() : false;
+                                                @endphp
+                                                <div x-data="{ wishlistLoading: false, wishlisted: {{ $isWishlisted ? 'true' : 'false' }} }">
+                                                    <button type="button"
+                                                            @click="
+                                                                wishlistLoading = true;
+                                                                fetch('{{ route('wishlist.toggle', $product) }}', {
+                                                                    method: 'POST',
+                                                                    headers: {
+                                                                        'Content-Type': 'application/json',
+                                                                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                                                        'Accept': 'application/json'
+                                                                    }
+                                                                })
+                                                                .then(r => r.json())
+                                                                .then(data => {
+                                                                    wishlistLoading = false;
+                                                                    if (data.success) {
+                                                                        wishlisted = data.is_wishlisted;
+                                                                        if (data.wishlist_count !== undefined && window.Alpine && window.Alpine.store('wishlist')) {
+                                                                            window.Alpine.store('wishlist').count = data.wishlist_count;
+                                                                        }
+                                                                        window.dispatchEvent(new CustomEvent('toast', {
+                                                                            detail: { message: data.message, type: 'success' }
+                                                                        }));
+                                                                    }
+                                                                })
+                                                                .catch(() => {
+                                                                    wishlistLoading = false;
+                                                                    window.dispatchEvent(new CustomEvent('toast', {
+                                                                        detail: { message: 'Có lỗi xảy ra, thử lại sau.', type: 'error' }
+                                                                    }));
+                                                                })
+                                                            "
+                                                            :disabled="wishlistLoading"
+                                                            class="w-full border border-[#efe8e3] bg-white text-[#2c2a28] py-3 px-4 rounded-xl font-medium hover:border-[#b8847e] hover:text-[#b8847e] transition-colors text-xs flex items-center justify-center gap-2 shadow-sm disabled:opacity-60 cursor-pointer">
+                                                        <svg x-show="!wishlisted" class="w-4 h-4 text-[#9a9490]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                                        </svg>
+                                                        <svg x-show="wishlisted" x-cloak class="w-4 h-4 text-[#b8847e]" fill="currentColor" viewBox="0 0 24 24">
+                                                            <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                                        </svg>
+                                                        <span x-text="wishlisted ? 'Đã yêu thích' : 'Yêu thích sản phẩm'"></span>
+                                                    </button>
+                                                </div>
+                                            @else
+                                                <a href="{{ route('login') }}"
+                                                   @click.prevent="
+                                                       window.dispatchEvent(new CustomEvent('toast', {
+                                                           detail: { message: 'Vui lòng đăng nhập để lưu sản phẩm vào danh sách yêu thích nhé!', type: 'info' }
+                                                       }));
+                                                       setTimeout(() => { window.location.href = '{{ route('login') }}'; }, 800);
+                                                   "
+                                                   title="Đăng nhập để thêm vào yêu thích"
+                                                   class="w-full border border-[#efe8e3] bg-white text-[#2c2a28] py-3 px-4 rounded-xl font-medium hover:border-[#b8847e] hover:text-[#b8847e] transition-colors text-xs flex items-center justify-center gap-2 shadow-sm cursor-pointer">
+                                                    <svg class="w-4 h-4 text-[#9a9490]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                                    </svg>
+                                                    <span>Yêu thích sản phẩm</span>
+                                                </a>
+                                            @endauth
+
+                                            {{-- Compare Button --}}
+                                            <div x-data="{ compareLoading: false }">
+                                                <button type="button"
+                                                        @click="
+                                                            compareLoading = true;
+                                                            fetch('{{ route('compare.add', $product) }}', {
+                                                                method: 'POST',
+                                                                headers: {
+                                                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                                                    'Accept': 'application/json'
+                                                                }
+                                                            })
+                                                            .then(r => r.json().then(data => ({ ok: r.ok, data })))
+                                                            .then(({ ok, data }) => {
+                                                                compareLoading = false;
+                                                                window.dispatchEvent(new CustomEvent('toast', {
+                                                                    detail: {
+                                                                        message: data.message || (ok ? 'Đã thêm vào danh sách so sánh!' : 'Không thể thêm vào so sánh.'),
+                                                                        type: ok ? 'success' : 'error'
+                                                                    }
+                                                                }));
+                                                                if (ok) window.dispatchEvent(new CustomEvent('compare-updated', { detail: data.compare_count }));
+                                                            })
+                                                            .catch(() => {
+                                                                compareLoading = false;
+                                                                window.dispatchEvent(new CustomEvent('toast', {
+                                                                    detail: { message: 'Có lỗi xảy ra, thử lại sau.', type: 'error' }
+                                                                }));
+                                                            })
+                                                        "
+                                                        :disabled="compareLoading"
+                                                        class="w-full border border-[#efe8e3] bg-white text-[#2c2a28] py-3 px-4 rounded-xl font-medium hover:border-[#b8847e] hover:text-[#b8847e] transition-colors text-xs flex items-center justify-center gap-2 disabled:opacity-60 shadow-sm cursor-pointer">
+                                                    <svg x-show="!compareLoading" class="w-4 h-4 text-[#b8847e]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                                    </svg>
+                                                    <svg x-show="compareLoading" x-cloak class="w-4 h-4 animate-spin text-[#b8847e]" fill="none" viewBox="0 0 24 24">
+                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                                    </svg>
+                                                    <span x-text="compareLoading ? 'Đang thêm...' : 'So sánh sản phẩm'"></span>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
