@@ -29,8 +29,8 @@ COPY . .
 # Copy compiled frontend assets from node-builder
 COPY --from=node-builder /app/public/build ./public/build
 
-# Install production PHP dependencies
-RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+RUN rm -f config/scribe.php && \
+    composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
 # Setup storage and cache directories
 RUN mkdir -p \
