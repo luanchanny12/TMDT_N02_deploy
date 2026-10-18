@@ -221,6 +221,7 @@
                                                 type: ok ? 'success' : 'error'
                                             }
                                         }));
+                                        if (ok) window.dispatchEvent(new CustomEvent('compare-updated', { detail: data.compare_count }));
                                     })
                                     .catch(() => {
                                         compareLoading = false;

@@ -459,5 +459,19 @@
 
     @livewireScripts
     @stack('scripts')
+    {{-- Thanh so sánh nổi: hiện khi đã chọn sản phẩm để so sánh --}}
+    @unless(request()->routeIs('compare.index'))
+        <div x-data="{ count: {{ count(session('compare_products', [])) }} }"
+             @compare-updated.window="count = $event.detail ?? count"
+             x-show="count > 0" x-cloak x-transition
+             class="fixed bottom-5 left-5 z-[55]" data-testid="compare-bar">
+            <a href="{{ route('compare.index') }}"
+               class="flex items-center gap-2 rounded-full bg-[#3d3a37] text-white pl-4 pr-5 py-3 shadow-lg hover:bg-[#b8847e] transition-colors text-sm font-medium">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                So sánh (<span x-text="count"></span>/4)
+            </a>
+        </div>
+    @endunless
+
 </body>
 </html>
