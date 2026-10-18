@@ -142,6 +142,9 @@ class DatabaseSeeder extends Seeder
         // Đơn hàng + đánh giá demo (dashboard doanh thu, hàng đợi kiểm duyệt)
         $this->call(DemoOrderSeeder::class);
 
+        // Biến thể size/màu mẫu cho quần áo, giày dép (sau đơn demo để tồn kho = tổng biến thể)
+        $this->call(ProductVariantSeeder::class);
+
         // Chiến dịch quảng cáo + lượt truy cập demo (trang Phân tích dữ liệu)
         $this->call(CampaignSeeder::class);
     }

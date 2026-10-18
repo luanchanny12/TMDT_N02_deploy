@@ -178,8 +178,15 @@
             </div>
         @endif
 
-        {{-- Add to Cart Button (AJAX) --}}
-        @if($product->stock > 0)
+        {{-- Add to Cart Button (AJAX) — sản phẩm có size/màu thì chọn ở trang chi tiết --}}
+        @if($product->stock > 0 && ($product->variants_count ?? 0) > 0)
+            <div class="card-action mt-auto pt-2">
+                <a href="{{ route('products.show', $product->slug) }}"
+                   class="w-full bg-[#3d3a37] text-white text-sm font-semibold py-2 rounded-lg hover:bg-[#b8847e] transition-all flex items-center justify-center gap-2">
+                    Chọn size/màu
+                </a>
+            </div>
+        @elseif($product->stock > 0)
             <div class="card-action mt-auto pt-2">
                 <button type="button"
                         @click="

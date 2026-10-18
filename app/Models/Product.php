@@ -159,6 +159,7 @@ class Product extends Model
 
         return $query
             ->with('images')
+            ->withCount('variants')
             ->withCount(['reviews as reviews_count' => $approved])
             ->withAvg(['reviews as approved_rating_avg' => $approved], 'rating');
     }
