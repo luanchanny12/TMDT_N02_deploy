@@ -28,7 +28,7 @@
         </div>
 
         {{-- Sidebar --}}
-        <aside class="w-64 bg-indigo-700 text-white min-h-screen fixed z-50
+        <aside class="w-64 bg-indigo-700 text-white h-screen fixed z-50 flex flex-col
                        -translate-x-full transition-transform duration-300
                        md:translate-x-0"
                :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
@@ -43,7 +43,8 @@
                 </button>
             </div>
 
-            <nav class="mt-6">
+            {{-- Menu cuộn được khi dài hơn màn hình (để luôn thấy "Về trang chủ", "Đăng xuất") --}}
+            <nav class="mt-6 flex-1 overflow-y-auto pb-6">
                 <a href="{{ route('admin.dashboard') }}"
                    class="flex items-center px-4 py-3 {{ request()->routeIs('admin.dashboard') ? 'bg-indigo-800' : 'hover:bg-indigo-600' }}">
                     <svg class="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -92,6 +93,22 @@
                     Đánh giá
                 </a>
 
+                <a href="{{ route('admin.analytics.index') }}"
+                   class="flex items-center px-4 py-3 {{ request()->routeIs('admin.analytics.*') ? 'bg-indigo-800' : 'hover:bg-indigo-600' }}">
+                    <svg class="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    Phân tích dữ liệu
+                </a>
+
+                <a href="{{ route('admin.campaigns.index') }}"
+                   class="flex items-center px-4 py-3 {{ request()->routeIs('admin.campaigns.*') ? 'bg-indigo-800' : 'hover:bg-indigo-600' }}">
+                    <svg class="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+                    </svg>
+                    Chiến dịch quảng cáo
+                </a>
+
                 <a href="{{ route('admin.coupons.index') }}"
                    class="flex items-center px-4 py-3 {{ request()->routeIs('admin.coupons.*') ? 'bg-indigo-800' : 'hover:bg-indigo-600' }}">
                     <svg class="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,6 +131,15 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
                     Audit Log
+                </a>
+
+                <a href="{{ route('admin.settings.index') }}"
+                   class="flex items-center px-4 py-3 {{ request()->routeIs('admin.settings.*') ? 'bg-indigo-800' : 'hover:bg-indigo-600' }}">
+                    <svg class="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    Cài đặt (Thuế, Ship)
                 </a>
 
                 <div class="border-t border-indigo-600 mt-4 pt-4">
@@ -149,7 +175,61 @@
                 </button>
                 <h1 class="text-lg font-semibold text-gray-800">{{ $header ?? 'Dashboard' }}</h1>
                 <div class="ml-auto flex items-center space-x-4">
-                    <span class="text-sm text-gray-600">Xin chào, {{ Auth::user()->name }}</span>
+                    <a href="{{ route('home') }}" target="_blank" rel="noopener"
+                       class="hidden sm:inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-indigo-700" title="Mở trang cửa hàng">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                        </svg>
+                        Xem cửa hàng
+                    </a>
+                    {{-- Chuông thông báo: cập nhật mỗi 30 giây --}}
+                    <div class="relative" data-testid="admin-bell"
+                         x-data="{
+                             open: false,
+                             unread: {{ Auth::user()->unreadNotifications()->count() }},
+                             items: [],
+                             async load() {
+                                 try {
+                                     const res = await fetch('{{ route('admin.notifications.feed') }}', { headers: { 'Accept': 'application/json' } });
+                                     if (!res.ok) return;
+                                     const data = await res.json();
+                                     this.unread = data.unread;
+                                     this.items = data.items;
+                                 } catch (e) {}
+                             }
+                         }"
+                         x-init="load(); setInterval(() => load(), 30000)"
+                         @click.outside="open = false">
+                        <button type="button" @click="open = !open; if (open) load()" class="relative p-2 text-gray-600 hover:text-gray-900" aria-label="Thông báo">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                            </svg>
+                            <span x-show="unread > 0" x-cloak x-text="unread > 99 ? '99+' : unread"
+                                  class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[11px] leading-[18px] text-center font-semibold"></span>
+                        </button>
+                        <div x-show="open" x-cloak x-transition
+                             class="absolute right-0 mt-2 w-80 max-w-[90vw] bg-white rounded-xl shadow-lg border border-[#efe8e3] z-50 overflow-hidden">
+                            <div class="flex items-center justify-between px-4 py-3 border-b border-[#efe8e3]">
+                                <span class="font-semibold text-sm text-[#3d3d3d]">Thông báo</span>
+                                <a href="{{ route('admin.notifications.index') }}" class="text-xs text-[#b8847e] hover:underline">Xem tất cả</a>
+                            </div>
+                            <div class="max-h-96 overflow-y-auto divide-y divide-[#efe8e3]">
+                                <template x-for="n in items" :key="n.id">
+                                    <a :href="n.open_url" class="flex gap-3 px-4 py-3 hover:bg-[#faf7f4]" :class="n.read ? '' : 'bg-[#fdf9f6]'">
+                                        <span class="mt-1.5 h-2 w-2 rounded-full flex-shrink-0"
+                                              :class="{ 'bg-sky-500': n.level === 'info', 'bg-green-500': n.level === 'success', 'bg-amber-500': n.level === 'warning', 'bg-red-500': n.level === 'danger' }"></span>
+                                        <span class="min-w-0">
+                                            <span class="block text-sm text-[#3d3d3d]" :class="n.read ? '' : 'font-semibold'" x-text="n.title"></span>
+                                            <span class="block text-xs text-[#9a9490] truncate" x-text="n.message"></span>
+                                            <span class="block text-[11px] text-[#9a9490] mt-0.5" x-text="n.time"></span>
+                                        </span>
+                                    </a>
+                                </template>
+                                <p x-show="!items.length" class="px-4 py-6 text-center text-sm text-[#9a9490]">Chưa có thông báo.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="text-sm text-gray-600 hidden sm:inline">Xin chào, {{ Auth::user()->name }}</span>
                 </div>
             </header>
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Review;
+use App\Services\AdminNotifier;
 use Illuminate\Http\Request;
 
 class ReviewController extends Controller
@@ -52,7 +53,8 @@ class ReviewController extends Controller
         $validated['order_id'] = $completedOrder->id;
         $validated['status'] = 'pending';
 
-        Review::create($validated);
+        $review = Review::create($validated);
+        app(AdminNotifier::class)->newReview($review);
 
         return back()->with('success', 'Đánh giá của bạn đã được gửi thành công và đang chờ duyệt!');
     }

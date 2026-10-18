@@ -221,6 +221,7 @@
                                                 type: ok ? 'success' : 'error'
                                             }
                                         }));
+                                        if (ok) window.dispatchEvent(new CustomEvent('compare-updated', { detail: data.compare_count }));
                                     })
                                     .catch(() => {
                                         compareLoading = false;
@@ -243,30 +244,29 @@
                     </div>
 
                     {{-- Share --}}
-                    <div class="mt-6 pt-5 border-t border-[#efe8e3]">
+                    @php $btn = 'bg-[#3d3a37] text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-[#b8847e] transition-colors'; @endphp
+                    <div class="mt-6 pt-5 border-t border-[#efe8e3]" data-testid="share-buttons">
                         <p class="text-sm font-medium text-[#3d3d3d] mb-3">Chia sẻ sản phẩm:</p>
                         <div class="flex flex-wrap gap-2">
-                            <button onclick="shareToFacebook()"
-                                    class="bg-[#3d3a37] text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-[#b8847e] transition-colors">
-                                Facebook
+                            <button type="button" onclick="shareNative()" id="share-native"
+                                    class="hidden items-center gap-1 bg-[#b8847e] text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-[#a6736d] transition-colors">
+                                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12s-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                                Chia sẻ...
                             </button>
-                            <button onclick="shareToMessenger()"
-                                    class="bg-[#3d3a37] text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-[#b8847e] transition-colors">
-                                Messenger
-                            </button>
-                            <button onclick="shareToZalo()"
-                                    class="bg-[#3d3a37] text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-[#b8847e] transition-colors">
-                                Zalo
-                            </button>
-                            @auth
-                                <button onclick="copyReferralLink()"
-                                        class="bg-[#3d3a37] text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-[#b8847e] transition-colors">
-                                    Copy link
-                                </button>
-                            @endauth
+                            <button type="button" onclick="shareTo('facebook')" class="{{ $btn }}">Facebook</button>
+                            <button type="button" onclick="shareTo('messenger')" class="{{ $btn }}">Messenger</button>
+                            <button type="button" onclick="shareTo('zalo')" class="{{ $btn }}">Zalo</button>
+                            <button type="button" onclick="shareTo('x')" class="{{ $btn }}">X (Twitter)</button>
+                            <button type="button" onclick="shareTo('telegram')" class="{{ $btn }}">Telegram</button>
+                            <button type="button" onclick="shareTo('email')" class="{{ $btn }}">Email</button>
+                            <button type="button" onclick="copyShareLink()" id="copy-share-link" class="{{ $btn }}">Sao chép link</button>
                         </div>
+                        @auth
+                            <p class="mt-2 text-xs text-[#9a9490]">Link đã gắn mã giới thiệu của bạn — bạn bè mua hàng qua link này, bạn nhận hoa hồng.</p>
+                        @endauth
                         <input type="hidden" id="referral-link"
                                value="{{ route('products.show', $product->slug) }}@auth?ref={{ Auth::user()->referral_code }}@endauth">
+                        <input type="hidden" id="share-title" value="{{ $product->name }} - SocialShop">
                     </div>
                 </div>
             </div>
@@ -479,26 +479,62 @@
             input.value = val;
         }
 
-        function shareToFacebook() {
-            const url = encodeURIComponent(document.getElementById('referral-link').value);
-            window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
+        function shareData() {
+            return {
+                url: document.getElementById('referral-link').value,
+                title: document.getElementById('share-title').value,
+            };
         }
 
-        function shareToMessenger() {
-            const url = encodeURIComponent(document.getElementById('referral-link').value);
-            window.open(`https://www.messenger.com/share?link=${url}`, '_blank');
+        // Nút "Chia sẻ..." mở bảng chia sẻ của hệ điều hành (TikTok, Instagram, tin nhắn...) nếu trình duyệt hỗ trợ
+        if (navigator.share) {
+            const nativeBtn = document.getElementById('share-native');
+            nativeBtn.classList.remove('hidden');
+            nativeBtn.classList.add('inline-flex');
         }
 
-        function shareToZalo() {
-            const url = encodeURIComponent(document.getElementById('referral-link').value);
-            window.open(`https://zalo.me/share/?url=${url}`, '_blank');
+        function shareNative() {
+            const { url, title } = shareData();
+            navigator.share({ title, text: title, url }).catch(() => {});
         }
 
-        function copyReferralLink() {
-            const link = document.getElementById('referral-link').value;
-            navigator.clipboard.writeText(link).then(() => {
-                alert('Đã copy link giới thiệu!');
-            });
+        function shareTo(network) {
+            const { url, title } = shareData();
+            const u = encodeURIComponent(url);
+            const t = encodeURIComponent(title);
+            const targets = {
+                facebook: `https://www.facebook.com/sharer/sharer.php?u=${u}`,
+                messenger: `https://www.messenger.com/share?link=${u}`,
+                zalo: `https://zalo.me/share/?url=${u}`,
+                x: `https://twitter.com/intent/tweet?url=${u}&text=${t}`,
+                telegram: `https://t.me/share/url?url=${u}&text=${t}`,
+                email: `mailto:?subject=${t}&body=${t}%0A${u}`,
+            };
+            if (network === 'email') {
+                window.location.href = targets.email;
+            } else {
+                window.open(targets[network], '_blank', 'noopener,width=640,height=560');
+            }
+        }
+
+        function copyShareLink() {
+            const { url } = shareData();
+            const btn = document.getElementById('copy-share-link');
+            const done = () => {
+                btn.textContent = 'Đã sao chép ✓';
+                setTimeout(() => btn.textContent = 'Sao chép link', 2000);
+            };
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(url).then(done);
+            } else {
+                const tmp = document.createElement('textarea');
+                tmp.value = url;
+                document.body.appendChild(tmp);
+                tmp.select();
+                document.execCommand('copy');
+                tmp.remove();
+                done();
+            }
         }
     </script>
     @endpush

@@ -37,8 +37,9 @@ class ChatController extends Controller
         $contextParts = $chatbot->buildContext($message, $userId);
 
         $apiKey = $chatbot->getApiKey();
+        $serviceUrl = config('services.ai_service.url');
 
-        if (empty($apiKey) || $apiKey === 'test') {
+        if (! $serviceUrl && (empty($apiKey) || $apiKey === 'test')) {
             return $this->sendSseResponse(function () use ($message, $chatbot, $userId) {
                 $text = $chatbot->sendMessage($message, [], $userId);
                 $this->sendSseEvent(['text' => $text, 'done' => true]);
@@ -49,7 +50,14 @@ class ChatController extends Controller
             $model = $chatbot->getModel();
             $systemPrompt = $chatbot->getSystemPrompt();
 
-            $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:streamGenerateContent?alt=sse";
+            // Ưu tiên microservice ai-service (giữ khóa Gemini); không cấu hình thì gọi Gemini trực tiếp
+            if ($serviceUrl) {
+                $url = rtrim($serviceUrl, '/').'/v1/chat/stream';
+                $headers = ['Authorization' => 'Bearer '.config('services.ai_service.token')];
+            } else {
+                $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:streamGenerateContent?alt=sse";
+                $headers = ['x-goog-api-key' => $apiKey];
+            }
 
             $contents = [];
             foreach ($history as $msg) {
@@ -71,10 +79,10 @@ class ChatController extends Controller
                 ],
             ];
 
-            $client = new Client;
+            $client = app(Client::class);
             $response = $client->post($url, [
                 'json' => $payload,
-                'headers' => ['x-goog-api-key' => $apiKey],
+                'headers' => $headers,
                 'timeout' => 20,
                 'stream' => true,
             ]);
@@ -178,14 +186,18 @@ class ChatController extends Controller
     private function sendSseResponse(callable $callback): StreamedResponse
     {
         return response()->stream(function () use ($callback) {
-            while (ob_get_level() > 0) {
-                @ob_end_clean();
+            if ($this->streamsLive()) {
+                while (ob_get_level() > 0) {
+                    @ob_end_clean();
+                }
+                ob_implicit_flush(true);
             }
-            ob_implicit_flush(true);
 
             $callback();
 
-            flush();
+            if ($this->streamsLive()) {
+                flush();
+            }
         }, 200, [
             'Content-Type' => 'text/event-stream',
             'Cache-Control' => 'no-cache, no-store, must-revalidate',
@@ -198,9 +210,19 @@ class ChatController extends Controller
     private function sendSseEvent(array $data): void
     {
         echo 'data: '.json_encode($data)."\n\n";
-        if (ob_get_level() > 0) {
-            ob_flush();
+        if ($this->streamsLive()) {
+            if (ob_get_level() > 0) {
+                ob_flush();
+            }
+            flush();
         }
-        flush();
+    }
+
+    /**
+     * Đẩy từng sự kiện ra trình duyệt ngay; khi chạy test thì giữ trong buffer để kiểm tra nội dung stream.
+     */
+    private function streamsLive(): bool
+    {
+        return ! app()->runningUnitTests();
     }
 }

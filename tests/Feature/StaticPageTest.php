@@ -74,7 +74,7 @@ class StaticPageTest extends TestCase
             ->withSession(['checkout' => [
                 'shipping_name' => 'Test',
                 'shipping_phone' => '0900000000',
-                'shipping_address' => '123 Test',
+                'shipping_address' => '123 Test', 'shipping_province' => 'Quảng Ninh',
                 'payment_method' => 'cod',
             ]])
             ->get('/checkout/review')

@@ -46,7 +46,7 @@ class OrderTest extends TestCase
         return $this->actingAs($user)->post('/checkout/review', array_merge([
             'shipping_name' => 'John Doe',
             'shipping_phone' => '0987654321',
-            'shipping_address' => '123 Test St',
+            'shipping_address' => '123 Test St', 'shipping_province' => 'Quảng Ninh',
             'payment_method' => 'cod',
         ], $overrides));
     }
@@ -58,9 +58,13 @@ class OrderTest extends TestCase
         ], $overrides));
     }
 
-    public function test_guest_cannot_checkout(): void
+    public function test_guest_checkout_requires_shipping_info_and_later_steps_require_account(): void
     {
-        $this->post('/checkout/review')->assertRedirect('/login');
+        // Khách vãng lai được gửi thông tin giao hàng (bắt buộc email + địa chỉ)...
+        $this->post('/checkout/review')->assertSessionHasErrors(['guest_email', 'shipping_name', 'shipping_province']);
+        $this->assertGuest();
+
+        // ...còn bước xem lại / xác nhận chỉ dành cho người đã có tài khoản (tạo tự động ở bước trên)
         $this->get('/checkout/review')->assertRedirect('/login');
         $this->post('/checkout/confirm')->assertRedirect('/login');
     }
@@ -210,7 +214,7 @@ class OrderTest extends TestCase
                     'payment_method' => 'cod',
                     'shipping_name' => 'Name',
                     'shipping_phone' => 'Phone',
-                    'shipping_address' => 'Address',
+                    'shipping_address' => 'Address', 'shipping_province' => 'Quảng Ninh',
                 ],
                 'coupon_code' => 'INVALID',
             ])

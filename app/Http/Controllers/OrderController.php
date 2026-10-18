@@ -5,11 +5,15 @@ namespace App\Http\Controllers;
 use App\Exceptions\CouponException;
 use App\Exceptions\OrderException;
 use App\Models\Coupon;
+use App\Models\ShippingZone;
 use App\Services\Cart\CartService;
+use App\Services\Order\GuestCheckoutService;
 use App\Services\Order\OrderService;
+use App\Services\Order\PricingService;
 use App\Services\Payment\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class OrderController extends Controller
 {
@@ -38,13 +42,28 @@ class OrderController extends Controller
      */
     public function review(Request $request)
     {
-        $validated = $request->validate([
+        $guestRules = Auth::check() ? [] : ['guest_email' => 'required|email:rfc|max:255'];
+
+        $validated = $request->validate($guestRules + [
             'shipping_name' => 'required|string|max:255',
             'shipping_phone' => 'required|string|max:20',
-            'shipping_address' => 'required|string',
+            'shipping_address' => 'required|string|max:500',
+            'shipping_province' => ['required', 'string', Rule::in(ShippingZone::allProvinces())],
             'shipping_notes' => 'nullable|string|max:500',
             'payment_method' => 'required|in:cod,vnpay',
+        ], [
+            'guest_email.required' => 'Vui lòng nhập email để nhận xác nhận đơn hàng.',
+            'guest_email.email' => 'Email không hợp lệ.',
         ]);
+
+        if (! Auth::check()) {
+            if ($this->cartService->getGuestCartItems()->isEmpty()) {
+                return redirect()->route('cart.index')->with('error', 'Giỏ hàng của bạn đang trống.');
+            }
+
+            app(GuestCheckoutService::class)->createAccountAndLogin($request, $validated['guest_email'], $validated['shipping_name']);
+            unset($validated['guest_email']);
+        }
 
         $cart = $this->cartService->getCartWithItems(Auth::id());
 
@@ -91,8 +110,13 @@ class OrderController extends Controller
             }
         }
 
-        $shippingFee = $cartTotal >= 500000 ? 0 : 30000;
-        $total = $cartTotal - $discount + $shippingFee;
+        $pricing = app(PricingService::class)->breakdown((int) $cartTotal, (int) $discount, $checkout['shipping_province'] ?? null);
+        $shippingFee = $pricing['shipping_fee'];
+        $shippingRule = app(PricingService::class)->shippingRule($checkout['shipping_province'] ?? null);
+        $taxAmount = $pricing['tax_amount'];
+        $taxRate = $pricing['tax_rate'];
+        $taxLabel = app(PricingService::class)->taxLabel();
+        $total = $pricing['total'];
 
         return view('checkout.review', compact(
             'checkout',
@@ -101,6 +125,10 @@ class OrderController extends Controller
             'couponCode',
             'discount',
             'shippingFee',
+            'taxAmount',
+            'shippingRule',
+            'taxRate',
+            'taxLabel',
             'total'
         ));
     }
@@ -142,6 +170,7 @@ class OrderController extends Controller
                 'shipping_name' => $validated['shipping_name'],
                 'shipping_phone' => $validated['shipping_phone'],
                 'shipping_address' => $validated['shipping_address'],
+                'shipping_province' => $validated['shipping_province'] ?? null,
                 'note' => $validated['shipping_notes'] ?? null,
                 'payment_method' => $validated['payment_method'],
             ]);

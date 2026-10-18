@@ -19,9 +19,7 @@ class PaymentController extends Controller
         $inputData = $request->all();
 
         if ($this->vnpayService->verifyCallback($inputData)) {
-            $responseCode = $inputData['vnp_ResponseCode'] ?? '';
-
-            if ($responseCode === '00') {
+            if (VNPayService::isSuccessful($inputData)) {
                 // Cập nhật payment/order ngay trên return (idempotent — IPN vẫn xử lý nếu portal gọi)
                 $this->paymentService->processVNPayIpn($inputData);
 

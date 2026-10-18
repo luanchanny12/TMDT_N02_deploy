@@ -10,9 +10,9 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'order_code', 'subtotal', 'discount', 'shipping_fee', 'total',
+        'user_id', 'campaign_id', 'traffic_source', 'order_code', 'subtotal', 'discount', 'shipping_fee', 'tax_rate', 'tax_amount', 'total',
         'status', 'payment_method', 'payment_status',
-        'shipping_name', 'shipping_phone', 'shipping_address', 'note',
+        'shipping_name', 'shipping_phone', 'shipping_address', 'shipping_province', 'note',
     ];
 
     protected function casts(): array
@@ -21,6 +21,8 @@ class Order extends Model
             'subtotal' => 'integer',
             'discount' => 'integer',
             'shipping_fee' => 'integer',
+            'tax_rate' => 'float',
+            'tax_amount' => 'integer',
             'total' => 'integer',
         ];
     }
@@ -28,6 +30,16 @@ class Order extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function analyticsEvents()
+    {
+        return $this->hasMany(AnalyticsEvent::class);
+    }
+
+    public function campaign()
+    {
+        return $this->belongsTo(Campaign::class);
     }
 
     public function items()

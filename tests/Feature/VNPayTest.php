@@ -27,6 +27,8 @@ class VNPayTest extends TestCase
 
     private function sign(array $data): array
     {
+        // Callback thật của VNPay luôn kèm mã merchant
+        $data += ['vnp_TmnCode' => config('vnpay.tmn_code')];
         ksort($data);
         $hashData = '';
         $i = 0;

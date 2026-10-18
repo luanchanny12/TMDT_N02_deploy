@@ -13,6 +13,8 @@ use App\Models\Payment;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
+use App\Services\AdminNotifier;
+use App\Services\Analytics\AnalyticsService;
 use App\Services\AuditService;
 use App\Services\BaseService;
 use App\Services\Cart\CartService;
@@ -28,7 +30,9 @@ class OrderService extends BaseService
     public function __construct(
         private CartService $cartService,
         private CouponService $couponService,
-        private ReferralService $referralService
+        private ReferralService $referralService,
+        private PricingService $pricingService,
+        private AnalyticsService $analytics
     ) {}
 
     /**
@@ -56,7 +60,7 @@ class OrderService extends BaseService
             $itemsToCreate = [];
 
             $productIds = $cart->items->pluck('product_id');
-            $products = Product::whereIn('id', $productIds)->lockForUpdate()->get()->keyBy('id');
+            $products = Product::whereIn('id', $productIds)->withCount('variants')->lockForUpdate()->get()->keyBy('id');
 
             $variantIds = $cart->items->pluck('variant_id')->filter();
             $variants = ! $variantIds->isEmpty()
@@ -71,6 +75,11 @@ class OrderService extends BaseService
 
                 if (! $product || $product->status !== 'active') {
                     throw new OrderException("Sản phẩm \"{$cartItem->product->name}\" hiện không còn kinh doanh.");
+                }
+
+                // Giỏ cũ / giỏ khách vãng lai có thể chứa sản phẩm (nay) có size/màu nhưng chưa chọn biến thể
+                if (! $variant && $product->variants_count > 0) {
+                    throw new OrderException("Vui lòng chọn size/màu cho \"{$product->name}\": xóa sản phẩm khỏi giỏ và thêm lại từ trang sản phẩm.");
                 }
 
                 $availableStock = $variant ? $variant->stock : $product->stock;
@@ -116,18 +125,23 @@ class OrderService extends BaseService
                 }
             }
 
-            // 4. Tính phí ship (freeship khi subtotal >= 500k, không áp dụng cho discount)
-            $freeShippingThreshold = 500000;
-            $shippingFee = $subtotal >= $freeShippingThreshold ? 0 : 30000;
-            $total = $subtotal - $discount + $shippingFee;
+            // 4. Phí ship + VAT theo cấu hình Admin → Cài đặt (freeship xét trên tạm tính, VAT trên giá trị sau giảm giá)
+            $pricing = $this->pricingService->breakdown($subtotal, $discount, $data['shipping_province'] ?? null);
+            $shippingFee = $pricing['shipping_fee'];
+            $total = $pricing['total'];
 
-            // 5. Tạo Order
+            // 5. Tạo Order (gắn nguồn truy cập / chiến dịch quảng cáo đưa khách tới — last-click)
+            $attribution = $this->analytics->attribution();
             $order = Order::create([
                 'user_id' => $user->id,
+                'campaign_id' => $attribution['campaign_id'],
+                'traffic_source' => $attribution['source'],
                 'order_code' => 'ORD-'.date('Ymd').'-'.strtoupper(Str::random(4)),
                 'subtotal' => $subtotal,
                 'discount' => $discount,
                 'shipping_fee' => $shippingFee,
+                'tax_rate' => $pricing['tax_rate'],
+                'tax_amount' => $pricing['tax_amount'],
                 'total' => $total,
                 'status' => 'pending',
                 'payment_method' => $data['payment_method'],
@@ -135,6 +149,7 @@ class OrderService extends BaseService
                 'shipping_name' => $data['shipping_name'],
                 'shipping_phone' => $data['shipping_phone'],
                 'shipping_address' => $data['shipping_address'],
+                'shipping_province' => $data['shipping_province'] ?? null,
                 'note' => $data['note'] ?? null,
             ]);
 
@@ -168,6 +183,8 @@ class OrderService extends BaseService
                 'order_code' => $order->order_code,
                 'total' => $order->total,
             ]);
+            $this->analytics->track('purchase', ['order_id' => $order->id, 'value' => $order->total]);
+            app(AdminNotifier::class)->newOrder($order);
 
             // 11. Xóa coupon khỏi session
             session()->forget('coupon_code');
@@ -235,6 +252,12 @@ class OrderService extends BaseService
             $oldStatus = $locked->status;
             $locked->update(array_merge(['status' => 'cancelled'], $extra));
 
+            // Vô hiệu giao dịch VNPay đang chờ: IPN đến sau sẽ không đánh dấu đơn đã hủy là "đã thanh toán"
+            Payment::where('order_id', $locked->id)
+                ->where('method', 'vnpay')
+                ->where('status', 'pending')
+                ->update(['status' => 'failed']);
+
             foreach ($locked->items as $item) {
                 if ($item->variant_id) {
                     ProductVariant::where('id', $item->variant_id)
@@ -283,7 +306,9 @@ class OrderService extends BaseService
             throw new OrderException('Đơn hàng này không thể hủy (đã được xác nhận hoặc đã thanh toán).');
         }
 
-        $this->cancelOrder($order, 'customer');
+        if ($this->cancelOrder($order, 'customer')) {
+            app(AdminNotifier::class)->orderCancelledByCustomer($order);
+        }
     }
 
     public function customerCanCancel(Order $order): bool

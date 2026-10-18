@@ -37,7 +37,7 @@ class CheckoutIdempotencyTest extends TestCase
         $this->actingAs($user)->post('/checkout/review', [
             'shipping_name' => 'John Doe',
             'shipping_phone' => '0987654321',
-            'shipping_address' => '123 Test St',
+            'shipping_address' => '123 Test St', 'shipping_province' => 'Quảng Ninh',
             'payment_method' => 'cod',
         ]);
     }

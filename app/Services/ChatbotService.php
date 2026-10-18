@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\ChatbotFaq;
 use App\Models\Order;
 use App\Models\Product;
+use App\Services\Order\PricingService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -25,11 +26,21 @@ Bạn là trợ lý ảo của SocialShop — cửa hàng trực tuyến chuyên
 Hãy trả lời ngắn gọn, thân thiện bằng tiếng Việt.
 Khi khách cần tư vấn hoặc gợi ý, chỉ giới thiệu sản phẩm có trong danh sách sản phẩm của shop (kèm giá) và mời khách xem chi tiết trên website.
 Nếu khách hỏi mặt hàng shop không kinh doanh (ví dụ điện thoại, laptop), hãy nói rõ shop chưa bán và gợi ý sản phẩm thời trang phù hợp.
-Nếu hỏi về giao hàng, miễn phí ship cho đơn từ 500.000đ, giao toàn quốc.
+Nếu hỏi về giao hàng, giao toàn quốc, phí ship theo khu vực, miễn phí ship cho đơn từ :free_ship.
 Nếu hỏi về thanh toán, hỗ trợ COD và VNPay.
 Nếu hỏi về liên hệ, hotline 077123456, email support@socialshop.vn.
 Không trả lời các câu hỏi ngoài phạm vi cửa hàng.
 PROMPT;
+        $this->systemPrompt = str_replace(':free_ship', $this->freeShipText(), $this->systemPrompt);
+    }
+
+    private function freeShipText(): string
+    {
+        try {
+            return number_format(app(PricingService::class)->nationwideFreeShippingThreshold(), 0, ',', '.').'đ';
+        } catch (\Throwable) {
+            return '300.000đ';
+        }
     }
 
     public function getApiKey(): string
@@ -332,7 +343,7 @@ PROMPT;
         return match (true) {
             str_contains($lower, 'xin chào') || str_contains($lower, 'hello') || str_contains($lower, 'hi') => 'Xin chào! Rất vui được hỗ trợ bạn. Bạn cần tìm sản phẩm nào?',
             str_contains($lower, 'giá') || str_contains($lower, 'price') => 'Bạn có thể xem giá sản phẩm trên trang chi tiết sản phẩm. Chúng tôi có nhiều ưu đãi hấp dẫn!',
-            str_contains($lower, 'giao hàng') || str_contains($lower, 'ship') => 'Chúng tôi giao hàng toàn quốc. Miễn phí ship cho đơn từ 500.000đ!',
+            str_contains($lower, 'giao hàng') || str_contains($lower, 'ship') => 'Chúng tôi giao hàng toàn quốc. Miễn phí ship cho đơn từ '.$this->freeShipText().'!',
             str_contains($lower, 'thanh toán') || str_contains($lower, 'payment') => 'Chúng tôi hỗ trợ thanh toán COD và VNPay. Bạn chọn phương thức nào phù hợp nhất!',
             str_contains($lower, 'liên hệ') => 'Bạn có thể liên hệ hotline 077123456 hoặc email support@socialshop.vn.',
             default => 'Cảm ơn bạn đã nhắn tin! Hiện tại tôi là trợ lý demo. Vui lòng xem thêm thông tin trên trang web hoặc liên hệ hỗ trợ.',

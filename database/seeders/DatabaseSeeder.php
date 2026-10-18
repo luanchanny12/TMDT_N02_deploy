@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -129,6 +130,9 @@ class DatabaseSeeder extends Seeder
             }
         }
 
+        // Chính sách vận chuyển của shop: freeship toàn quốc cho đơn từ 300.000đ (chỉnh tại Admin → Cài đặt)
+        Setting::put(['free_shipping_threshold' => 300000, 'shipping_fee' => 30000]);
+
         // Coupons
         $this->call(CouponSeeder::class);
 
@@ -137,5 +141,11 @@ class DatabaseSeeder extends Seeder
 
         // Đơn hàng + đánh giá demo (dashboard doanh thu, hàng đợi kiểm duyệt)
         $this->call(DemoOrderSeeder::class);
+
+        // Biến thể size/màu mẫu cho quần áo, giày dép (sau đơn demo để tồn kho = tổng biến thể)
+        $this->call(ProductVariantSeeder::class);
+
+        // Chiến dịch quảng cáo + lượt truy cập demo (trang Phân tích dữ liệu)
+        $this->call(CampaignSeeder::class);
     }
 }

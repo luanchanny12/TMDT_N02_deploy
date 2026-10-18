@@ -170,6 +170,12 @@
                         <span class="text-[#9a9490]">Phí vận chuyển</span>
                         <span class="font-medium text-[#3d3d3d]">{{ number_format($order->shipping_fee, 0, ',', '.') }}₫</span>
                     </div>
+                    @if($order->tax_amount > 0)
+                        <div class="flex justify-between text-sm">
+                            <span class="text-[#9a9490]">Thuế VAT ({{ rtrim(rtrim(number_format($order->tax_rate, 2, ',', ''), '0'), ',') }}%)</span>
+                            <span class="font-medium text-[#3d3d3d]">{{ number_format($order->tax_amount, 0, ',', '.') }}₫</span>
+                        </div>
+                    @endif
                     <div class="border-t border-[#efe8e3] pt-3 flex justify-between">
                         <span class="font-bold text-[#3d3d3d]">Tổng cộng</span>
                         <span class="font-extrabold text-lg text-[#b8847e]">{{ number_format($order->total, 0, ',', '.') }}₫</span>
@@ -203,7 +209,7 @@
             {{-- Shipping Address --}}
             <div class="bg-white rounded-xl shadow-sm border border-[#efe8e3] p-6">
                 <h2 class="font-serif text-lg font-semibold text-[#3d3d3d] mb-4">Địa chỉ giao hàng</h2>
-                <p class="text-sm text-[#3d3d3d] leading-relaxed">{{ $order->shipping_address }}</p>
+                <p class="text-sm text-[#3d3d3d] leading-relaxed">{{ $order->shipping_address }}@if($order->shipping_province), <strong>{{ $order->shipping_province }}</strong>@endif</p>
                 @if($order->note)
                     <div class="mt-3 p-3 bg-[#faf7f4] rounded-lg">
                         <span class="text-xs text-[#9a9490] block mb-1">Ghi chú:</span>

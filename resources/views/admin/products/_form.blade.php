@@ -59,53 +59,103 @@
                 </div>
             </div>
         </div>
-        {{-- Variants (edit only) --}}
-        @if($isEdit)
-            <div class="bg-white rounded-xl shadow-sm border border-[#efe8e3] p-6" x-data="{
-                rows: {{ json_encode(old('variants', $product->variants()->get(['id','size','color','stock','price'])->map(fn($v) => ['id'=>$v->id,'size'=>$v->size,'color'=>$v->color,'stock'=>$v->stock,'price'=>$v->price])->values())) }}
-            }">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-serif text-lg font-semibold text-[#3d3d3d]">Biến thể Size/Màu</h3>
-                    <button type="button" @click="rows.push({id:null,size:'',color:'',stock:0,price:null})"
-                            class="text-sm text-[#b8847e] font-medium hover:underline">+ Thêm biến thể</button>
-                </div>
-
-                @if(($product->variants()->count() ?? 0) > 0 || old('variants'))
-                    <div class="space-y-3">
-                        <template x-for="(row, index) in rows" :key="index">
-                            <div class="grid grid-cols-12 gap-3 items-end">
-                                <div class="col-span-3">
-                                    <label class="block text-xs text-[#9a9490] mb-1">Size</label>
-                                    <input type="text" :name="'variants['+index+'][size]'" x-model="row.size" placeholder="S/M/L"
-                                           class="w-full border border-[#efe8e3] rounded-lg px-3 py-2 text-sm">
-                                </div>
-                                <div class="col-span-3">
-                                    <label class="block text-xs text-[#9a9490] mb-1">Màu</label>
-                                    <input type="text" :name="'variants['+index+'][color]'" x-model="row.color" placeholder="Đen/Trắng"
-                                           class="w-full border border-[#efe8e3] rounded-lg px-3 py-2 text-sm">
-                                </div>
-                                <div class="col-span-2">
-                                    <label class="block text-xs text-[#9a9490] mb-1">Tồn kho</label>
-                                    <input type="number" min="0" :name="'variants['+index+'][stock]'" x-model.number="row.stock"
-                                           class="w-full border border-[#efe8e3] rounded-lg px-3 py-2 text-sm">
-                                </div>
-                                <div class="col-span-3">
-                                    <label class="block text-xs text-[#9a9490] mb-1">Giá override (₫)</label>
-                                    <input type="number" min="0" :name="'variants['+index+'][price]'" x-model="row.price" placeholder="Theo SP"
-                                           class="w-full border border-[#efe8e3] rounded-lg px-3 py-2 text-sm">
-                                </div>
-                                <div class="col-span-1">
-                                    <input type="hidden" x-show="row.id" :name="'variants['+index+'][id]'" :value="row.id ?? ''">
-                                    <button type="button" @click="rows.splice(index,1)"
-                                            class="w-full text-red-500 hover:text-red-700 text-sm py-2">✕</button>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-                @endif
-                <p class="text-xs text-[#9a9490] mt-3">Để trống size/màu nếu chỉ cần 1 dòng. Khi có biến thể, tồn kho theo từng dòng.</p>
+        {{-- Variants (Size/Màu) — dùng cho cả thêm mới và sửa --}}
+        @php
+            $variantRows = old('variants', $isEdit
+                ? $product->variants()->get(['id', 'size', 'color', 'stock', 'price'])
+                    ->map(fn ($v) => ['id' => $v->id, 'size' => $v->size, 'color' => $v->color, 'stock' => $v->stock, 'price' => $v->price])
+                    ->values()->all()
+                : []);
+        @endphp
+        <div class="bg-white rounded-xl shadow-sm border border-[#efe8e3] p-6" data-testid="variants-section" x-data="{
+            rows: @js(array_values($variantRows)),
+            sizes: '',
+            colors: '',
+            stock: 10,
+            generate() {
+                const split = v => v.split(',').map(s => s.trim()).filter(Boolean);
+                const sizes = split(this.sizes).length ? split(this.sizes) : [''];
+                const colors = split(this.colors).length ? split(this.colors) : [''];
+                for (const size of sizes) {
+                    for (const color of colors) {
+                        if (!size && !color) continue;
+                        if (this.rows.some(r => (r.size || '') === size && (r.color || '') === color)) continue;
+                        this.rows.push({ id: null, size, color, stock: Number(this.stock) || 0, price: null });
+                    }
+                }
+            },
+            get totalStock() { return this.rows.reduce((t, r) => t + (Number(r.stock) || 0), 0); }
+        }">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-serif text-lg font-semibold text-[#3d3d3d]">Biến thể Size/Màu</h3>
+                <button type="button" @click="rows.push({id:null,size:'',color:'',stock:0,price:null})"
+                        class="text-sm text-[#b8847e] font-medium hover:underline">+ Thêm 1 dòng</button>
             </div>
-        @endif
+
+            {{-- Tạo nhanh mọi tổ hợp Size × Màu --}}
+            <div class="grid grid-cols-12 gap-3 items-end bg-[#faf7f4] rounded-lg p-3 mb-4">
+                <div class="col-span-12 sm:col-span-4">
+                    <label class="block text-xs text-[#9a9490] mb-1">Các size (phẩy ngăn cách)</label>
+                    <input type="text" x-model="sizes" placeholder="S, M, L, XL" class="w-full border border-[#efe8e3] rounded-lg px-3 py-2 text-sm bg-white">
+                </div>
+                <div class="col-span-12 sm:col-span-4">
+                    <label class="block text-xs text-[#9a9490] mb-1">Các màu</label>
+                    <input type="text" x-model="colors" placeholder="Đen, Trắng" class="w-full border border-[#efe8e3] rounded-lg px-3 py-2 text-sm bg-white">
+                </div>
+                <div class="col-span-6 sm:col-span-2">
+                    <label class="block text-xs text-[#9a9490] mb-1">Tồn kho mỗi dòng</label>
+                    <input type="number" min="0" x-model.number="stock" class="w-full border border-[#efe8e3] rounded-lg px-3 py-2 text-sm bg-white">
+                </div>
+                <div class="col-span-6 sm:col-span-2">
+                    <button type="button" @click="generate()" class="w-full bg-[#3d3a37] text-white rounded-lg py-2 text-sm hover:bg-[#b8847e] transition">Tạo tổ hợp</button>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <template x-for="(row, index) in rows" :key="index">
+                    <div class="grid grid-cols-12 gap-3 items-end">
+                        <div class="col-span-3">
+                            <label class="block text-xs text-[#9a9490] mb-1">Size</label>
+                            <input type="text" :name="'variants['+index+'][size]'" x-model="row.size" placeholder="S/M/L"
+                                   class="w-full border border-[#efe8e3] rounded-lg px-3 py-2 text-sm">
+                        </div>
+                        <div class="col-span-3">
+                            <label class="block text-xs text-[#9a9490] mb-1">Màu</label>
+                            <input type="text" :name="'variants['+index+'][color]'" x-model="row.color" placeholder="Đen/Trắng"
+                                   class="w-full border border-[#efe8e3] rounded-lg px-3 py-2 text-sm">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-xs text-[#9a9490] mb-1">Tồn kho</label>
+                            <input type="number" min="0" :name="'variants['+index+'][stock]'" x-model.number="row.stock"
+                                   class="w-full border border-[#efe8e3] rounded-lg px-3 py-2 text-sm">
+                        </div>
+                        <div class="col-span-3">
+                            <label class="block text-xs text-[#9a9490] mb-1">Giá riêng (₫)</label>
+                            <input type="number" min="0" :name="'variants['+index+'][price]'" x-model="row.price" placeholder="Theo SP"
+                                   class="w-full border border-[#efe8e3] rounded-lg px-3 py-2 text-sm">
+                        </div>
+                        <div class="col-span-1">
+                            <template x-if="row.id">
+                                <input type="hidden" :name="'variants['+index+'][id]'" :value="row.id">
+                            </template>
+                            <button type="button" @click="rows.splice(index,1)"
+                                    class="w-full text-red-500 hover:text-red-700 text-sm py-2" title="Xóa dòng">✕</button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            {{-- Gửi mảng rỗng khi xóa hết biến thể để server xóa các biến thể cũ --}}
+            <input type="hidden" name="variants_submitted" value="1">
+
+            <p class="text-xs text-[#9a9490] mt-3" x-show="rows.length">
+                <span x-text="rows.length"></span> biến thể · tổng tồn kho <strong x-text="totalStock"></strong>
+                (ô "Tồn kho" của sản phẩm sẽ tự cập nhật bằng tổng này).
+            </p>
+            <p class="text-xs text-[#9a9490] mt-3" x-show="!rows.length">
+                Sản phẩm không có size/màu thì bỏ trống phần này. Khi có biến thể, khách phải chọn size/màu và tồn kho tính theo từng dòng.
+            </p>
+        </div>
 
 
     </div>

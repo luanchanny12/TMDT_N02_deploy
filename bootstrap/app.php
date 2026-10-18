@@ -4,6 +4,7 @@ use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\IsAdmin;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\TrackReferral;
+use App\Http\Middleware\TrackVisit;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -30,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             EnsureUserIsActive::class,
             TrackReferral::class,
+            TrackVisit::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

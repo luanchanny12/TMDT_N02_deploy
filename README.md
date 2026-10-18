@@ -4,13 +4,13 @@ Website thương mại điện tử tích hợp mạng xã hội (Laravel 12, Li
 
 ## Chức năng chính
 
-**Khách hàng:** đăng ký / đăng nhập (email, Google, Facebook), tìm kiếm – lọc – sắp xếp sản phẩm, biến thể size/màu, giỏ hàng, checkout 2 bước (nhập thông tin → xem lại & đồng ý điều kiện), mã giảm giá, thanh toán COD / VNPay (sandbox), theo dõi & tự hủy đơn khi còn "Chờ xử lý", đánh giá kèm ảnh (sau khi nhận hàng), wishlist, so sánh tối đa 4 sản phẩm.
+**Khách hàng:** đăng ký / đăng nhập (email, Google, Facebook), tìm kiếm – lọc – sắp xếp sản phẩm (phím tắt `/` hoặc `Ctrl+K`; không có kết quả thì gợi ý sản phẩm gần đúng / được xem nhiều), biến thể size/màu, giỏ hàng, **mua hàng không cần đăng ký** (khách vãng lai nhập email → tự tạo tài khoản, nhận link đặt mật khẩu), checkout 2 bước (nhập thông tin → xem lại & đồng ý điều kiện), mã giảm giá, thanh toán COD / VNPay (sandbox), theo dõi & tự hủy đơn khi còn "Chờ xử lý", đánh giá kèm ảnh (sau khi nhận hàng), wishlist, so sánh tối đa 4 sản phẩm (giá tốt nhất, giảm nhiều nhất, đánh giá cao nhất, bán chạy nhất, size/màu còn hàng, lọc chỉ điểm khác nhau).
 
-**Social & nâng cao:** chia sẻ Facebook / Messenger / Zalo, chương trình giới thiệu (referral), chatbot AI Gemini (stream SSE, FAQ fallback cho khách), SEO (JSON-LD, sitemap.xml), email xác nhận / cập nhật đơn qua queue.
+**Social & nâng cao:** chia sẻ Facebook / Messenger / Zalo / X / Telegram / Email / bảng chia sẻ của điện thoại, sao chép link (kèm mã giới thiệu), chương trình giới thiệu (referral), chatbot AI Gemini (stream SSE, FAQ fallback cho khách), SEO (JSON-LD, sitemap.xml), email xác nhận / cập nhật đơn qua queue.
 
-**Quản trị (`/admin`):** dashboard doanh thu 7 ngày, top xem / bán chạy; CRUD sản phẩm – ảnh – biến thể, danh mục, mã giảm giá, FAQ chatbot; quản lý đơn (chặn xác nhận/giao đơn VNPay chưa thanh toán), người dùng, kiểm duyệt đánh giá, nhật ký audit.
+**Quản trị (`/admin`):** dashboard doanh thu 7 ngày, top xem / bán chạy; **phân tích dữ liệu** (lượt truy cập, phễu chuyển đổi, nguồn truy cập, tỷ lệ chuyển đổi, ROAS); **chiến dịch quảng cáo** Facebook / YouTube / TikTok với link UTM tự sinh; **cài đặt thuế VAT** (tùy chọn tính trên phí ship) và **phí ship theo khu vực** (34 tỉnh/thành sau sắp xếp 2025); **thông báo quản trị** (đơn mới, đã thanh toán, khách hủy, sắp hết hàng, đánh giá chờ duyệt, cần hoàn tiền); thêm sản phẩm kèm biến thể (tạo nhanh tổ hợp Size × Màu); CRUD sản phẩm – ảnh – biến thể, danh mục, mã giảm giá, FAQ chatbot; quản lý đơn (chặn xác nhận/giao đơn VNPay chưa thanh toán), người dùng, kiểm duyệt đánh giá, nhật ký audit.
 
-**Bảo mật:** VNPay xác thực HMAC-SHA512 + IPN idempotent, trừ kho trong transaction có `lockForUpdate`, đơn VNPay thất bại / quá hạn tự hủy và hoàn kho, RBAC admin, chống IDOR đơn hàng, CSRF + security headers, tài khoản bị khóa bị đăng xuất ngay, chỉ tin proxy khai báo trong `TRUSTED_PROXIES`, rate limit (đăng nhập theo email+IP và theo IP, đăng ký, quên mật khẩu, checkout, đánh giá, chatbot).
+**Bảo mật:** VNPay xác thực HMAC-SHA512 + kiểm tra mã merchant, số tiền, `vnp_TransactionStatus`, link thanh toán hết hạn theo đơn, IPN idempotent, thanh toán muộn cho đơn đã hủy không mở lại đơn (ghi vết cần hoàn tiền), trừ kho trong transaction có `lockForUpdate`, đơn VNPay thất bại / quá hạn tự hủy và hoàn kho, RBAC admin, chống IDOR đơn hàng, CSRF + security headers, tài khoản bị khóa bị đăng xuất ngay, chỉ tin proxy khai báo trong `TRUSTED_PROXIES`, rate limit (đăng nhập theo email+IP và theo IP, đăng ký, quên mật khẩu, checkout, đánh giá, chatbot).
 
 ## Chạy bằng Docker (khuyến nghị)
 
@@ -32,8 +32,19 @@ docker compose exec app php artisan scribe:generate --no-extraction   # tạo Po
 | Tài liệu API (Scribe) | http://localhost:8081/docs |
 | Mailpit (xem email) | http://localhost:8025 |
 | phpMyAdmin | http://localhost:8888 |
+| ai-service (nội bộ) | `http://ai-service:3000/health` — chỉ truy cập từ trong mạng Docker |
 
-Các container `queue-worker` (gửi email) và `scheduler` (hủy đơn VNPay quá hạn mỗi 5 phút, backup DB 02:00) chạy tự động.
+Các container `queue-worker` (gửi email), `scheduler` (hủy đơn VNPay quá hạn mỗi 5 phút, backup DB 02:00) và `ai-service` (microservice chatbot AI) chạy tự động.
+
+### Kiến trúc dịch vụ
+
+```
+Trình duyệt ─> nginx ─> app (Laravel) ─┬─> mysql
+                                      ├─> mailpit (SMTP)          queue-worker, scheduler: tiến trình nền dùng chung code Laravel
+                                      └─> ai-service (Node.js) ─> Google Gemini API
+```
+
+`ai-service` là microservice độc lập (thư mục [services/ai-service](services/ai-service/README.md)): giữ khóa Gemini, xác thực bằng `AI_SERVICE_TOKEN`, giới hạn tần suất riêng, có healthcheck. Khi dịch vụ lỗi hoặc không cấu hình `AI_SERVICE_URL`, Laravel tự gọi Gemini trực tiếp / trả lời bằng FAQ.
 Debug mặc định **tắt** trong Docker; bật khi phát triển bằng `DOCKER_APP_DEBUG=true` trong `.env`.
 
 ## Chạy không dùng Docker
@@ -94,15 +105,23 @@ php artisan test                 # SQLite in-memory, không cần MySQL
 vendor/bin/pint --test           # kiểm tra code style
 ```
 
-CI (GitHub Actions, `.github/workflows/tests.yml`) chạy Pint và toàn bộ test trên PHP 8.2 và 8.4.
+CI (GitHub Actions, `.github/workflows/tests.yml`) chạy Pint và toàn bộ test trên PHP 8.2 và 8.4, cùng test của microservice (`cd services/ai-service && npm test`).
+
+## Quảng cáo & đo lường
+
+1. Admin → **Chiến dịch quảng cáo** → Tạo chiến dịch (nền tảng, trang đích, chi phí).
+2. Sao chép **link UTM** (vd. `.../danh-muc/giay-dep?utm_source=tiktok&utm_medium=cpc&utm_campaign=sneaker-week`) dán vào quảng cáo Facebook / mô tả video YouTube / bio TikTok.
+3. Website ghi nhận lượt truy cập, xem sản phẩm, thêm giỏ, đặt hàng theo nguồn (last-click, giữ 30 ngày; không lưu IP).
+4. Admin → **Phân tích dữ liệu**: tỷ lệ chuyển đổi = đơn / lượt truy cập; ROAS = doanh thu từ chiến dịch / chi phí (cập nhật chi phí từ trình quản lý quảng cáo).
 
 ## Cấu trúc chính
 
 ```
 app/Http/Controllers      # controller khách hàng + Admin/ + Auth/
-app/Services              # nghiệp vụ: Order, Payment (VNPay), Cart, Coupon, Referral, Chatbot, Audit
+app/Services              # nghiệp vụ: Order + Pricing (VAT, ship), Payment (VNPay), Cart, Coupon, Referral, Chatbot, Analytics, Audit
 app/Console/Commands      # orders:expire-unpaid, db:backup
 database/seeders          # dữ liệu demo
 resources/views           # Blade + Livewire
 tests/Feature             # test tính năng
+services/ai-service       # microservice chatbot AI (Node.js, Dockerfile, test riêng)
 ```

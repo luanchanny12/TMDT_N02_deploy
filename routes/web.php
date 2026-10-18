@@ -1,13 +1,18 @@
 <?php
 
+use App\Http\Controllers\Admin\AnalyticsController as AdminAnalyticsController;
 use App\Http\Controllers\Admin\AuditLogController as AdminAuditLogController;
+use App\Http\Controllers\Admin\CampaignController as AdminCampaignController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\ChatbotFaqController;
 use App\Http\Controllers\Admin\CouponController as AdminCouponController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
+use App\Http\Controllers\Admin\SettingController as AdminSettingController;
+use App\Http\Controllers\Admin\ShippingZoneController as AdminShippingZoneController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\FacebookController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
@@ -84,8 +89,6 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/forgot-password', [ForgotPasswordController::class, 'showForm'])->name('password.request');
     Route::post('/forgot-password', [ForgotPasswordController::class, 'sendLink'])->middleware('throttle:password')->name('password.email');
-    Route::get('/reset-password/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
-    Route::post('/reset-password', [ForgotPasswordController::class, 'resetPassword'])->name('password.update');
 
     Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('auth.google');
     Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('auth.google.callback');
@@ -94,7 +97,12 @@ Route::middleware('guest')->group(function () {
     Route::get('/auth/facebook/callback', [FacebookController::class, 'callback'])->name('auth.facebook.callback');
 });
 
-// Cart (guest allowed — session cart; checkout bắt buộc đăng nhập)
+// Đặt lại mật khẩu bằng token email — mở cả khi đang đăng nhập (khách vãng lai được đăng nhập tự động
+// sau checkout rồi mới bấm link "đặt mật khẩu" trong email)
+Route::get('/reset-password/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
+Route::post('/reset-password', [ForgotPasswordController::class, 'resetPassword'])->middleware('throttle:password')->name('password.update');
+
+// Cart (guest allowed — session cart)
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 Route::post('/cart/update', [CartController::class, 'update'])->name('cart.update');
@@ -102,6 +110,10 @@ Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remov
 Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
 
 // Chat Streaming (guest → FAQ-only; auth → Gemini + throttle)
+// Checkout bước 1 — mở cho khách vãng lai (tự tạo tài khoản theo email khi gửi thông tin giao hàng)
+Route::get('/checkout', [CartController::class, 'checkout'])->name('checkout.index');
+Route::post('/checkout/review', [OrderController::class, 'review'])->middleware('throttle:checkout')->name('checkout.review');
+
 Route::post('/chat/stream', [ChatController::class, 'stream'])->middleware('throttle:chat')->name('chat.stream');
 
 // Auth: Authenticated users
@@ -109,8 +121,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [LogoutController::class, 'logout'])->name('logout');
 
     // Checkout bắt buộc đăng nhập
-    Route::get('/checkout', [CartController::class, 'checkout'])->name('checkout.index');
-    Route::post('/checkout/review', [OrderController::class, 'review'])->name('checkout.review');
     Route::get('/checkout/review', [OrderController::class, 'showReview'])->name('checkout.review.show');
     Route::post('/checkout/confirm', [OrderController::class, 'confirm'])->middleware('throttle:checkout')->name('checkout.confirm');
 
@@ -168,6 +178,22 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Audit logs
     Route::get('/audit-logs', [AdminAuditLogController::class, 'index'])->name('audit-logs.index');
+
+    // Phân tích dữ liệu (lượt truy cập, chuyển đổi, ROAS) và chiến dịch quảng cáo UTM
+    Route::get('/analytics', [AdminAnalyticsController::class, 'index'])->name('analytics.index');
+    Route::delete('/analytics/demo', [AdminAnalyticsController::class, 'clearDemo'])->name('analytics.clear-demo');
+    Route::resource('campaigns', AdminCampaignController::class)->except(['show']);
+
+    // Cài đặt cửa hàng (thuế VAT, phí vận chuyển)
+    Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings.index');
+    Route::put('/settings', [AdminSettingController::class, 'update'])->name('settings.update');
+    Route::resource('shipping-zones', AdminShippingZoneController::class)->except(['index', 'show']);
+
+    // Thông báo quản trị (chuông trên thanh tiêu đề)
+    Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/feed', [AdminNotificationController::class, 'feed'])->name('notifications.feed');
+    Route::post('/notifications/read-all', [AdminNotificationController::class, 'readAll'])->name('notifications.read-all');
+    Route::get('/notifications/{id}/open', [AdminNotificationController::class, 'open'])->whereUuid('id')->name('notifications.open');
 
     // Coupons (specific routes before wildcard)
     Route::get('/coupons', [AdminCouponController::class, 'index'])->name('coupons.index');

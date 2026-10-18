@@ -60,3 +60,21 @@ jobs:
 
       - name: Execute tests
         run: php artisan test
+
+  ai-service:
+    runs-on: ubuntu-latest
+
+    name: ai-service (Node 22)
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Run microservice tests
+        working-directory: services/ai-service
+        run: npm test

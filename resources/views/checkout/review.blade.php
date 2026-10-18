@@ -34,7 +34,7 @@
                             </div>
                             <div class="flex gap-3">
                                 <dt class="w-32 text-gray-500">Địa chỉ</dt>
-                                <dd class="font-medium text-gray-900">{{ $checkout['shipping_address'] }}</dd>
+                                <dd class="font-medium text-gray-900">{{ $checkout['shipping_address'] }}@if(!empty($checkout['shipping_province'])), {{ $checkout['shipping_province'] }}@endif</dd>
                             </div>
                             @if(!empty($checkout['shipping_notes']))
                                 <div class="flex gap-3">
@@ -126,6 +126,21 @@
                                     <span class="text-green-600 font-medium">Miễn phí</span>
                                 @endif
                             </div>
+                            <p class="text-xs text-gray-500 -mt-2" data-testid="shipping-hint">
+                                {{ $shippingRule['zone'] ?? 'Phí mặc định' }} · phí {{ number_format($shippingRule['fee'], 0, ',', '.') }} ₫,
+                                @if($shippingFee > 0)
+                                    mua thêm {{ number_format(max(0, $shippingRule['threshold'] - $cartTotal), 0, ',', '.') }} ₫ để được miễn phí.
+                                @else
+                                    miễn phí cho đơn từ {{ number_format($shippingRule['threshold'], 0, ',', '.') }} ₫.
+                                @endif
+                            </p>
+
+                            @if($taxAmount > 0)
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">{{ $taxLabel }} ({{ rtrim(rtrim(number_format($taxRate, 2, ',', ''), '0'), ',') }}%)</span>
+                                    <span class="font-medium">{{ number_format($taxAmount, 0, ',', '.') }} ₫</span>
+                                </div>
+                            @endif
 
                             <div class="flex justify-between text-lg font-bold border-t pt-3">
                                 <span>Tổng cộng</span>

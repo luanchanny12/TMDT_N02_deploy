@@ -205,7 +205,7 @@ class P2OptionalTest extends TestCase
         $this->actingAs($user)->post('/checkout/review', [
             'shipping_name' => 'Test',
             'shipping_phone' => '0900000000',
-            'shipping_address' => 'HN',
+            'shipping_address' => 'HN', 'shipping_province' => 'Quảng Ninh',
             'payment_method' => 'cod',
         ])->assertRedirect(route('checkout.review.show'));
 

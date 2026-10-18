@@ -20,7 +20,7 @@ class VNPayService extends BaseService
         $vnp_TxnRef = $transactionCode;
         $vnp_OrderInfo = "Thanh toan don hang {$order->order_code}";
         $vnp_OrderType = 'billpayment';
-        $vnp_Amount = $order->total * 100;
+        $vnp_Amount = (int) $order->total * 100;
         $vnp_Locale = 'vn';
         // Không gửi vnp_BankCode — để VNPay hiện màn hình chọn ngân hàng
         $vnp_IpAddr = $ipAddress;
@@ -30,7 +30,9 @@ class VNPayService extends BaseService
             'vnp_TmnCode' => $vnp_TmnCode,
             'vnp_Amount' => $vnp_Amount,
             'vnp_Command' => 'pay',
-            'vnp_CreateDate' => date('YmdHis'),
+            'vnp_CreateDate' => now('Asia/Ho_Chi_Minh')->format('YmdHis'),
+            // Link thanh toán hết hạn cùng lúc đơn bị tự hủy → không thể trả tiền cho đơn đã hủy
+            'vnp_ExpireDate' => now('Asia/Ho_Chi_Minh')->addMinutes((int) config('vnpay.expire_minutes', 30))->format('YmdHis'),
             'vnp_CurrCode' => 'VND',
             'vnp_IpAddr' => $vnp_IpAddr,
             'vnp_Locale' => $vnp_Locale,
@@ -68,7 +70,18 @@ class VNPayService extends BaseService
      */
     public function verifyCallback(array $inputData): bool
     {
+        $vnp_HashSecret = (string) config('vnpay.hash_secret');
         $vnp_SecureHash = $inputData['vnp_SecureHash'] ?? '';
+
+        // Thiếu secret thì ai cũng tự ký được callback "đã thanh toán" → luôn từ chối
+        if ($vnp_HashSecret === '' || ! is_string($vnp_SecureHash) || $vnp_SecureHash === '') {
+            return false;
+        }
+
+        // Callback phải thuộc đúng merchant của shop
+        if (($inputData['vnp_TmnCode'] ?? null) !== config('vnpay.tmn_code')) {
+            return false;
+        }
 
         $vnpayData = [];
         foreach ($inputData as $key => $value) {
@@ -92,10 +105,17 @@ class VNPayService extends BaseService
             }
         }
 
-        $vnp_HashSecret = config('vnpay.hash_secret');
-
         $secureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
 
-        return hash_equals((string) $secureHash, (string) $vnp_SecureHash);
+        return hash_equals($secureHash, strtolower($vnp_SecureHash));
+    }
+
+    /**
+     * Giao dịch chỉ thành công khi cả mã phản hồi và trạng thái giao dịch đều là 00 (theo tài liệu VNPay).
+     */
+    public static function isSuccessful(array $inputData): bool
+    {
+        return ($inputData['vnp_ResponseCode'] ?? '') === '00'
+            && ($inputData['vnp_TransactionStatus'] ?? '00') === '00';
     }
 }

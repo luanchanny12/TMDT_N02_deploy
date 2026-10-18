@@ -34,6 +34,7 @@ class CartService extends BaseService
     {
         $product = Product::active()->findOrFail($productId);
         $variant = null;
+        $this->ensureVariantChosen($product, $variantId);
 
         if ($variantId !== null) {
             $variant = ProductVariant::where('product_id', $product->id)
@@ -139,6 +140,16 @@ class CartService extends BaseService
         return (int) CartItem::where('cart_id', $cart->id)->sum('quantity');
     }
 
+    /**
+     * Sản phẩm có size/màu phải chọn biến thể — tránh đơn hàng thiếu size.
+     */
+    private function ensureVariantChosen(Product $product, ?int $variantId): void
+    {
+        if ($variantId === null && $product->hasVariants()) {
+            throw new CartException("Vui lòng chọn size/màu cho \"{$product->name}\".");
+        }
+    }
+
     // ─── Guest cart (session) ────────────────────────────────────────────────
 
     private function guestKey(int $productId, ?int $variantId = null): string
@@ -152,6 +163,7 @@ class CartService extends BaseService
     {
         $product = Product::active()->findOrFail($productId);
         $variant = null;
+        $this->ensureVariantChosen($product, $variantId);
 
         if ($variantId !== null) {
             $variant = ProductVariant::where('product_id', $product->id)

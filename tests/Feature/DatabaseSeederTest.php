@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\AnalyticsEvent;
+use App\Models\Campaign;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
@@ -43,7 +45,13 @@ class DatabaseSeederTest extends TestCase
         $this->assertStringContainsString('Đầm Dạ Hội', $context);
         $this->assertStringNotContainsString('iPhone', $context);
 
+        // Có chiến dịch + lượt truy cập để trang phân tích hiển thị số liệu
+        $this->assertSame(3, Campaign::count());
+        $this->assertTrue(Order::whereNotNull('campaign_id')->exists());
+        $this->assertGreaterThan(100, AnalyticsEvent::where('type', 'visit')->count());
+
         $admin = User::where('email', 'admin@socialshop.vn')->firstOrFail();
+        $this->actingAs($admin)->get(route('admin.analytics.index'))->assertOk()->assertSee('Sale Thu 2026 - Facebook Ads');
         $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk();
         $this->actingAs($admin)->get(route('admin.reviews.index', ['status' => 'pending']))->assertOk();
     }

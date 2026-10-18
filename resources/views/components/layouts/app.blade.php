@@ -77,6 +77,23 @@
                     : app(\App\Services\Cart\CartService::class)->getGuestItemCount() }}
             });
         });
+
+        // Phím tắt tìm kiếm: "/" hoặc Ctrl/Cmd + K đưa con trỏ vào ô tìm kiếm, Esc để thoát
+        document.addEventListener('keydown', (e) => {
+            const input = document.getElementById('site-search');
+            if (!input || input.offsetParent === null) return;
+
+            const typing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName) || e.target.isContentEditable;
+            const ctrlK = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k';
+
+            if (ctrlK || (e.key === '/' && !typing)) {
+                e.preventDefault();
+                input.focus();
+                input.select();
+            } else if (e.key === 'Escape' && e.target === input) {
+                input.blur();
+            }
+        });
     </script>
 
     {{-- Header --}}
@@ -94,12 +111,16 @@
                 <div class="hidden md:flex flex-1 max-w-lg mx-8">
                     <form action="{{ route('products.index') }}" method="GET" class="w-full">
                         <div class="relative">
-                            <input type="text" name="search" value="{{ request('search') }}"
-                                   placeholder="Tìm sản phẩm..."
-                                   class="w-full pl-10 pr-4 py-2 border border-[#efe8e3] rounded-lg bg-white focus:ring-2 focus:ring-[#c9a9a6] focus:border-transparent transition-all text-sm">
+                            <input type="text" name="search" value="{{ request('search') }}" id="site-search"
+                                   placeholder="Tìm sản phẩm..." aria-keyshortcuts="/ Control+K"
+                                   class="w-full pl-10 pr-20 py-2 border border-[#efe8e3] rounded-lg bg-white focus:ring-2 focus:ring-[#c9a9a6] focus:border-transparent transition-all text-sm">
                             <svg class="absolute left-3 top-2.5 h-4 w-4 text-[#9a9490]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                             </svg>
+                            <span class="pointer-events-none absolute right-3 top-2 hidden lg:flex items-center gap-1 text-[11px] text-[#9a9490]" title="Phím tắt tìm kiếm">
+                                <kbd class="px-1.5 py-0.5 rounded border border-[#efe8e3] bg-[#faf7f5] font-sans">Ctrl</kbd>
+                                <kbd class="px-1.5 py-0.5 rounded border border-[#efe8e3] bg-[#faf7f5] font-sans">K</kbd>
+                            </span>
                         </div>
                     </form>
                 </div>
@@ -438,5 +459,19 @@
 
     @livewireScripts
     @stack('scripts')
+    {{-- Thanh so sánh nổi: hiện khi đã chọn sản phẩm để so sánh --}}
+    @unless(request()->routeIs('compare.index'))
+        <div x-data="{ count: {{ count(session('compare_products', [])) }} }"
+             @compare-updated.window="count = $event.detail ?? count"
+             x-show="count > 0" x-cloak x-transition
+             class="fixed bottom-5 left-5 z-[55]" data-testid="compare-bar">
+            <a href="{{ route('compare.index') }}"
+               class="flex items-center gap-2 rounded-full bg-[#3d3a37] text-white pl-4 pr-5 py-3 shadow-lg hover:bg-[#b8847e] transition-colors text-sm font-medium">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                So sánh (<span x-text="count"></span>/4)
+            </a>
+        </div>
+    @endunless
+
 </body>
 </html>

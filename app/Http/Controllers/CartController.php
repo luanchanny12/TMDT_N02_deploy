@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Exceptions\CartException;
 use App\Models\Coupon;
 use App\Models\ProductVariant;
+use App\Services\Analytics\AnalyticsService;
 use App\Services\Cart\CartService;
+use App\Services\Order\PricingService;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
@@ -56,6 +58,7 @@ class CartController extends Controller
                     (int) ($request->quantity ?? 1),
                     $variantId
                 );
+                $this->trackAddToCart($request);
 
                 if ($request->wantsJson()) {
                     return response()->json([
@@ -73,6 +76,7 @@ class CartController extends Controller
                 (int) ($request->quantity ?? 1),
                 $variantId
             );
+            $this->trackAddToCart($request);
 
             if ($request->wantsJson()) {
                 return response()->json([
@@ -89,6 +93,14 @@ class CartController extends Controller
 
             return redirect()->back()->with('error', $e->getMessage());
         }
+    }
+
+    private function trackAddToCart(Request $request): void
+    {
+        app(AnalyticsService::class)->track('add_to_cart', [
+            'product_id' => (int) $request->product_id,
+            'value' => (int) ($request->quantity ?? 1),
+        ]);
     }
 
     public function update(Request $request)
@@ -149,18 +161,19 @@ class CartController extends Controller
 
     public function checkout()
     {
-        if (! auth()->check()) {
-            return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để tiến hành thanh toán!');
+        // Khách vãng lai được thanh toán bằng giỏ hàng trong session (tài khoản tạo ở bước tiếp theo)
+        if ($this->cartService->isGuest()) {
+            $cartItems = $this->cartService->getGuestCartItems();
+            $cartTotal = (int) $cartItems->sum(fn ($item) => $item->quantity * $item->price);
+        } else {
+            $cart = $this->cartService->getCartWithItems(auth()->id());
+            $cartItems = $cart->items;
+            $cartTotal = $cart->totalPrice();
         }
-
-        $cart = $this->cartService->getCartWithItems(auth()->id());
-        $cartItems = $cart->items;
 
         if ($cartItems->isEmpty()) {
             return redirect()->route('cart.index')->with('error', 'Giỏ hàng trống!');
         }
-
-        $cartTotal = $cart->totalPrice();
 
         // Lấy coupon từ session (nếu có)
         $couponCode = session('coupon_code');
@@ -178,7 +191,8 @@ class CartController extends Controller
         }
 
         $total = $cartTotal - $discount;
+        $pricingConfig = app(PricingService::class)->clientConfig();
 
-        return view('checkout.index', compact('cartItems', 'cartTotal', 'couponCode', 'discount', 'total'));
+        return view('checkout.index', compact('cartItems', 'cartTotal', 'couponCode', 'discount', 'total', 'pricingConfig'));
     }
 }

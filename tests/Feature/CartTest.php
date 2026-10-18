@@ -222,9 +222,10 @@ class CartTest extends TestCase
             ->assertStatus(422);
     }
 
-    public function test_checkout_redirects_guest(): void
+    public function test_guest_with_empty_cart_is_sent_back_to_cart(): void
     {
-        $this->get('/checkout')->assertRedirect('/login');
+        // Khách vãng lai được vào checkout (không bắt đăng nhập), nhưng giỏ trống thì quay lại giỏ hàng
+        $this->get('/checkout')->assertRedirect('/cart');
     }
 
     public function test_checkout_redirects_empty_cart(): void

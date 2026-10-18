@@ -52,4 +52,10 @@ return [
         'model' => env('GEMINI_MODEL', 'gemini-3.5-flash'),
     ],
 
+    // Microservice chatbot AI (services/ai-service). Để trống URL thì gọi Gemini trực tiếp.
+    'ai_service' => [
+        'url' => env('AI_SERVICE_URL'),
+        'token' => env('AI_SERVICE_TOKEN'),
+    ],
+
 ];

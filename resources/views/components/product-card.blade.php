@@ -56,6 +56,7 @@
                                 type: ok ? 'success' : 'error'
                             }
                         }));
+                        if (ok) window.dispatchEvent(new CustomEvent('compare-updated', { detail: data.compare_count }));
                     })
                     .catch(() => {
                         compareLoading = false;
@@ -67,7 +68,7 @@
                 :disabled="compareLoading"
                 class="absolute bottom-3 left-3 z-10 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-md hover:bg-white transition-all disabled:opacity-60">
             <svg x-show="!compareLoading" class="w-5 h-5 text-[#9a9490]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
             </svg>
             <svg x-show="compareLoading" x-cloak class="w-5 h-5 animate-spin text-[#9a9490]" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -177,8 +178,15 @@
             </div>
         @endif
 
-        {{-- Add to Cart Button (AJAX) --}}
-        @if($product->stock > 0)
+        {{-- Add to Cart Button (AJAX) — sản phẩm có size/màu thì chọn ở trang chi tiết --}}
+        @if($product->stock > 0 && ($product->variants_count ?? 0) > 0)
+            <div class="card-action mt-auto pt-2">
+                <a href="{{ route('products.show', $product->slug) }}"
+                   class="w-full bg-[#3d3a37] text-white text-sm font-semibold py-2 rounded-lg hover:bg-[#b8847e] transition-all flex items-center justify-center gap-2">
+                    Chọn size/màu
+                </a>
+            </div>
+        @elseif($product->stock > 0)
             <div class="card-action mt-auto pt-2">
                 <button type="button"
                         @click="

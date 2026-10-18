@@ -87,7 +87,7 @@ class AuditLogTest extends TestCase
         $this->actingAs($user)->post('/checkout/review', [
             'shipping_name' => 'A',
             'shipping_phone' => '098',
-            'shipping_address' => 'HN',
+            'shipping_address' => 'HN', 'shipping_province' => 'Quảng Ninh',
             'payment_method' => 'cod',
         ]);
 
@@ -122,7 +122,7 @@ class AuditLogTest extends TestCase
             'payment_status' => 'pending',
             'shipping_name' => 'A',
             'shipping_phone' => '098',
-            'shipping_address' => 'HN',
+            'shipping_address' => 'HN', 'shipping_province' => 'Quảng Ninh',
         ]);
 
         $this->actingAs($admin)
@@ -171,7 +171,7 @@ class AuditLogTest extends TestCase
             'payment_status' => 'pending',
             'shipping_name' => 'A',
             'shipping_phone' => '098',
-            'shipping_address' => 'HN',
+            'shipping_address' => 'HN', 'shipping_province' => 'Quảng Ninh',
         ]);
 
         $review = Review::create([
