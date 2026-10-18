@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Số liệu cho trang Admin → Phân tích dữ liệu.
- *  - Tỷ lệ chuyển đổi = số đơn (không tính đơn hủy) / số lượt truy cập.
+ *  - Tỷ lệ chuyển đổi = số đơn (không tính đơn hủy, có ghi nhận trên website) / số lượt truy cập.
  *  - ROAS = doanh thu đơn đến từ chiến dịch / chi phí quảng cáo của chiến dịch.
  */
 class AnalyticsReportService extends BaseService
@@ -20,7 +20,7 @@ class AnalyticsReportService extends BaseService
     public function build(CarbonImmutable $from, CarbonImmutable $to): array
     {
         $events = AnalyticsEvent::query()->whereBetween('created_at', [$from, $to]);
-        $orders = Order::query()->where('status', '!=', 'cancelled')->whereBetween('created_at', [$from, $to]);
+        $orders = $this->trackedOrders()->whereBetween('created_at', [$from, $to]);
 
         $visits = (clone $events)->where('type', 'visit')->count();
         $orderCount = (clone $orders)->count();
@@ -68,8 +68,8 @@ class AnalyticsReportService extends BaseService
             ->selectRaw('campaign_id, COUNT(*) as c')
             ->pluck('c', 'campaign_id');
 
-        $orders = Order::query()
-            ->where('status', '!=', 'cancelled')->whereNotNull('campaign_id')
+        $orders = $this->trackedOrders()
+            ->whereNotNull('campaign_id')
             ->groupBy('campaign_id')
             ->get(['campaign_id', DB::raw('COUNT(*) as orders'), DB::raw('SUM(total) as revenue')])
             ->keyBy('campaign_id');
@@ -99,7 +99,7 @@ class AnalyticsReportService extends BaseService
             ->selectRaw('DATE(created_at) as d, COUNT(*) as c')
             ->pluck('c', 'd');
 
-        $orders = Order::query()->where('status', '!=', 'cancelled')->whereBetween('created_at', [$from, $to])
+        $orders = $this->trackedOrders()->whereBetween('created_at', [$from, $to])
             ->groupBy(DB::raw('DATE(created_at)'))
             ->get([DB::raw('DATE(created_at) as d'), DB::raw('COUNT(*) as c'), DB::raw('SUM(total) as r')])
             ->keyBy('d');
@@ -125,7 +125,7 @@ class AnalyticsReportService extends BaseService
             ->selectRaw('source, COUNT(*) as c')
             ->pluck('c', 'source');
 
-        $orders = Order::query()->where('status', '!=', 'cancelled')->whereBetween('created_at', [$from, $to])
+        $orders = $this->trackedOrders()->whereBetween('created_at', [$from, $to])
             ->groupBy('traffic_source')
             ->get(['traffic_source', DB::raw('COUNT(*) as c'), DB::raw('SUM(total) as r')])
             ->keyBy(fn ($row) => (string) $row->traffic_source);
@@ -161,6 +161,22 @@ class AnalyticsReportService extends BaseService
                 DB::raw("SUM(CASE WHEN type = 'product_view' THEN 1 ELSE 0 END) as views"),
                 DB::raw("SUM(CASE WHEN type = 'add_to_cart' THEN 1 ELSE 0 END) as carts"),
             ]);
+    }
+
+    /**
+     * Đơn hợp lệ (không hủy) có ghi nhận hành trình mua trên website (sự kiện purchase) —
+     * để tỷ lệ chuyển đổi so sánh cùng nguồn dữ liệu với lượt truy cập.
+     */
+    private function trackedOrders()
+    {
+        return Order::query()
+            ->where('status', '!=', 'cancelled')
+            ->whereHas('analyticsEvents', fn ($q) => $q->where('type', 'purchase'));
+    }
+
+    public function hasDemoData(): bool
+    {
+        return AnalyticsEvent::where('is_demo', true)->exists() || Campaign::where('is_demo', true)->exists();
     }
 
     private function ratio(int|float $a, int|float $b): float

@@ -27,6 +27,7 @@ class CampaignSeeder extends Seeder
             'utm_medium' => 'cpc',
             'starts_on' => now()->subDays(14)->toDateString(),
             'status' => 'active',
+            'is_demo' => true,
         ]));
 
         // Gán khoảng một nửa đơn demo cho các chiến dịch / nguồn tự nhiên
@@ -52,7 +53,7 @@ class CampaignSeeder extends Seeder
                 $campaign = $roll <= 45 ? $campaigns[$roll % 3] : null;
                 $source = $campaign?->utm_source ?? [null, 'google', 'facebook', 'zalo'][$roll % 4];
                 $at = $day->copy()->addMinutes(mt_rand(8 * 60, 23 * 60));
-                $base = ['session_hash' => $session, 'campaign_id' => $campaign?->id, 'source' => $source, 'user_id' => null, 'order_id' => null, 'value' => null];
+                $base = ['session_hash' => $session, 'campaign_id' => $campaign?->id, 'source' => $source, 'user_id' => null, 'order_id' => null, 'value' => null, 'is_demo' => true];
 
                 $rows[] = $base + ['type' => 'visit', 'product_id' => null, 'path' => $campaign?->landing_path ?? '/', 'created_at' => $at];
 
@@ -70,5 +71,42 @@ class CampaignSeeder extends Seeder
         foreach (array_chunk($rows, 500) as $chunk) {
             AnalyticsEvent::insert($chunk);
         }
+
+        static::attachDemoPurchaseEvents();
+    }
+
+    /**
+     * Đơn demo được tạo trực tiếp trong DB (không qua website) nên chưa có sự kiện "purchase".
+     * Tạo phiên truy cập + sự kiện mua hàng (đánh dấu demo) để trang Phân tích đếm được các đơn này.
+     * Chạy lại nhiều lần không bị trùng.
+     */
+    public static function attachDemoPurchaseEvents(): int
+    {
+        $rows = [];
+
+        Order::query()
+            ->whereDoesntHave('analyticsEvents', fn ($q) => $q->where('type', 'purchase'))
+            ->whereHas('user', fn ($q) => $q->where('role', 'customer'))
+            ->orderBy('id')
+            ->get()
+            ->each(function (Order $order) use (&$rows) {
+                $session = hash('sha256', 'seed-order-'.$order->id);
+                $base = [
+                    'session_hash' => $session,
+                    'user_id' => $order->user_id,
+                    'campaign_id' => $order->campaign_id,
+                    'source' => $order->traffic_source,
+                    'product_id' => null,
+                    'is_demo' => true,
+                ];
+                $rows[] = $base + ['type' => 'visit', 'order_id' => null, 'value' => null, 'path' => '/', 'created_at' => $order->created_at->copy()->subMinutes(15)];
+                $rows[] = $base + ['type' => 'purchase', 'order_id' => $order->id, 'value' => $order->total, 'path' => null, 'created_at' => $order->created_at];
+            });
+
+        foreach (array_chunk($rows, 500) as $chunk) {
+            AnalyticsEvent::insert($chunk);
+        }
+
+        return intdiv(count($rows), 2);
     }
 }

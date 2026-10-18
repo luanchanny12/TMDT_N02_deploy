@@ -10,13 +10,14 @@ class AnalyticsEvent extends Model
 
     protected $fillable = [
         'type', 'session_hash', 'user_id', 'campaign_id', 'source',
-        'product_id', 'order_id', 'value', 'path', 'created_at',
+        'product_id', 'order_id', 'value', 'path', 'is_demo', 'created_at',
     ];
 
     protected function casts(): array
     {
         return [
             'value' => 'integer',
+            'is_demo' => 'boolean',
             'created_at' => 'datetime',
         ];
     }

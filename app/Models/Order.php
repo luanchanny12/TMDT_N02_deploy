@@ -32,6 +32,11 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function analyticsEvents()
+    {
+        return $this->hasMany(AnalyticsEvent::class);
+    }
+
     public function campaign()
     {
         return $this->belongsTo(Campaign::class);

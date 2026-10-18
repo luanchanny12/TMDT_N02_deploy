@@ -42,6 +42,11 @@ class TrackVisit
             return false;
         }
 
+        // Admin xem/đặt thử trên cửa hàng không làm sai số liệu khách thật
+        if ($request->user()?->role === 'admin') {
+            return false;
+        }
+
         $agent = strtolower((string) $request->userAgent());
 
         return ! preg_match('/bot|crawl|spider|slurp|facebookexternalhit|preview|monitor|curl|wget|python/', $agent);

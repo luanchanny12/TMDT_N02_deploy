@@ -6,6 +6,21 @@
         $th = 'px-4 py-3 text-xs font-semibold text-[#9a9490] uppercase tracking-wide';
     @endphp
 
+    @if($hasDemoData)
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4" data-testid="demo-data-notice">
+            <p class="text-sm text-amber-800">
+                Trang đang gồm <strong>dữ liệu mẫu</strong> (lượt truy cập, chiến dịch demo) để minh họa.
+                Mọi thao tác thật của khách vẫn được cộng thêm. Xóa dữ liệu mẫu để chỉ xem số liệu thật.
+            </p>
+            <form method="POST" action="{{ route('admin.analytics.clear-demo') }}"
+                  onsubmit="return confirm('Xóa toàn bộ dữ liệu mẫu? Số liệu thật và đơn hàng được giữ nguyên.')">
+                @csrf
+                @method('DELETE')
+                <button class="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700">Xóa dữ liệu mẫu</button>
+            </form>
+        </div>
+    @endif
+
     {{-- Bộ lọc thời gian --}}
     <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
         <p class="text-sm text-[#9a9490]">

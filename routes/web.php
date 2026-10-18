@@ -178,6 +178,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Phân tích dữ liệu (lượt truy cập, chuyển đổi, ROAS) và chiến dịch quảng cáo UTM
     Route::get('/analytics', [AdminAnalyticsController::class, 'index'])->name('analytics.index');
+    Route::delete('/analytics/demo', [AdminAnalyticsController::class, 'clearDemo'])->name('analytics.clear-demo');
     Route::resource('campaigns', AdminCampaignController::class)->except(['show']);
 
     // Cài đặt cửa hàng (thuế VAT, phí vận chuyển)

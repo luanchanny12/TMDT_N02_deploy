@@ -21,13 +21,14 @@ class Campaign extends Model
 
     protected $fillable = [
         'name', 'platform', 'utm_source', 'utm_medium', 'utm_campaign',
-        'landing_path', 'spend', 'starts_on', 'ends_on', 'status', 'note',
+        'landing_path', 'spend', 'starts_on', 'ends_on', 'status', 'note', 'is_demo',
     ];
 
     protected function casts(): array
     {
         return [
             'spend' => 'integer',
+            'is_demo' => 'boolean',
             'starts_on' => 'date',
             'ends_on' => 'date',
         ];

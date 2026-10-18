@@ -112,8 +112,13 @@ class AnalyticsCampaignTest extends TestCase
     public function test_conversion_rate_is_orders_over_visits(): void
     {
         $user = User::factory()->create();
-        Order::factory()->create(['user_id' => $user->id, 'status' => 'delivered', 'total' => 500000]);
-        Order::factory()->create(['user_id' => $user->id, 'status' => 'cancelled', 'total' => 900000]);
+        $delivered = Order::factory()->create(['user_id' => $user->id, 'status' => 'delivered', 'total' => 500000]);
+        $cancelled = Order::factory()->create(['user_id' => $user->id, 'status' => 'cancelled', 'total' => 900000]);
+        // Đơn tạo ngoài website (không có sự kiện mua hàng) không tính vào tỷ lệ chuyển đổi
+        Order::factory()->create(['user_id' => $user->id, 'status' => 'delivered', 'total' => 700000]);
+        foreach ([$delivered, $cancelled] as $order) {
+            AnalyticsEvent::create(['type' => 'purchase', 'session_hash' => 'p'.$order->id, 'order_id' => $order->id, 'value' => $order->total]);
+        }
         foreach (range(1, 4) as $i) {
             AnalyticsEvent::create(['type' => 'visit', 'session_hash' => "s{$i}"]);
         }
@@ -121,7 +126,47 @@ class AnalyticsCampaignTest extends TestCase
         $this->actingAs(User::factory()->create(['role' => 'admin']))
             ->get(route('admin.analytics.index'))
             ->assertOk()
-            ->assertSee('25,00%'); // 1 đơn hợp lệ / 4 lượt truy cập
+            ->assertSee('25,00%'); // 1 đơn hợp lệ có ghi nhận / 4 lượt truy cập
+    }
+
+    public function test_admin_browsing_the_shop_is_not_counted(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $product = $this->product();
+
+        $this->actingAs($admin)->withHeader('User-Agent', 'Mozilla/5.0')->get('/?utm_source=facebook&utm_campaign=x')->assertOk();
+        $this->actingAs($admin)->get(route('products.show', $product))->assertOk();
+        $this->actingAs($admin)->post(route('cart.add'), ['product_id' => $product->id, 'quantity' => 1]);
+
+        $this->assertSame(0, AnalyticsEvent::count());
+    }
+
+    public function test_clear_demo_data_keeps_real_numbers(): void
+    {
+        $demoCampaign = $this->campaign(['utm_campaign' => 'demo-x', 'is_demo' => true]);
+        $realCampaign = $this->campaign(['utm_campaign' => 'real-y', 'name' => 'Chiến dịch thật']);
+        AnalyticsEvent::create(['type' => 'visit', 'session_hash' => 'demo1', 'campaign_id' => $demoCampaign->id, 'is_demo' => true]);
+        AnalyticsEvent::create(['type' => 'visit', 'session_hash' => 'real1', 'campaign_id' => $realCampaign->id]);
+        $order = Order::factory()->create(['user_id' => User::factory()->create()->id, 'campaign_id' => $demoCampaign->id]);
+
+        $admin = User::factory()->create(['role' => 'admin']);
+        $this->actingAs($admin)->get(route('admin.analytics.index'))->assertSee('Xóa dữ liệu mẫu');
+
+        $this->actingAs($admin)->delete(route('admin.analytics.clear-demo'))->assertRedirect(route('admin.analytics.index'));
+
+        $this->assertSame(['real1'], AnalyticsEvent::pluck('session_hash')->all());
+        $this->assertNull(Campaign::find($demoCampaign->id));
+        $this->assertNotNull(Campaign::find($realCampaign->id));
+        $this->assertNull($order->fresh()->campaign_id); // đơn hàng vẫn còn, chỉ bỏ gắn chiến dịch mẫu
+        $this->actingAs($admin)->get(route('admin.analytics.index'))->assertDontSee('data-testid="demo-data-notice"', false);
+    }
+
+    public function test_customer_cannot_clear_demo_data(): void
+    {
+        AnalyticsEvent::create(['type' => 'visit', 'session_hash' => 'demo1', 'is_demo' => true]);
+
+        $this->actingAs(User::factory()->create())->delete(route('admin.analytics.clear-demo'))->assertForbidden();
+        $this->assertSame(1, AnalyticsEvent::count());
     }
 
     public function test_admin_creates_campaign_with_generated_utm_link(): void

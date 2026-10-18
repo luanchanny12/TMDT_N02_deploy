@@ -91,6 +91,10 @@ class AnalyticsService extends BaseService
 
     public function track(string $type, array $attributes = []): void
     {
+        if (auth()->user()?->role === 'admin') {
+            return; // không tính thao tác của quản trị viên
+        }
+
         try {
             $attribution = $this->attribution();
 
