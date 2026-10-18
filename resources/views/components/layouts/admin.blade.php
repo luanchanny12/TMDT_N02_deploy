@@ -28,7 +28,7 @@
         </div>
 
         {{-- Sidebar --}}
-        <aside class="w-64 bg-indigo-700 text-white min-h-screen fixed z-50
+        <aside class="w-64 bg-indigo-700 text-white h-screen fixed z-50 flex flex-col
                        -translate-x-full transition-transform duration-300
                        md:translate-x-0"
                :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
@@ -43,7 +43,8 @@
                 </button>
             </div>
 
-            <nav class="mt-6">
+            {{-- Menu cuộn được khi dài hơn màn hình (để luôn thấy "Về trang chủ", "Đăng xuất") --}}
+            <nav class="mt-6 flex-1 overflow-y-auto pb-6">
                 <a href="{{ route('admin.dashboard') }}"
                    class="flex items-center px-4 py-3 {{ request()->routeIs('admin.dashboard') ? 'bg-indigo-800' : 'hover:bg-indigo-600' }}">
                     <svg class="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,6 +175,13 @@
                 </button>
                 <h1 class="text-lg font-semibold text-gray-800">{{ $header ?? 'Dashboard' }}</h1>
                 <div class="ml-auto flex items-center space-x-4">
+                    <a href="{{ route('home') }}" target="_blank" rel="noopener"
+                       class="hidden sm:inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-indigo-700" title="Mở trang cửa hàng">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                        </svg>
+                        Xem cửa hàng
+                    </a>
                     {{-- Chuông thông báo: cập nhật mỗi 30 giây --}}
                     <div class="relative" data-testid="admin-bell"
                          x-data="{
