@@ -36,6 +36,7 @@ class ProductImage extends Model
 
     /**
      * Trả về URL ảnh đúng bất kể image_path là URL đầy đủ hay đường dẫn tương đối.
+     * Tự động thêm tham số ?v={filemtime} để phá vỡ browser cache khi ảnh được cập nhật.
      */
     public function getUrlAttribute(): string
     {
@@ -44,9 +45,15 @@ class ProductImage extends Model
         }
 
         if (str_starts_with($this->image_path, 'images/')) {
-            return asset('storage/'.$this->image_path);
+            $fullPath = storage_path('app/public/'.$this->image_path);
+            $version = file_exists($fullPath) ? filemtime($fullPath) : 1;
+
+            return asset('storage/'.$this->image_path).'?v='.$version;
         }
 
-        return asset($this->image_path);
+        $fullPath = public_path($this->image_path);
+        $version = file_exists($fullPath) ? filemtime($fullPath) : 1;
+
+        return asset($this->image_path).'?v='.$version;
     }
 }
