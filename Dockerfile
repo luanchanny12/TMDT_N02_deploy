@@ -19,6 +19,10 @@ RUN install-php-extensions \
     gd \
     opcache
 
+RUN apk add --no-cache --virtual .builddeps libcap && \
+    setcap -r /usr/local/bin/frankenphp && \
+    apk del .builddeps
+
 WORKDIR /app
 
 # Copy Composer binary
