@@ -66,6 +66,36 @@ class PricingService extends BaseService
         ];
     }
 
+    /**
+     * Ngưỡng để đơn được miễn phí ship ở MỌI tỉnh/thành — dùng cho banner "Freeship toàn quốc từ ...",
+     * lấy mức cao nhất giữa các khu vực để thông điệp quảng cáo luôn đúng.
+     */
+    public function nationwideFreeShippingThreshold(): int
+    {
+        $map = ShippingZone::provinceMap();
+        $default = $this->freeShippingThreshold();
+        $thresholds = array_map(fn ($zone) => $zone['threshold'] ?? $default, $map);
+
+        if (count($map) < count(ShippingZone::allProvinces())) {
+            $thresholds[] = $default; // còn tỉnh dùng ngưỡng mặc định
+        }
+
+        return (int) max($thresholds ?: [$default]);
+    }
+
+    /**
+     * Mức phí ship thấp nhất (khu vực rẻ nhất) — hiển thị "phí ship chỉ từ ...".
+     */
+    public function lowestShippingFee(): int
+    {
+        $fees = array_column(ShippingZone::provinceMap(), 'fee');
+        if (count($fees) < count(ShippingZone::allProvinces())) {
+            $fees[] = $this->shippingFee();
+        }
+
+        return (int) min($fees ?: [$this->shippingFee()]);
+    }
+
     public function shippingFor(int $subtotal, ?string $province = null): int
     {
         $rule = $this->shippingRule($province);

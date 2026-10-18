@@ -19,7 +19,7 @@ class ChatbotFaqSeeder extends Seeder
             ],
             [
                 'question' => 'Shop có miễn phí ship không?',
-                'answer' => 'Miễn phí giao hàng cho đơn từ 500.000đ. Đơn dưới 500.000đ phí ship 30.000đ. Giao hàng toàn quốc.',
+                'answer' => 'Miễn phí giao hàng toàn quốc cho đơn từ 300.000đ. Đơn dưới 300.000đ phí ship 20.000đ (nội thành Hà Nội, TP.HCM) đến 35.000đ tùy khu vực.',
                 'keywords' => 'ship,giao hàng,freeship,miễn phí ship,phí ship,phí giao,bao giờ nhận',
                 'status' => 'active',
                 'sort_order' => 2,

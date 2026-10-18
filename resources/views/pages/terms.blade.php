@@ -39,7 +39,8 @@
                 <h2 class="font-serif text-xl font-semibold text-[#3d3d3d] mb-3">4. Giao hàng &amp; phí vận chuyển</h2>
                 <ul class="list-disc list-inside space-y-1 ml-1">
                     <li>Phạm vi giao hàng: toàn quốc (theo biểu phí đơn vị vận chuyển).</li>
-                    <li>Phí vận chuyển mặc định: 30.000₫; <strong class="text-[#3d3d3d]">miễn phí</strong> cho đơn từ 500.000₫.</li>
+                    @php $pricing = app(\App\Services\Order\PricingService::class); @endphp
+                    <li>Phí vận chuyển theo khu vực của tỉnh/thành nhận hàng, từ {{ number_format($pricing->lowestShippingFee(), 0, ',', '.') }}₫; <strong class="text-[#3d3d3d]">miễn phí</strong> toàn quốc cho đơn có giá trị hàng từ {{ number_format($pricing->nationwideFreeShippingThreshold(), 0, ',', '.') }}₫. Phí chính xác hiển thị ở bước thanh toán trước khi xác nhận đơn.</li>
                     <li>Thời gian giao dự kiến: 2–5 ngày làm việc tùy khu vực (kể từ khi đơn được xác nhận).</li>
                 </ul>
             </section>

@@ -14,7 +14,9 @@
             {{-- Free Shipping Progress --}}
             @php
                 $subtotal = $cartTotal;
-                $freeShippingThreshold = 500000;
+                $pricing = app(\App\Services\Order\PricingService::class);
+                $freeShippingThreshold = max(1, $pricing->nationwideFreeShippingThreshold());
+                $lowestShippingFee = $pricing->lowestShippingFee();
                 $progress = min(($subtotal / $freeShippingThreshold) * 100, 100);
                 $remaining = max($freeShippingThreshold - $subtotal, 0);
             @endphp
@@ -148,17 +150,20 @@
                                 @if($subtotal >= $freeShippingThreshold)
                                     <span class="font-semibold text-green-600">Miễn phí</span>
                                 @else
-                                    <span class="font-semibold text-gray-900">30.000₫</span>
+                                    <span class="font-semibold text-gray-900">từ {{ number_format($lowestShippingFee, 0, ',', '.') }}₫</span>
                                 @endif
                             </div>
                         </div>
                         <div class="border-t border-gray-100 pt-4 mb-5">
                             <div class="flex justify-between items-baseline">
-                                <span class="text-base font-bold text-gray-900">Tổng cộng</span>
+                                <span class="text-base font-bold text-gray-900">Tiền hàng <span class="text-xs font-normal text-gray-500">(chưa gồm ship)</span></span>
                                 <span class="text-xl font-extrabold text-[#b8847e]">
-                                    {{ number_format($cartTotal + ($subtotal >= $freeShippingThreshold ? 0 : 30000), 0, ',', '.') }}₫
+                                    {{ number_format($cartTotal, 0, ',', '.') }}₫
                                 </span>
                             </div>
+                            <p class="text-xs text-gray-500 mt-1">
+                                {{ $subtotal >= $freeShippingThreshold ? 'Đơn được freeship toàn quốc.' : 'Phí ship tính theo tỉnh/thành ở bước thanh toán.' }}
+                            </p>
                         </div>
 
                         <a href="{{ route('checkout.index') }}"

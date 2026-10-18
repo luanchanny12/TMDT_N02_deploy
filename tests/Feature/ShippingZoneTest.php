@@ -113,6 +113,22 @@ class ShippingZoneTest extends TestCase
             ->assertSee('miễn phí cho đơn từ 500.000 ₫');
     }
 
+    public function test_home_shows_freeship_banner_matching_policy(): void
+    {
+        Setting::put(['free_shipping_threshold' => 300000]);
+
+        // Mọi khu vực mặc định đều freeship từ 300.000đ → banner "toàn quốc" đúng sự thật
+        $this->assertSame(300000, app(PricingService::class)->nationwideFreeShippingThreshold());
+        $this->get(route('home'))->assertOk()
+            ->assertSee('Freeship toàn quốc')
+            ->assertSee('Cho đơn từ 300.000₫');
+
+        // Nếu một khu vực có ngưỡng cao hơn, banner tự nâng theo để không quảng cáo sai
+        ShippingZone::where('name', 'Miền Trung')->update(['free_shipping_threshold' => 400000]);
+        Cache::forget('shipping_zones.active');
+        $this->get(route('home'))->assertSee('Cho đơn từ 400.000₫');
+    }
+
     public function test_unzoned_province_uses_default_fee(): void
     {
         ShippingZone::query()->delete();
