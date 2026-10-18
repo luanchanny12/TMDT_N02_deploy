@@ -174,7 +174,54 @@
                 </button>
                 <h1 class="text-lg font-semibold text-gray-800">{{ $header ?? 'Dashboard' }}</h1>
                 <div class="ml-auto flex items-center space-x-4">
-                    <span class="text-sm text-gray-600">Xin chào, {{ Auth::user()->name }}</span>
+                    {{-- Chuông thông báo: cập nhật mỗi 30 giây --}}
+                    <div class="relative" data-testid="admin-bell"
+                         x-data="{
+                             open: false,
+                             unread: {{ Auth::user()->unreadNotifications()->count() }},
+                             items: [],
+                             async load() {
+                                 try {
+                                     const res = await fetch('{{ route('admin.notifications.feed') }}', { headers: { 'Accept': 'application/json' } });
+                                     if (!res.ok) return;
+                                     const data = await res.json();
+                                     this.unread = data.unread;
+                                     this.items = data.items;
+                                 } catch (e) {}
+                             }
+                         }"
+                         x-init="load(); setInterval(() => load(), 30000)"
+                         @click.outside="open = false">
+                        <button type="button" @click="open = !open; if (open) load()" class="relative p-2 text-gray-600 hover:text-gray-900" aria-label="Thông báo">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                            </svg>
+                            <span x-show="unread > 0" x-cloak x-text="unread > 99 ? '99+' : unread"
+                                  class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[11px] leading-[18px] text-center font-semibold"></span>
+                        </button>
+                        <div x-show="open" x-cloak x-transition
+                             class="absolute right-0 mt-2 w-80 max-w-[90vw] bg-white rounded-xl shadow-lg border border-[#efe8e3] z-50 overflow-hidden">
+                            <div class="flex items-center justify-between px-4 py-3 border-b border-[#efe8e3]">
+                                <span class="font-semibold text-sm text-[#3d3d3d]">Thông báo</span>
+                                <a href="{{ route('admin.notifications.index') }}" class="text-xs text-[#b8847e] hover:underline">Xem tất cả</a>
+                            </div>
+                            <div class="max-h-96 overflow-y-auto divide-y divide-[#efe8e3]">
+                                <template x-for="n in items" :key="n.id">
+                                    <a :href="n.open_url" class="flex gap-3 px-4 py-3 hover:bg-[#faf7f4]" :class="n.read ? '' : 'bg-[#fdf9f6]'">
+                                        <span class="mt-1.5 h-2 w-2 rounded-full flex-shrink-0"
+                                              :class="{ 'bg-sky-500': n.level === 'info', 'bg-green-500': n.level === 'success', 'bg-amber-500': n.level === 'warning', 'bg-red-500': n.level === 'danger' }"></span>
+                                        <span class="min-w-0">
+                                            <span class="block text-sm text-[#3d3d3d]" :class="n.read ? '' : 'font-semibold'" x-text="n.title"></span>
+                                            <span class="block text-xs text-[#9a9490] truncate" x-text="n.message"></span>
+                                            <span class="block text-[11px] text-[#9a9490] mt-0.5" x-text="n.time"></span>
+                                        </span>
+                                    </a>
+                                </template>
+                                <p x-show="!items.length" class="px-4 py-6 text-center text-sm text-[#9a9490]">Chưa có thông báo.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="text-sm text-gray-600 hidden sm:inline">Xin chào, {{ Auth::user()->name }}</span>
                 </div>
             </header>
 

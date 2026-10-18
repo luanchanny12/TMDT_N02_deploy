@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\ChatbotFaqController;
 use App\Http\Controllers\Admin\CouponController as AdminCouponController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
@@ -183,6 +184,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings.index');
     Route::put('/settings', [AdminSettingController::class, 'update'])->name('settings.update');
     Route::resource('shipping-zones', AdminShippingZoneController::class)->except(['index', 'show']);
+
+    // Thông báo quản trị (chuông trên thanh tiêu đề)
+    Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/feed', [AdminNotificationController::class, 'feed'])->name('notifications.feed');
+    Route::post('/notifications/read-all', [AdminNotificationController::class, 'readAll'])->name('notifications.read-all');
+    Route::get('/notifications/{id}/open', [AdminNotificationController::class, 'open'])->whereUuid('id')->name('notifications.open');
 
     // Coupons (specific routes before wildcard)
     Route::get('/coupons', [AdminCouponController::class, 'index'])->name('coupons.index');

@@ -69,6 +69,15 @@
                         </div>
                     </div>
                 </div>
+
+                {{-- Thông báo --}}
+                <div class="bg-white rounded-xl shadow-sm border border-[#efe8e3] p-6">
+                    <h3 class="font-serif text-lg font-semibold text-[#3d3d3d] mb-1">Thông báo quản trị</h3>
+                    <p class="text-sm text-[#9a9490] mb-4">Báo ở chuông khi có đơn mới, thanh toán, hủy đơn, đánh giá chờ duyệt, cần hoàn tiền và khi sản phẩm sắp hết.</p>
+                    <label class="block text-sm font-medium text-[#3d3d3d] mb-1.5">Cảnh báo sắp hết hàng khi tồn kho ≤</label>
+                    <input type="number" name="low_stock_threshold" min="0" value="{{ old('low_stock_threshold', $lowStockThreshold) }}" class="{{ $input }} max-w-xs">
+                    @error('low_stock_threshold') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
             </div>
 
             {{-- Ví dụ --}}

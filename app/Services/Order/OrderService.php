@@ -13,6 +13,7 @@ use App\Models\Payment;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
+use App\Services\AdminNotifier;
 use App\Services\Analytics\AnalyticsService;
 use App\Services\AuditService;
 use App\Services\BaseService;
@@ -178,6 +179,7 @@ class OrderService extends BaseService
                 'total' => $order->total,
             ]);
             $this->analytics->track('purchase', ['order_id' => $order->id, 'value' => $order->total]);
+            app(AdminNotifier::class)->newOrder($order);
 
             // 11. Xóa coupon khỏi session
             session()->forget('coupon_code');
@@ -299,7 +301,9 @@ class OrderService extends BaseService
             throw new OrderException('Đơn hàng này không thể hủy (đã được xác nhận hoặc đã thanh toán).');
         }
 
-        $this->cancelOrder($order, 'customer');
+        if ($this->cancelOrder($order, 'customer')) {
+            app(AdminNotifier::class)->orderCancelledByCustomer($order);
+        }
     }
 
     public function customerCanCancel(Order $order): bool

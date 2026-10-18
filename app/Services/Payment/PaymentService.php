@@ -4,6 +4,7 @@ namespace App\Services\Payment;
 
 use App\Models\Order;
 use App\Models\Payment;
+use App\Services\AdminNotifier;
 use App\Services\AuditService;
 use App\Services\BaseService;
 use App\Services\Order\OrderService;
@@ -99,6 +100,7 @@ class PaymentService extends BaseService
                         'order_id' => $payment->order_id,
                         'vnp_TransactionNo' => $inputData['vnp_TransactionNo'] ?? null,
                     ]);
+                    app(AdminNotifier::class)->refundRequired($payment->order, (int) $payment->amount);
                 }
 
                 return ['RspCode' => '02', 'Message' => 'Order already confirmed'];
@@ -123,6 +125,7 @@ class PaymentService extends BaseService
                     'amount' => $payment->amount,
                     'order_id' => $order->id,
                 ]);
+                app(AdminNotifier::class)->orderPaid($order);
 
                 return ['RspCode' => '00', 'Message' => 'Confirm Success'];
             } else {
