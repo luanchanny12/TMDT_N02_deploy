@@ -76,7 +76,7 @@
             </svg>
         </button>
 
-        {{-- Wishlist Heart Button - Góc trên bên phải của ảnh sản phẩm --}}
+        {{-- Wishlist Heart Button - Góc dưới bên phải của ảnh (đối diện nút So sánh) --}}
         @auth
             <button type="button"
                     title="Yêu thích"
@@ -111,11 +111,11 @@
                         })
                     "
                     :disabled="wishlistLoading"
-                    class="absolute top-2.5 right-2.5 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md hover:bg-white hover:scale-110 transition-all disabled:opacity-60 cursor-pointer">
-                <svg x-show="!wishlisted" class="w-4 h-4 sm:w-5 sm:h-5 text-[#9a9490] hover:text-[#b8847e]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    class="absolute bottom-3 right-3 z-10 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-md hover:bg-white hover:scale-105 transition-all disabled:opacity-60 cursor-pointer">
+                <svg x-show="!wishlisted" class="w-5 h-5 text-[#9a9490] hover:text-[#b8847e]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                 </svg>
-                <svg x-show="wishlisted" x-cloak class="w-4 h-4 sm:w-5 sm:h-5 text-[#b8847e]" fill="currentColor" viewBox="0 0 24 24">
+                <svg x-show="wishlisted" x-cloak class="w-5 h-5 text-[#b8847e]" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                 </svg>
             </button>
@@ -128,8 +128,8 @@
                         setTimeout(() => { window.location.href = '{{ route('login') }}'; }, 800);
                     "
                     title="Đăng nhập để thêm vào yêu thích"
-                    class="absolute top-2.5 right-2.5 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md hover:bg-white hover:scale-110 text-[#9a9490] hover:text-[#b8847e] transition-all cursor-pointer">
-                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    class="absolute bottom-3 right-3 z-10 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-md hover:bg-white hover:scale-105 text-[#9a9490] hover:text-[#b8847e] transition-all cursor-pointer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                 </svg>
             </button>
