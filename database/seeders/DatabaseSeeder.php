@@ -52,7 +52,8 @@ class DatabaseSeeder extends Seeder
 
         $categoryIds = [];
         foreach ($tree as $i => [$name, $slug, $children]) {
-            $parent = Category::create(['name' => $name, 'slug' => $slug, 'sort_order' => $i + 1, 'status' => 'active']);
+            $catImg = file_exists(public_path("category-images/{$slug}.jpg")) ? "category-images/{$slug}.jpg" : null;
+            $parent = Category::create(['name' => $name, 'slug' => $slug, 'image' => $catImg, 'sort_order' => $i + 1, 'status' => 'active']);
             $categoryIds[$slug] = $parent->id;
 
             foreach ($children as $j => [$childName, $childSlug]) {

@@ -138,11 +138,14 @@
 
             @php
                 $categoryImages = [
-                    'thoi-trang-nam' => 'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?w=240&h=240&fit=crop',
-                    'thoi-trang-nu' => 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=240&h=240&fit=crop',
-                    'giay-dep' => 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=240&h=240&fit=crop',
-                    'tui-vi' => 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=240&h=240&fit=crop',
-                    'my-pham-nuoc-hoa' => 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=240&h=240&fit=crop',
+                    'thoi-trang-nam' => asset('category-images/thoi-trang-nam.jpg'),
+                    'thoi-trang-nu' => asset('category-images/thoi-trang-nu.jpg'),
+                    'giay-dep' => asset('category-images/giay-dep.jpg'),
+                    'tui-xach' => asset('category-images/tui-xach.jpg'),
+                    'tui-vi' => asset('category-images/tui-xach.jpg'),
+                    'dong-ho' => asset('category-images/dong-ho.jpg'),
+                    'my-pham' => asset('category-images/my-pham.jpg'),
+                    'my-pham-nuoc-hoa' => asset('category-images/my-pham.jpg'),
                 ];
                 $topCategories = $categories->whereNull('parent_id')->take(6);
                 if($topCategories->isEmpty()) {
@@ -150,10 +153,10 @@
                 }
             @endphp
 
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-14">
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 mb-14">
                 @foreach($topCategories as $category)
                     @php
-                        $img = $category->image ?? ($categoryImages[$category->slug] ?? 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=240&h=240&fit=crop');
+                        $img = $category->image_url ?? ($categoryImages[$category->slug] ?? asset('category-images/thoi-trang-nam.jpg'));
                     @endphp
                     <a href="{{ route('categories.show', $category) }}"
                        class="group flex flex-col items-center p-3.5 rounded-2xl bg-white border border-[#efe8e3] hover-lift text-center transition-all">
