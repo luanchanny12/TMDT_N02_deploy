@@ -12,7 +12,7 @@ class Order extends Model
     protected $fillable = [
         'user_id', 'campaign_id', 'traffic_source', 'order_code', 'subtotal', 'discount', 'shipping_fee', 'tax_rate', 'tax_amount', 'total',
         'status', 'payment_method', 'payment_status',
-        'shipping_name', 'shipping_phone', 'shipping_address', 'note',
+        'shipping_name', 'shipping_phone', 'shipping_address', 'shipping_province', 'note',
     ];
 
     protected function casts(): array

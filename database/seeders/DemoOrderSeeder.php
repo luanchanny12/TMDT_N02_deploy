@@ -113,7 +113,8 @@ class DemoOrderSeeder extends Seeder
             'payment_status' => $paymentStatus,
             'shipping_name' => $customer->name,
             'shipping_phone' => '09'.mt_rand(10000000, 99999999),
-            'shipping_address' => mt_rand(1, 200).' Nguyễn Trãi, Thanh Xuân, Hà Nội',
+            'shipping_address' => mt_rand(1, 200).' Nguyễn Trãi, Thanh Xuân',
+            'shipping_province' => 'Hà Nội',
             'created_at' => $createdAt,
             'updated_at' => $createdAt,
         ])->save();

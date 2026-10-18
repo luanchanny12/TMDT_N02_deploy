@@ -209,7 +209,7 @@
             {{-- Shipping Address --}}
             <div class="bg-white rounded-xl shadow-sm border border-[#efe8e3] p-6">
                 <h2 class="font-serif text-lg font-semibold text-[#3d3d3d] mb-4">Địa chỉ giao hàng</h2>
-                <p class="text-sm text-[#3d3d3d] leading-relaxed">{{ $order->shipping_address }}</p>
+                <p class="text-sm text-[#3d3d3d] leading-relaxed">{{ $order->shipping_address }}@if($order->shipping_province), <strong>{{ $order->shipping_province }}</strong>@endif</p>
                 @if($order->note)
                     <div class="mt-3 p-3 bg-[#faf7f4] rounded-lg">
                         <span class="text-xs text-[#9a9490] block mb-1">Ghi chú:</span>

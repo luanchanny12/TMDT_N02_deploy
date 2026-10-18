@@ -48,7 +48,7 @@ class AnalyticsCampaignTest extends TestCase
         CartItem::firstOrCreate(['cart_id' => $cart->id, 'product_id' => $product->id], ['quantity' => 1, 'price' => $product->price]);
 
         $this->actingAs($user)->post('/checkout/review', [
-            'shipping_name' => 'A', 'shipping_phone' => '0981234567', 'shipping_address' => 'HN', 'payment_method' => 'cod',
+            'shipping_name' => 'A', 'shipping_phone' => '0981234567', 'shipping_address' => 'HN', 'shipping_province' => 'Quảng Ninh', 'payment_method' => 'cod',
         ]);
         $this->actingAs($user)->post('/checkout/confirm', ['agree_terms' => '1']);
 

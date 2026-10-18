@@ -161,18 +161,19 @@ class CartController extends Controller
 
     public function checkout()
     {
-        if (! auth()->check()) {
-            return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để tiến hành thanh toán!');
+        // Khách vãng lai được thanh toán bằng giỏ hàng trong session (tài khoản tạo ở bước tiếp theo)
+        if ($this->cartService->isGuest()) {
+            $cartItems = $this->cartService->getGuestCartItems();
+            $cartTotal = (int) $cartItems->sum(fn ($item) => $item->quantity * $item->price);
+        } else {
+            $cart = $this->cartService->getCartWithItems(auth()->id());
+            $cartItems = $cart->items;
+            $cartTotal = $cart->totalPrice();
         }
-
-        $cart = $this->cartService->getCartWithItems(auth()->id());
-        $cartItems = $cart->items;
 
         if ($cartItems->isEmpty()) {
             return redirect()->route('cart.index')->with('error', 'Giỏ hàng trống!');
         }
-
-        $cartTotal = $cart->totalPrice();
 
         // Lấy coupon từ session (nếu có)
         $couponCode = session('coupon_code');

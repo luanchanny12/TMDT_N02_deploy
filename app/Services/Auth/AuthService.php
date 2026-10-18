@@ -30,6 +30,9 @@ class AuthService extends BaseService
             'referral_code' => $this->generateUniqueReferralCode(),
         ]);
 
+        // Nạp giá trị mặc định của DB (is_active = true...) để không bị coi là tài khoản bị khóa
+        $user->refresh();
+
         event(new Registered($user));
 
         return $user;

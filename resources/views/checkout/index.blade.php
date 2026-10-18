@@ -11,10 +11,28 @@
                     <div class="bg-white rounded-lg shadow p-6">
                         <h2 class="text-lg font-semibold text-gray-900 mb-4">Thông tin giao hàng</h2>
 
+                        @guest
+                            {{-- Khách vãng lai: mua hàng không cần đăng ký trước --}}
+                            <div class="mb-5 rounded-lg border border-[#efe8e3] bg-[#faf7f4] p-4 text-sm text-gray-700" data-testid="guest-checkout">
+                                Bạn đang mua hàng <strong>không cần đăng nhập</strong>. Chúng tôi sẽ gửi xác nhận đơn và link đặt mật khẩu
+                                (để theo dõi đơn sau này) tới email bên dưới.
+                                Đã có tài khoản? <a href="{{ route('login') }}" class="text-[#b8847e] underline">Đăng nhập</a>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                                <input type="email" name="guest_email" value="{{ old('guest_email') }}" autocomplete="email"
+                                       class="w-full border border-gray-300 rounded-lg px-4 py-2 @error('guest_email') border-red-500 @enderror"
+                                       required>
+                                @error('guest_email')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        @endguest
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Họ và tên *</label>
-                                <input type="text" name="shipping_name" value="{{ old('shipping_name', Auth::user()->name) }}"
+                                <input type="text" name="shipping_name" value="{{ old('shipping_name', Auth::user()?->name) }}"
                                        class="w-full border border-gray-300 rounded-lg px-4 py-2 @error('shipping_name') border-red-500 @enderror"
                                        required>
                                 @error('shipping_name')
@@ -33,7 +51,28 @@
                         </div>
 
                         <div class="mt-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Địa chỉ giao hàng *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tỉnh / Thành phố *</label>
+                            <select name="shipping_province" x-model="province" required
+                                    class="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white @error('shipping_province') border-red-500 @enderror">
+                                <option value="">— Chọn tỉnh/thành phố —</option>
+                                @foreach(config('vietnam.regions') as $region => $provinces)
+                                    <optgroup label="{{ $region }}">
+                                        @foreach($provinces as $province)
+                                            <option value="{{ $province }}">{{ $province }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                @endforeach
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1" x-show="zone" x-cloak>
+                                Khu vực giao hàng: <span x-text="zone"></span>
+                            </p>
+                            @error('shipping_province')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Địa chỉ cụ thể (số nhà, đường, phường/xã) *</label>
                             <textarea name="shipping_address" rows="3"
                                       class="w-full border border-gray-300 rounded-lg px-4 py-2 @error('shipping_address') border-red-500 @enderror"
                                       required>{{ old('shipping_address') }}</textarea>
@@ -95,6 +134,7 @@
                             @endforeach
                         </div>
 
+                        @auth
                         {{-- Coupon Input --}}
                         <div class="border-t pt-4 mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Mã giảm giá</label>
@@ -129,6 +169,11 @@
                             {{-- Error message --}}
                             <div x-show="couponError" x-cloak class="mt-2 text-sm text-red-600" x-text="couponError"></div>
                         </div>
+                        @else
+                            <p class="border-t pt-4 mb-4 text-sm text-gray-500">
+                                <a href="{{ route('login') }}" class="text-[#b8847e] underline">Đăng nhập</a> để dùng mã giảm giá.
+                            </p>
+                        @endauth
 
                         <div class="border-t pt-3 space-y-2">
                             <div class="flex justify-between text-sm">
@@ -143,9 +188,13 @@
                             </div>
 
                             <div class="flex justify-between text-sm">
-                                <span class="text-gray-600">Phí vận chuyển</span>
+                                <span class="text-gray-600" x-text="province ? 'Phí vận chuyển' : 'Phí vận chuyển (ước tính)'">Phí vận chuyển</span>
                                 <span x-text="shippingFee > 0 ? formatCurrency(shippingFee) : 'Miễn phí'" :class="shippingFee === 0 ? 'text-green-600' : ''"></span>
                             </div>
+                            <p class="text-xs text-gray-500 -mt-1" x-show="province" x-cloak data-testid="shipping-hint"
+                               x-text="shippingFee === 0
+                                   ? 'Miễn phí vì đơn từ ' + formatCurrency(rule.threshold) + ' (' + (zone || 'mặc định') + ', phí thường ' + formatCurrency(rule.fee) + ')'
+                                   : 'Mua thêm ' + formatCurrency(rule.threshold - cartTotal) + ' để được miễn phí ship (' + (zone || 'mặc định') + ')'"></p>
 
                             <div x-show="pricing.taxRate > 0" x-cloak class="flex justify-between text-sm" data-testid="tax-line">
                                 <span class="text-gray-600" x-text="pricing.taxLabel + ' (' + pricing.taxRate + '%)'"></span>
@@ -189,13 +238,27 @@
                 },
 
                 pricing: @js($pricingConfig),
+                province: @js(old('shipping_province', '')),
+
+                get rule() {
+                    const z = this.pricing.zones[this.province];
+                    return {
+                        fee: z ? z.fee : this.pricing.shippingFee,
+                        threshold: z && z.threshold !== null ? z.threshold : this.pricing.freeShippingThreshold,
+                    };
+                },
+
+                get zone() {
+                    return this.pricing.zones[this.province]?.zone || '';
+                },
 
                 get shippingFee() {
-                    return this.cartTotal >= this.pricing.freeShippingThreshold ? 0 : this.pricing.shippingFee;
+                    return this.cartTotal >= this.rule.threshold ? 0 : this.rule.fee;
                 },
 
                 get taxAmount() {
-                    return Math.round(Math.max(0, this.cartTotal - this.discount) * this.pricing.taxRate / 100);
+                    const base = Math.max(0, this.cartTotal - this.discount) + (this.pricing.taxOnShipping ? this.shippingFee : 0);
+                    return Math.round(base * this.pricing.taxRate / 100);
                 },
 
                 get finalTotal() {

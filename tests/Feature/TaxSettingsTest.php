@@ -40,7 +40,7 @@ class TaxSettingsTest extends TestCase
         $this->actingAs($user)->post('/checkout/review', [
             'shipping_name' => 'Nguyễn Văn A',
             'shipping_phone' => '0981234567',
-            'shipping_address' => 'Hà Nội',
+            'shipping_address' => 'Hà Nội', 'shipping_province' => 'Quảng Ninh',
             'payment_method' => 'cod',
         ]);
         $this->actingAs($user)->post('/checkout/confirm', ['agree_terms' => '1']);

@@ -3,12 +3,15 @@
 namespace App\Services\Order;
 
 use App\Models\Setting;
+use App\Models\ShippingZone;
 use App\Services\BaseService;
 
 /**
  * Tính tiền đơn hàng từ một nguồn duy nhất (checkout, trang xem lại, tạo đơn):
  * tổng = tạm tính − giảm giá + phí vận chuyển + VAT.
- * VAT tính trên giá trị hàng sau giảm giá; cấu hình trong Admin → Cài đặt.
+ *  - Phí ship theo khu vực của tỉnh/thành nhận hàng (Admin → Cài đặt → Khu vực giao hàng);
+ *    tỉnh không thuộc khu vực nào dùng phí ship mặc định.
+ *  - VAT tính trên giá trị hàng sau giảm giá, cộng thêm phí ship nếu bật "Tính VAT trên phí vận chuyển".
  */
 class PricingService extends BaseService
 {
@@ -34,6 +37,11 @@ class PricingService extends BaseService
         return (string) Setting::get('tax_label', 'Thuế VAT');
     }
 
+    public function taxOnShipping(): bool
+    {
+        return (bool) Setting::get('tax_on_shipping', false);
+    }
+
     public function shippingFee(): int
     {
         return (int) Setting::get('shipping_fee', self::DEFAULT_SHIPPING_FEE);
@@ -44,9 +52,25 @@ class PricingService extends BaseService
         return (int) Setting::get('free_shipping_threshold', self::DEFAULT_FREE_SHIPPING_THRESHOLD);
     }
 
-    public function shippingFor(int $subtotal): int
+    /**
+     * @return array{zone: string|null, fee: int, threshold: int}
+     */
+    public function shippingRule(?string $province = null): array
     {
-        return $subtotal >= $this->freeShippingThreshold() ? 0 : $this->shippingFee();
+        $zone = $province ? (ShippingZone::provinceMap()[$province] ?? null) : null;
+
+        return [
+            'zone' => $zone['zone'] ?? null,
+            'fee' => $zone['fee'] ?? $this->shippingFee(),
+            'threshold' => $zone['threshold'] ?? $this->freeShippingThreshold(),
+        ];
+    }
+
+    public function shippingFor(int $subtotal, ?string $province = null): int
+    {
+        $rule = $this->shippingRule($province);
+
+        return $subtotal >= $rule['threshold'] ? 0 : $rule['fee'];
     }
 
     public function taxFor(int $taxable, ?float $rate = null): int
@@ -57,19 +81,21 @@ class PricingService extends BaseService
     }
 
     /**
-     * @return array{subtotal:int, discount:int, shipping_fee:int, tax_rate:float, tax_amount:int, total:int}
+     * @return array{subtotal:int, discount:int, shipping_fee:int, shipping_zone:string|null, tax_rate:float, tax_amount:int, total:int}
      */
-    public function breakdown(int $subtotal, int $discount = 0): array
+    public function breakdown(int $subtotal, int $discount = 0, ?string $province = null): array
     {
         $discount = min(max(0, $discount), $subtotal);
-        $shipping = $this->shippingFor($subtotal);
+        $shipping = $this->shippingFor($subtotal, $province);
         $rate = $this->taxRate();
-        $tax = $this->taxFor($subtotal - $discount, $rate);
+        $taxable = $subtotal - $discount + ($this->taxOnShipping() ? $shipping : 0);
+        $tax = $this->taxFor($taxable, $rate);
 
         return [
             'subtotal' => $subtotal,
             'discount' => $discount,
             'shipping_fee' => $shipping,
+            'shipping_zone' => $this->shippingRule($province)['zone'],
             'tax_rate' => $rate,
             'tax_amount' => $tax,
             'total' => $subtotal - $discount + $shipping + $tax,
@@ -77,15 +103,17 @@ class PricingService extends BaseService
     }
 
     /**
-     * Cấu hình cho JavaScript tính lại tổng khi khách áp mã giảm giá trên trang checkout.
+     * Cấu hình cho JavaScript tính lại tổng khi khách đổi tỉnh/thành hoặc áp mã giảm giá trên trang checkout.
      */
     public function clientConfig(): array
     {
         return [
             'shippingFee' => $this->shippingFee(),
             'freeShippingThreshold' => $this->freeShippingThreshold(),
+            'zones' => ShippingZone::provinceMap(),
             'taxRate' => $this->taxRate(),
             'taxLabel' => $this->taxLabel(),
+            'taxOnShipping' => $this->taxOnShipping(),
         ];
     }
 }

@@ -120,7 +120,7 @@ class OrderService extends BaseService
             }
 
             // 4. Phí ship + VAT theo cấu hình Admin → Cài đặt (freeship xét trên tạm tính, VAT trên giá trị sau giảm giá)
-            $pricing = $this->pricingService->breakdown($subtotal, $discount);
+            $pricing = $this->pricingService->breakdown($subtotal, $discount, $data['shipping_province'] ?? null);
             $shippingFee = $pricing['shipping_fee'];
             $total = $pricing['total'];
 
@@ -143,6 +143,7 @@ class OrderService extends BaseService
                 'shipping_name' => $data['shipping_name'],
                 'shipping_phone' => $data['shipping_phone'],
                 'shipping_address' => $data['shipping_address'],
+                'shipping_province' => $data['shipping_province'] ?? null,
                 'note' => $data['note'] ?? null,
             ]);
 

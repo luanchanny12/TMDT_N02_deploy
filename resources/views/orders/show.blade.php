@@ -151,7 +151,7 @@
                         </div>
                         <div>
                             <span class="text-gray-600">Địa chỉ:</span>
-                            <p class="mt-1">{{ $order->shipping_address }}</p>
+                            <p class="mt-1">{{ $order->shipping_address }}@if($order->shipping_province), {{ $order->shipping_province }}@endif</p>
                         </div>
                         @if($order->note)
                             <div>

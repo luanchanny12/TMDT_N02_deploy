@@ -182,7 +182,7 @@ class CouponTest extends TestCase
             'payment_status' => 'paid',
             'shipping_name' => 'Test User',
             'shipping_phone' => '0987654321',
-            'shipping_address' => '123 Test Street',
+            'shipping_address' => '123 Test Street', 'shipping_province' => 'Quảng Ninh',
         ]);
 
         CouponUsage::create([
@@ -221,7 +221,7 @@ class CouponTest extends TestCase
         $this->actingAs($user)->post('/checkout/review', [
             'shipping_name' => 'Test User',
             'shipping_phone' => '0987654321',
-            'shipping_address' => '123 Test Street',
+            'shipping_address' => '123 Test Street', 'shipping_province' => 'Quảng Ninh',
             'payment_method' => 'cod',
         ])->assertRedirect(route('checkout.review.show'));
 
@@ -262,7 +262,7 @@ class CouponTest extends TestCase
         $this->actingAs($user)->post('/checkout/review', [
             'shipping_name' => 'Test User',
             'shipping_phone' => '0987654321',
-            'shipping_address' => '123 Test Street',
+            'shipping_address' => '123 Test Street', 'shipping_province' => 'Quảng Ninh',
             'payment_method' => 'cod',
         ])->assertRedirect(route('checkout.review.show'));
 
@@ -295,7 +295,7 @@ class CouponTest extends TestCase
                 $this->actingAs($user)->post('/checkout/review', [
                     'shipping_name' => "User {$i}",
                     'shipping_phone' => '0987654321',
-                    'shipping_address' => '123 Test Street',
+                    'shipping_address' => '123 Test Street', 'shipping_province' => 'Quảng Ninh',
                     'payment_method' => 'cod',
                 ]);
 

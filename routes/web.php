@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
+use App\Http\Controllers\Admin\ShippingZoneController as AdminShippingZoneController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\FacebookController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
@@ -97,7 +98,7 @@ Route::middleware('guest')->group(function () {
     Route::get('/auth/facebook/callback', [FacebookController::class, 'callback'])->name('auth.facebook.callback');
 });
 
-// Cart (guest allowed — session cart; checkout bắt buộc đăng nhập)
+// Cart (guest allowed — session cart)
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 Route::post('/cart/update', [CartController::class, 'update'])->name('cart.update');
@@ -105,6 +106,10 @@ Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remov
 Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
 
 // Chat Streaming (guest → FAQ-only; auth → Gemini + throttle)
+// Checkout bước 1 — mở cho khách vãng lai (tự tạo tài khoản theo email khi gửi thông tin giao hàng)
+Route::get('/checkout', [CartController::class, 'checkout'])->name('checkout.index');
+Route::post('/checkout/review', [OrderController::class, 'review'])->middleware('throttle:checkout')->name('checkout.review');
+
 Route::post('/chat/stream', [ChatController::class, 'stream'])->middleware('throttle:chat')->name('chat.stream');
 
 // Auth: Authenticated users
@@ -112,8 +117,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [LogoutController::class, 'logout'])->name('logout');
 
     // Checkout bắt buộc đăng nhập
-    Route::get('/checkout', [CartController::class, 'checkout'])->name('checkout.index');
-    Route::post('/checkout/review', [OrderController::class, 'review'])->name('checkout.review');
     Route::get('/checkout/review', [OrderController::class, 'showReview'])->name('checkout.review.show');
     Route::post('/checkout/confirm', [OrderController::class, 'confirm'])->middleware('throttle:checkout')->name('checkout.confirm');
 
@@ -179,6 +182,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Cài đặt cửa hàng (thuế VAT, phí vận chuyển)
     Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings.index');
     Route::put('/settings', [AdminSettingController::class, 'update'])->name('settings.update');
+    Route::resource('shipping-zones', AdminShippingZoneController::class)->except(['index', 'show']);
 
     // Coupons (specific routes before wildcard)
     Route::get('/coupons', [AdminCouponController::class, 'index'])->name('coupons.index');
