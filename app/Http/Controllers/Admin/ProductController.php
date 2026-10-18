@@ -12,6 +12,15 @@ use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
+    private const VARIANT_RULES = [
+        'variants' => 'nullable|array|max:100',
+        'variants.*.id' => 'nullable|integer',
+        'variants.*.size' => 'nullable|string|max:50',
+        'variants.*.color' => 'nullable|string|max:50',
+        'variants.*.stock' => 'nullable|integer|min:0|max:1000000',
+        'variants.*.price' => 'nullable|integer|min:0',
+    ];
+
     public function index(Request $request)
     {
         $query = Product::with('category', 'images');
@@ -49,6 +58,7 @@ class ProductController extends Controller
             'brand' => 'nullable|string',
             'image' => 'nullable|mimes:jpg,jpeg,png,webp|max:4096',
             'status' => 'sometimes|in:active,inactive',
+            ...self::VARIANT_RULES,
         ], [
             'image.mimes' => 'Hình ảnh bìa phải là JPG, PNG hoặc WebP.',
             'image.max' => 'Hình ảnh bìa tối đa 4MB.',
@@ -58,6 +68,8 @@ class ProductController extends Controller
         $validated['status'] = $request->input('status', 'active');
 
         $product = Product::create(collect($validated)->only(['name', 'slug', 'description', 'price', 'sale_price', 'category_id', 'stock', 'brand', 'status'])->toArray());
+
+        $this->syncVariants($product, $request);
 
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('images/products', 'public');
@@ -93,6 +105,7 @@ class ProductController extends Controller
             'brand' => 'nullable|string',
             'image' => 'nullable|mimes:jpg,jpeg,png,webp|max:4096',
             'status' => 'sometimes|in:active,inactive,out_of_stock',
+            ...self::VARIANT_RULES,
         ], [
             'image.mimes' => 'Hình ảnh bìa phải là JPG, PNG hoặc WebP.',
             'image.max' => 'Hình ảnh bìa tối đa 4MB.',
@@ -135,7 +148,8 @@ class ProductController extends Controller
 
     private function syncVariants(Product $product, Request $request): void
     {
-        if (! $request->has('variants')) {
+        // Form luôn gửi variants_submitted → xóa hết dòng trên form nghĩa là xóa hết biến thể
+        if (! $request->has('variants') && ! $request->has('variants_submitted')) {
             return;
         }
 
@@ -146,7 +160,7 @@ class ProductController extends Controller
             $size = trim((string) ($row['size'] ?? ''));
             $color = trim((string) ($row['color'] ?? ''));
             $stock = (int) ($row['stock'] ?? 0);
-            $price = $row['price'] !== null && $row['price'] !== '' ? (int) $row['price'] : null;
+            $price = isset($row['price']) && $row['price'] !== '' ? (int) $row['price'] : null;
             $id = $row['id'] ?? null;
 
             if ($size === '' && $color === '') {
