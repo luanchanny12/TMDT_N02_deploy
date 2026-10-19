@@ -19,3 +19,8 @@ database/*.sqlite-*
 tests
 docs
 *.md
+# Chỉ dùng cho Docker local / microservice riêng, image production không cần
+docker
+services
+docker-compose.yml
+public/storage
