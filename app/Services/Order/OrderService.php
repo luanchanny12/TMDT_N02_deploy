@@ -354,6 +354,11 @@ class OrderService extends BaseService
         $order->refresh();
         $this->notifyStatusChanged($order, $cancelled);
 
+        // Khách hủy thanh toán / bỏ dở VNPay: giỏ hàng được trả lại nguyên như trước khi đặt
+        if (in_array($reason, ['payment_failed', 'payment_expired'], true)) {
+            $this->cartService->restoreFromOrder($order);
+        }
+
         return true;
     }
 

@@ -5,6 +5,7 @@ namespace App\Services\Cart;
 use App\Exceptions\CartException;
 use App\Models\Cart;
 use App\Models\CartItem;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Services\BaseService;
@@ -122,6 +123,44 @@ class CartService extends BaseService
             ->where('cart_id', $cart->id)
             ->firstOrFail()
             ->delete();
+    }
+
+    /**
+     * Trả sản phẩm của đơn chưa thanh toán (VNPay bị hủy / hết hạn) về giỏ để khách đặt lại ngay.
+     * Bỏ qua sản phẩm đã ngừng bán, dòng khách đã tự thêm lại, và giới hạn theo tồn kho hiện tại.
+     */
+    public function restoreFromOrder(Order $order): int
+    {
+        $cart = $this->getOrCreateCart($order->user_id);
+        $restored = 0;
+
+        foreach ($order->items()->with(['product', 'variant'])->get() as $item) {
+            $product = $item->product;
+            if (! $product || $product->status !== 'active') {
+                continue;
+            }
+
+            $exists = CartItem::where('cart_id', $cart->id)
+                ->where('product_id', $item->product_id)
+                ->where(fn ($q) => $item->variant_id ? $q->where('variant_id', $item->variant_id) : $q->whereNull('variant_id'))
+                ->exists();
+            $stock = $item->variant ? $item->variant->stock : $product->stock;
+
+            if ($exists || $stock < 1 || ($item->variant_id && ! $item->variant)) {
+                continue;
+            }
+
+            CartItem::create([
+                'cart_id' => $cart->id,
+                'product_id' => $item->product_id,
+                'variant_id' => $item->variant_id,
+                'quantity' => min($item->quantity, $stock),
+                'price' => $item->variant ? $item->variant->unitPrice() : $product->effectivePrice(),
+            ]);
+            $restored++;
+        }
+
+        return $restored;
     }
 
     public function clearCart(int $userId): void
