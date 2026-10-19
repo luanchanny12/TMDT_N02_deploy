@@ -7,6 +7,7 @@ use App\Services\ChatbotService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class ChatbotPolicyGuardrailTest extends TestCase
@@ -25,7 +26,7 @@ class ChatbotPolicyGuardrailTest extends TestCase
         ];
     }
 
-    /** @dataProvider policyQuestions */
+    #[DataProvider('policyQuestions')]
     public function test_policy_questions_get_fixed_answer_with_link_and_hotline(string $question, string $expected): void
     {
         $answer = app(ChatbotService::class)->policyAnswer($question);
