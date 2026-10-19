@@ -6,6 +6,8 @@ services:
     container_name: socialshop-app
     restart: unless-stopped
     working_dir: /var/www
+    # Khởi động: chạy migration còn thiếu + tạo mã khuyến mãi WELCOME10 nếu chưa có (không xóa dữ liệu), rồi chạy php-fpm
+    command: sh -c "php artisan migrate --force && php artisan db:seed --class=PromoCouponSeeder --force; exec php-fpm"
     volumes:
       - .:/var/www
       - vendor_volume:/var/www/vendor

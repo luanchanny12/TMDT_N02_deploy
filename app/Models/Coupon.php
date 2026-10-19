@@ -11,6 +11,9 @@ class Coupon extends Model
 {
     use HasFactory;
 
+    /** Mã chào mừng quảng bá trên thanh ưu đãi đầu trang (tạo bởi PromoCouponSeeder). */
+    public const WELCOME_CODE = 'WELCOME10';
+
     protected $fillable = [
         'code',
         'type',

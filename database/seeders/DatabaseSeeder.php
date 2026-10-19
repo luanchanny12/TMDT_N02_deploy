@@ -140,6 +140,7 @@ class DatabaseSeeder extends Seeder
         $this->call(FlashSaleSeeder::class); // ưu đãi có mốc kết thúc thật
 
         $this->call(CouponSeeder::class);
+        $this->call(PromoCouponSeeder::class); // WELCOME10 trên thanh ưu đãi
 
         // Chatbot FAQs
         $this->call(ChatbotFaqSeeder::class);

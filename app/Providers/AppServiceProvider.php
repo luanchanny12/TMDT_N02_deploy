@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Models\Category;
+use App\Models\Coupon;
+use App\Services\Order\PricingService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -75,6 +77,17 @@ class AppServiceProvider extends ServiceProvider
                 ->orderBy('sort_order')
                 ->orderBy('name')
                 ->get());
+
+            // Thanh ưu đãi: ngưỡng freeship thật và chỉ quảng bá mã khi mã còn dùng được
+            $welcome = Coupon::where('code', Coupon::WELCOME_CODE)
+                ->where('status', 'active')
+                ->where(fn ($q) => $q->whereNull('start_at')->orWhere('start_at', '<=', now()))
+                ->where(fn ($q) => $q->whereNull('end_at')->orWhere('end_at', '>=', now()))
+                ->where(fn ($q) => $q->whereNull('usage_limit')->orWhereColumn('used_count', '<', 'usage_limit'))
+                ->first();
+
+            $view->with('promoFreeShip', app(PricingService::class)->nationwideFreeShippingThreshold());
+            $view->with('promoCoupon', $welcome);
         });
     }
 }
