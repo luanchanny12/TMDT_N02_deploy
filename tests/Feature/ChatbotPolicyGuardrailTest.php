@@ -41,6 +41,7 @@ class ChatbotPolicyGuardrailTest extends TestCase
     {
         $this->assertNull(app(ChatbotService::class)->policyAnswer('Có áo hoodie nam không?'));
         $this->assertNull(app(ChatbotService::class)->policyAnswer('Phí ship ra Hà Nội bao nhiêu'));
+        $this->assertNull(app(ChatbotService::class)->policyAnswer('Mình đổi sang thanh toán VNPay được không'));
     }
 
     public function test_logged_in_user_policy_question_never_reaches_ai(): void

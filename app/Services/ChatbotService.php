@@ -72,7 +72,7 @@ PROMPT;
             $has(['khiếu nại', 'khieu nai', 'phàn nàn', 'tố cáo']) => 'complaint',
             $has(['hoàn tiền', 'hoàn lại tiền', 'hoan tien', 'refund', 'trả tiền lại']) => 'refund',
             $has(['bảo hành', 'bao hanh', 'warranty']) => 'warranty',
-            $has(['đổi trả', 'doi tra', 'trả hàng', 'tra hang', 'trả lại', 'đổi hàng', 'doi hang', 'đổi size', 'đổi mẫu', 'đổi màu', 'đổi sang']) => 'return',
+            $has(['đổi trả', 'doi tra', 'trả hàng', 'tra hang', 'trả lại', 'đổi hàng', 'doi hang', 'đổi size', 'đổi mẫu', 'đổi màu']) => 'return',
             default => null,
         };
 
