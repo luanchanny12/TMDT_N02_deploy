@@ -3,15 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\AnalyticsEvent;
-use App\Models\Campaign;
-use App\Models\Order;
-use App\Models\Product;
 use App\Services\Analytics\AnalyticsReportService;
+use App\Services\Analytics\DemoAnalyticsService;
 use App\Services\AuditService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class AnalyticsController extends Controller
 {
@@ -32,33 +28,23 @@ class AnalyticsController extends Controller
             'ranges' => self::RANGES,
             'from' => $from,
             'to' => $to,
-            'hasDemoData' => $reports->hasDemoData(),
+            'demoEnabled' => app(DemoAnalyticsService::class)->isEnabled(),
         ]));
     }
 
     /**
-     * Xóa dữ liệu demo (lượt truy cập, sự kiện, chiến dịch mẫu) — số liệu thật và đơn hàng giữ nguyên.
+     * Công tắc dữ liệu mẫu: bật = tạo lại dữ liệu demo, tắt = xóa (số liệu thật và đơn hàng giữ nguyên).
      */
-    public function clearDemo()
+    public function toggleDemo(Request $request, DemoAnalyticsService $demo)
     {
-        $events = AnalyticsEvent::where('is_demo', true)->count();
-        $campaignIds = Campaign::where('is_demo', true)->pluck('id');
+        $enable = $request->boolean('enabled');
+        $result = $enable ? $demo->enable() : $demo->disable();
 
-        DB::transaction(function () use ($campaignIds) {
-            AnalyticsEvent::where('is_demo', true)->delete();
-            Order::whereIn('campaign_id', $campaignIds)->update(['campaign_id' => null]);
-            Campaign::whereIn('id', $campaignIds)->delete();
+        AuditService::log($enable ? 'analytics_demo_enabled' : 'analytics_demo_cleared', 'AnalyticsEvent', null, $result);
 
-            // Lượt xem hiển thị trên sản phẩm (thẻ, trang chi tiết, "Xem nhiều", Dashboard) cũng chứa số mẫu
-            // → tính lại bằng đúng số lượt xem thật đã ghi nhận
-            Product::query()->update([
-                'views_count' => DB::raw("(SELECT COUNT(*) FROM analytics_events WHERE analytics_events.product_id = products.id AND analytics_events.type = 'product_view')"),
-            ]);
-        });
-
-        AuditService::log('analytics_demo_cleared', 'AnalyticsEvent', null, ['events' => $events, 'campaigns' => $campaignIds->count()]);
-
-        return redirect()->route('admin.analytics.index')
-            ->with('success', "Đã xóa dữ liệu mẫu ({$events} sự kiện, {$campaignIds->count()} chiến dịch). Trang chỉ còn số liệu thật.");
+        return redirect()->route('admin.analytics.index', ['days' => $request->integer('days', 30)])
+            ->with('success', $enable
+                ? "Đã bật dữ liệu mẫu ({$result['events']} sự kiện, {$result['campaigns']} chiến dịch demo)."
+                : "Đã tắt dữ liệu mẫu (xóa {$result['events']} sự kiện, {$result['campaigns']} chiến dịch). Trang chỉ còn số liệu thật.");
     }
 }

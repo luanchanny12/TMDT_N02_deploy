@@ -150,15 +150,15 @@ class AnalyticsCampaignTest extends TestCase
         $order = Order::factory()->create(['user_id' => User::factory()->create()->id, 'campaign_id' => $demoCampaign->id]);
 
         $admin = User::factory()->create(['role' => 'admin']);
-        $this->actingAs($admin)->get(route('admin.analytics.index'))->assertSee('Xóa dữ liệu mẫu');
+        $this->actingAs($admin)->get(route('admin.analytics.index'))->assertSee('Dữ liệu mẫu: Đang bật')->assertSee('Tắt dữ liệu mẫu');
 
-        $this->actingAs($admin)->delete(route('admin.analytics.clear-demo'))->assertRedirect(route('admin.analytics.index'));
+        $this->actingAs($admin)->post(route('admin.analytics.demo'), ['enabled' => 0])->assertRedirect(route('admin.analytics.index', ['days' => 30]));
 
         $this->assertSame(['real1'], AnalyticsEvent::pluck('session_hash')->all());
         $this->assertNull(Campaign::find($demoCampaign->id));
         $this->assertNotNull(Campaign::find($realCampaign->id));
         $this->assertNull($order->fresh()->campaign_id); // đơn hàng vẫn còn, chỉ bỏ gắn chiến dịch mẫu
-        $this->actingAs($admin)->get(route('admin.analytics.index'))->assertDontSee('data-testid="demo-data-notice"', false);
+        $this->actingAs($admin)->get(route('admin.analytics.index'))->assertSee('Dữ liệu mẫu: Đang tắt')->assertSee('Bật dữ liệu mẫu');
     }
 
     public function test_clear_demo_data_recomputes_product_view_counts(): void
@@ -172,17 +172,44 @@ class AnalyticsCampaignTest extends TestCase
         $other = $this->product();
         $other->update(['views_count' => 300]);
 
-        $this->actingAs(User::factory()->create(['role' => 'admin']))->delete(route('admin.analytics.clear-demo'));
+        $this->actingAs(User::factory()->create(['role' => 'admin']))->post(route('admin.analytics.demo'), ['enabled' => 0]);
 
         $this->assertSame(2, $product->fresh()->views_count); // chỉ còn 2 lượt xem thật
         $this->assertSame(0, $other->fresh()->views_count);
+    }
+
+    public function test_demo_data_can_be_turned_back_on_without_touching_real_orders(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $product = $this->product();
+        $realCampaign = $this->campaign(['utm_campaign' => 'that-su', 'name' => 'Chiến dịch thật']);
+
+        // Một đơn thật đặt qua website (có sự kiện mua hàng thật, gắn chiến dịch thật)
+        $realOrder = Order::factory()->create(['user_id' => User::factory()->create()->id, 'status' => 'delivered', 'campaign_id' => $realCampaign->id, 'traffic_source' => 'facebook']);
+        AnalyticsEvent::create(['type' => 'purchase', 'session_hash' => 'real', 'order_id' => $realOrder->id, 'value' => $realOrder->total]);
+
+        $this->actingAs($admin)->get(route('admin.analytics.index'))->assertSee('Dữ liệu mẫu: Đang tắt');
+
+        $this->actingAs($admin)->post(route('admin.analytics.demo'), ['enabled' => 1])->assertRedirect();
+
+        $this->assertSame(3, Campaign::where('is_demo', true)->count());
+        $this->assertGreaterThan(100, AnalyticsEvent::where('is_demo', true)->where('type', 'visit')->count());
+        $this->assertGreaterThanOrEqual(20, $product->fresh()->views_count);
+        $this->assertSame($realCampaign->id, $realOrder->fresh()->campaign_id); // đơn thật không bị ghi đè nguồn
+        $this->actingAs($admin)->get(route('admin.analytics.index'))->assertSee('Dữ liệu mẫu: Đang bật');
+
+        // Tắt lại → về đúng số liệu thật
+        $this->actingAs($admin)->post(route('admin.analytics.demo'), ['enabled' => 0]);
+        $this->assertSame(0, AnalyticsEvent::where('is_demo', true)->count());
+        $this->assertSame(0, $product->fresh()->views_count);
+        $this->assertSame(1, AnalyticsEvent::where('type', 'purchase')->count());
     }
 
     public function test_customer_cannot_clear_demo_data(): void
     {
         AnalyticsEvent::create(['type' => 'visit', 'session_hash' => 'demo1', 'is_demo' => true]);
 
-        $this->actingAs(User::factory()->create())->delete(route('admin.analytics.clear-demo'))->assertForbidden();
+        $this->actingAs(User::factory()->create())->post(route('admin.analytics.demo'), ['enabled' => 0])->assertForbidden();
         $this->assertSame(1, AnalyticsEvent::count());
     }
 
