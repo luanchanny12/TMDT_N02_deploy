@@ -136,6 +136,10 @@ class ProductController extends Controller
             'images' => fn ($q) => $q->orderByDesc('is_primary')->orderBy('sort_order'),
             'variants' => fn ($q) => $q->orderBy('size')->orderBy('color'),
         ]);
+        $soldCount = (int) $product->orderItems()
+            ->whereHas('order', fn ($o) => $o->where('status', '!=', 'cancelled'))
+            ->sum('quantity');
+
         $recommendations = app(RecommendationService::class);
         $relatedProducts = $recommendations->similarTo($product);
         $boughtTogether = $recommendations->boughtTogether($product);
@@ -202,7 +206,7 @@ class ProductController extends Controller
         ];
 
         return view('products.show', compact(
-            'product', 'relatedProducts', 'boughtTogether', 'reviews', 'canReview', 'hasReviewed',
+            'product', 'soldCount', 'relatedProducts', 'boughtTogether', 'reviews', 'canReview', 'hasReviewed',
             'metaTitle', 'metaDescription', 'metaImage', 'jsonLd', 'hasVariants'
         ));
     }
