@@ -107,7 +107,7 @@
                 </button>
                 <div x-show="open === 6" x-collapse x-cloak class="px-5 pb-4 text-sm text-[#6b6560] leading-relaxed">
                     Bạn có thể hủy đơn hàng khi trạng thái đang ở <strong class="text-[#3d3d3d]">"Đang xử lý"</strong>.
-                    Liên hệ hotline <strong class="text-[#3d3d3d]">1900-xxxx-xxx</strong> hoặc gửi email kèm mã đơn hàng để yêu cầu hủy.
+                    Liên hệ hotline <strong class="text-[#3d3d3d]">077123456</strong> hoặc gửi email kèm mã đơn hàng để yêu cầu hủy.
                     Đơn hàng đã chuyển sang <strong class="text-[#3d3d3d]">"Đang giao"</strong> sẽ không thể hủy.
                 </div>
             </div>

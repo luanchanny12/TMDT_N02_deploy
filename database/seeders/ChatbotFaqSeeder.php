@@ -40,7 +40,7 @@ class ChatbotFaqSeeder extends Seeder
             ],
             [
                 'question' => 'Liên hệ shop bằng cách nào?',
-                'answer' => 'Hotline: 1900-xxxx-xxx (8:00 - 17:00, T2-T6). Email: support@socialshop.vn. Bạn cũng có thể chat trực tiếp với mình!',
+                'answer' => 'Hotline: 077123456 (8:00 - 17:00, T2-T6). Email: support@socialshop.vn. Bạn cũng có thể chat trực tiếp với mình!',
                 'keywords' => 'liên hệ,hotline,email,support,gọi,hỗ trợ,tư vấn',
                 'status' => 'active',
                 'sort_order' => 5,

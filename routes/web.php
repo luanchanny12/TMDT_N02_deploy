@@ -60,6 +60,7 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap')
 Route::get('/huong-dan-mua-hang', [StaticPageController::class, 'buyingGuide'])->name('pages.buying-guide');
 Route::get('/chinh-sach-doi-tra', [StaticPageController::class, 'returnPolicy'])->name('pages.return-policy');
 Route::get('/chinh-sach-bao-mat', [StaticPageController::class, 'privacy'])->name('pages.privacy');
+Route::get('/bang-dang-ky-du-lieu-ca-nhan', [StaticPageController::class, 'dataInventory'])->name('pages.data-inventory');
 Route::get('/dieu-khoan-giao-dich', [StaticPageController::class, 'terms'])->name('pages.terms');
 Route::get('/gioi-thieu', [StaticPageController::class, 'about'])->name('pages.about');
 Route::get('/faq', [StaticPageController::class, 'faq'])->name('pages.faq');

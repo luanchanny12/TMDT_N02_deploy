@@ -111,7 +111,7 @@
                     <a href="{{ route('orders.index') }}" class="hover:text-white transition-colors">Tra cứu đơn hàng</a>
                 @endauth
                 <span>•</span>
-                <a href="tel:1900xxxx" class="hover:text-white transition-colors">Hotline: 1900-xxxx</a>
+                <a href="tel:077123456" class="hover:text-white transition-colors">Hotline: 077123456</a>
             </div>
         </div>
     </div>
@@ -425,7 +425,7 @@
                     </p>
                     <div class="space-y-1.5 text-xs text-white/80">
                         <p class="flex items-center gap-2"><span>📍</span> 123 Đường Thời Trang, Quận 1, TP. Hồ Chí Minh</p>
-                        <p class="flex items-center gap-2"><span>📞</span> Hotline: <a href="tel:1900xxxx" class="hover:text-[#e8c4c4] transition-colors font-bold">1900-8888</a> (8:00 - 21:00)</p>
+                        <p class="flex items-center gap-2"><span>📞</span> Hotline: <a href="tel:077123456" class="hover:text-[#e8c4c4] transition-colors font-bold">077123456</a> (8:00 - 21:00)</p>
                         <p class="flex items-center gap-2"><span>✉️</span> Email: <a href="mailto:support@socialshop.vn" class="hover:text-[#e8c4c4] transition-colors">support@socialshop.vn</a></p>
                     </div>
                 </div>
@@ -450,6 +450,7 @@
                         <li><a href="{{ route('pages.return-policy') }}" class="hover:text-white transition-colors">Chính sách đổi trả 7 ngày</a></li>
                         <li><a href="{{ route('pages.terms') }}" class="hover:text-white transition-colors">Điều kiện giao dịch chung</a></li>
                         <li><a href="{{ route('pages.privacy') }}" class="hover:text-white transition-colors">Chính sách bảo mật</a></li>
+                        <li><a href="{{ route('pages.data-inventory') }}" class="hover:text-white transition-colors">Bảng đăng ký dữ liệu cá nhân</a></li>
                         <li><a href="{{ route('pages.faq') }}" class="hover:text-white transition-colors">Câu hỏi thường gặp (FAQ)</a></li>
                     </ul>
                 </div>

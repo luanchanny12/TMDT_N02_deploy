@@ -19,6 +19,11 @@ class StaticPageController extends Controller
         return view('pages.privacy');
     }
 
+    public function dataInventory()
+    {
+        return view('pages.data-inventory');
+    }
+
     public function faq()
     {
         return view('pages.faq');
