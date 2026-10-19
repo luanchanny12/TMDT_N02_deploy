@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\CouponException;
 use App\Exceptions\OrderException;
-use App\Models\Coupon;
+use App\Exceptions\PriceChangedException;
 use App\Models\ShippingZone;
 use App\Services\Cart\CartService;
 use App\Services\Order\GuestCheckoutService;
@@ -17,6 +17,9 @@ use Illuminate\Validation\Rule;
 
 class OrderController extends Controller
 {
+    /** Báo giá ở bước xác nhận được giữ trong 15 phút. */
+    private const QUOTE_MINUTES = 15;
+
     public function __construct(
         private OrderService $orderService,
         private PaymentService $paymentService,
@@ -73,7 +76,28 @@ class OrderController extends Controller
 
         session(['checkout' => $validated]);
 
+        try {
+            $this->storeQuote($validated);
+        } catch (OrderException $e) {
+            return redirect()->route('cart.index')->with('error', $e->getMessage());
+        }
+
         return redirect()->route('checkout.review.show');
+    }
+
+    /**
+     * Báo giá có hạn 15 phút: tính đúng như lúc đặt hàng và ghi nhớ tổng tiền khách đã thấy.
+     */
+    private function storeQuote(array $checkout): array
+    {
+        $quote = $this->orderService->quote(Auth::user(), $checkout['shipping_province'] ?? null);
+
+        session(['checkout_quote' => [
+            'total' => $quote['total'],
+            'expires_at' => now()->addMinutes(self::QUOTE_MINUTES)->getTimestamp(),
+        ]]);
+
+        return $quote;
     }
 
     /**
@@ -95,28 +119,33 @@ class OrderController extends Controller
             return redirect()->route('cart.index')->with('error', 'Giỏ hàng của bạn đang trống.');
         }
 
-        $cartTotal = $cart->totalPrice();
-        $couponCode = session('coupon_code');
-        $discount = 0;
-        $coupon = null;
-
-        if ($couponCode) {
-            $coupon = Coupon::where('code', $couponCode)->where('status', 'active')->first();
-            if ($coupon) {
-                $discount = $coupon->calculateDiscount($cartTotal);
-            } else {
-                session()->forget('coupon_code');
-                $couponCode = null;
-            }
+        try {
+            $quote = $this->storeQuote($checkout);
+        } catch (OrderException $e) {
+            return redirect()->route('cart.index')->with('error', $e->getMessage());
         }
 
-        $pricing = app(PricingService::class)->breakdown((int) $cartTotal, (int) $discount, $checkout['shipping_province'] ?? null);
+        // Giá từng dòng theo báo giá (không dùng giá lưu lúc bỏ vào giỏ)
+        $linePrices = collect($quote['lines'])->keyBy('cart_item_id');
+        $cartItems->each(function ($item) use ($linePrices) {
+            $item->price = $linePrices->get($item->id)['price'] ?? $item->price;
+        });
+
+        $pricing = $quote['pricing'];
+        $cartTotal = $quote['subtotal'];
+        $couponCode = session('coupon_code');
+        $discount = $quote['discount'];
         $shippingFee = $pricing['shipping_fee'];
         $shippingRule = app(PricingService::class)->shippingRule($checkout['shipping_province'] ?? null);
         $taxAmount = $pricing['tax_amount'];
         $taxRate = $pricing['tax_rate'];
         $taxLabel = app(PricingService::class)->taxLabel();
         $total = $pricing['total'];
+        $quoteExpiresAt = now()->addMinutes(self::QUOTE_MINUTES);
+
+        if ($quote['coupon_error']) {
+            session()->now('error', 'Mã giảm giá không còn áp dụng được: '.$quote['coupon_error']);
+        }
 
         return view('checkout.review', compact(
             'checkout',
@@ -129,7 +158,8 @@ class OrderController extends Controller
             'shippingRule',
             'taxRate',
             'taxLabel',
-            'total'
+            'total',
+            'quoteExpiresAt'
         ));
     }
 
@@ -160,7 +190,13 @@ class OrderController extends Controller
                 ->with('error', 'Vui lòng đồng ý Điều kiện giao dịch chung');
         }
 
-        return $this->placeOrder($request, $checkout);
+        $quote = session('checkout_quote');
+        if (! $quote || $quote['expires_at'] < now()->getTimestamp()) {
+            return redirect()->route('checkout.review.show')
+                ->with('error', 'Báo giá đã quá '.self::QUOTE_MINUTES.' phút nên hệ thống vừa cập nhật lại giá. Vui lòng kiểm tra và xác nhận lại.');
+        }
+
+        return $this->placeOrder($request, $checkout + ['expected_total' => $quote['total']]);
     }
 
     private function placeOrder(Request $request, array $validated)
@@ -173,9 +209,10 @@ class OrderController extends Controller
                 'shipping_province' => $validated['shipping_province'] ?? null,
                 'note' => $validated['shipping_notes'] ?? null,
                 'payment_method' => $validated['payment_method'],
+                'expected_total' => $validated['expected_total'] ?? null,
             ]);
 
-            session()->forget('checkout');
+            session()->forget(['checkout', 'checkout_quote']);
 
             $payment = $this->paymentService->createPayment($order, $request->ip());
 
@@ -184,6 +221,12 @@ class OrderController extends Controller
             }
 
             return redirect()->route('orders.success', $order)->with('success', 'Đặt hàng thành công!');
+        } catch (PriceChangedException $e) {
+            return redirect()->route('checkout.review.show')->with('error', sprintf(
+                'Giá đơn hàng vừa thay đổi từ %s₫ thành %s₫ (giá sản phẩm, khuyến mãi, phí ship hoặc thuế đã được cập nhật). Vui lòng kiểm tra và xác nhận lại — bạn chỉ thanh toán theo số tiền hiển thị.',
+                number_format($e->quotedTotal, 0, ',', '.'),
+                number_format($e->currentTotal, 0, ',', '.')
+            ));
         } catch (OrderException|CouponException $e) {
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }

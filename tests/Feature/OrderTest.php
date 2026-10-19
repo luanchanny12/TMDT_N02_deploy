@@ -203,7 +203,7 @@ class OrderTest extends TestCase
         $this->actingAs($user)->withSession(['checkout' => ['payment_method' => 'cod']])->get('/checkout/review')->assertRedirect(route('cart.index'));
     }
 
-    public function test_show_review_clears_coupon_if_invalid(): void
+    public function test_show_review_warns_when_coupon_is_invalid(): void
     {
         $user = User::factory()->create();
         $product = $this->createProduct();
@@ -219,9 +219,9 @@ class OrderTest extends TestCase
                 'coupon_code' => 'INVALID',
             ])
             ->get('/checkout/review')
-            ->assertOk();
-
-        $this->assertNull(session('coupon_code'));
+            ->assertOk()
+            // Báo rõ thay vì âm thầm gỡ mã; tổng tiền hiển thị không trừ mã
+            ->assertSee('Mã giảm giá không còn áp dụng được');
     }
 
     public function test_place_order_with_vnpay_redirects_to_vnpay(): void

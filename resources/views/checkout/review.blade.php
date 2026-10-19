@@ -198,6 +198,10 @@
                                 <span class="font-bold text-[#2c2a28]">Tổng cộng</span>
                                 <span class="font-serif text-2xl font-bold text-[#b8847e]">{{ number_format($total, 0, ',', '.') }} ₫</span>
                             </div>
+                            <p class="text-xs text-[#9a9490] mt-2" data-testid="quote-expiry">
+                                Giá trên được giữ đến {{ $quoteExpiresAt->format('H:i') }}. Nếu giá, khuyến mãi, phí ship hoặc thuế thay đổi trước khi bạn đặt,
+                                hệ thống sẽ báo để bạn xác nhận lại — bạn chỉ thanh toán đúng số tiền đã xem.
+                            </p>
                         </div>
 
                         <button type="submit" :disabled="submitting"

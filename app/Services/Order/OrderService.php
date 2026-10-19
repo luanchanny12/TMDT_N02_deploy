@@ -4,6 +4,7 @@ namespace App\Services\Order;
 
 use App\Exceptions\CouponException;
 use App\Exceptions\OrderException;
+use App\Exceptions\PriceChangedException;
 use App\Mail\OrderConfirmedMail;
 use App\Mail\OrderStatusChangedMail;
 use App\Models\Cart;
@@ -56,59 +57,7 @@ class OrderService extends BaseService
             }
 
             // 2. Kiểm tra tồn kho & tính subtotal (lấy giá từ DB thực, không tin giỏ hàng)
-            $subtotal = 0;
-            $itemsToCreate = [];
-
-            $productIds = $cart->items->pluck('product_id');
-            $products = Product::whereIn('id', $productIds)->withCount('variants')->lockForUpdate()->get()->keyBy('id');
-
-            $variantIds = $cart->items->pluck('variant_id')->filter();
-            $variants = ! $variantIds->isEmpty()
-                ? ProductVariant::whereIn('id', $variantIds)->lockForUpdate()->get()->keyBy('id')
-                : collect();
-
-            foreach ($cart->items as $cartItem) {
-                $product = $products->get($cartItem->product_id);
-                $variant = $cartItem->variant_id
-                    ? $variants->get($cartItem->variant_id)
-                    : null;
-
-                if (! $product || $product->status !== 'active') {
-                    throw new OrderException("Sản phẩm \"{$cartItem->product->name}\" hiện không còn kinh doanh.");
-                }
-
-                // Giỏ cũ / giỏ khách vãng lai có thể chứa sản phẩm (nay) có size/màu nhưng chưa chọn biến thể
-                if (! $variant && $product->variants_count > 0) {
-                    throw new OrderException("Vui lòng chọn size/màu cho \"{$product->name}\": xóa sản phẩm khỏi giỏ và thêm lại từ trang sản phẩm.");
-                }
-
-                $availableStock = $variant ? $variant->stock : $product->stock;
-                $stockOwnerLabel = $variant
-                    ? $product->name.' ('.$variant->label().')'
-                    : $product->name;
-
-                if ($availableStock < $cartItem->quantity) {
-                    throw new OrderException(
-                        "Sản phẩm \"{$stockOwnerLabel}\" chỉ còn {$availableStock} trong kho, không đủ số lượng yêu cầu."
-                    );
-                }
-
-                $unitPrice = $variant ? $variant->unitPrice() : $product->effectivePrice();
-                $lineTotal = $unitPrice * $cartItem->quantity;
-                $subtotal += $lineTotal;
-
-                $itemsToCreate[] = [
-                    'product_id' => $product->id,
-                    'variant_id' => $cartItem->variant_id,
-                    'product_name' => $product->name,
-                    'size' => $variant?->size,
-                    'color' => $variant?->color,
-                    'price' => $unitPrice,
-                    'cost_price' => $product->cost_price, // snapshot giá vốn tại thời điểm đặt
-                    'quantity' => $cartItem->quantity,
-                    'subtotal' => $lineTotal,
-                ];
-            }
+            [$itemsToCreate, $subtotal] = $this->priceCartLines($cart, lock: true);
 
             // 3. Xử lý Coupon (nếu có trong session)
             $discount = 0;
@@ -130,6 +79,11 @@ class OrderService extends BaseService
             $pricing = $this->pricingService->breakdown($subtotal, $discount, $data['shipping_province'] ?? null);
             $shippingFee = $pricing['shipping_fee'];
             $total = $pricing['total'];
+
+            // 4b. Khách chỉ trả đúng số tiền đã thấy ở bước xác nhận: lệch báo giá → không tạo đơn (rollback)
+            if (isset($data['expected_total']) && (int) $data['expected_total'] !== $total) {
+                throw new PriceChangedException((int) $data['expected_total'], $total);
+            }
 
             // 5. Tạo Order (gắn nguồn truy cập / chiến dịch quảng cáo đưa khách tới — last-click)
             $attribution = $this->analytics->attribution();
@@ -155,7 +109,7 @@ class OrderService extends BaseService
             ]);
 
             // 6. Tạo OrderItems
-            $order->items()->createMany($itemsToCreate);
+            $order->items()->createMany(array_map(fn ($line) => array_diff_key($line, ['cart_item_id' => true]), $itemsToCreate));
 
             // 7. Redeem Coupon (tăng used_count + tạo CouponUsage)
             if ($coupon) {
@@ -233,6 +187,113 @@ class OrderService extends BaseService
         $order->update(['status' => $status]);
 
         return $order;
+    }
+
+    /**
+     * Báo giá cho trang xác nhận đơn: tính đúng như lúc đặt hàng (giá hiện hành của sản phẩm/biến thể,
+     * mã giảm giá, phí ship theo tỉnh, VAT) nhưng không tạo đơn, không khóa dữ liệu.
+     *
+     * @return array{lines: array<int, array>, subtotal: int, discount: int, coupon_error: ?string, pricing: array, total: int}
+     *
+     * @throws OrderException Khi giỏ trống, hết hàng hoặc thiếu size/màu.
+     */
+    public function quote(User $user, ?string $province): array
+    {
+        $cart = $this->cartService->getCartWithItems($user->id);
+
+        if ($cart->items->isEmpty()) {
+            throw new OrderException('Giỏ hàng của bạn đang trống.');
+        }
+
+        [$lines, $subtotal] = $this->priceCartLines($cart, lock: false);
+
+        $discount = 0;
+        $couponError = null;
+        if ($couponCode = session('coupon_code')) {
+            try {
+                $discount = $this->couponService->validateAndCalculate($couponCode, $subtotal, $user)['discount'];
+            } catch (CouponException $e) {
+                // Không tự gỡ mã: báo cho khách; bước đặt hàng sẽ chặn và yêu cầu xác nhận lại
+                $couponError = $e->getMessage();
+            }
+        }
+
+        $pricing = $this->pricingService->breakdown($subtotal, $discount, $province);
+
+        return [
+            'lines' => $lines,
+            'subtotal' => $subtotal,
+            'discount' => $pricing['discount'],
+            'coupon_error' => $couponError,
+            'pricing' => $pricing,
+            'total' => $pricing['total'],
+        ];
+    }
+
+    /**
+     * Định giá từng dòng giỏ từ dữ liệu hiện hành + kiểm tra tồn kho, trạng thái, size/màu.
+     *
+     * @return array{0: array<int, array>, 1: int} [dòng đơn, tạm tính]
+     */
+    private function priceCartLines(Cart $cart, bool $lock): array
+    {
+        $subtotal = 0;
+        $itemsToCreate = [];
+
+        $productIds = $cart->items->pluck('product_id');
+        $products = Product::whereIn('id', $productIds)->withCount('variants')
+            ->when($lock, fn ($q) => $q->lockForUpdate())->get()->keyBy('id');
+
+        $variantIds = $cart->items->pluck('variant_id')->filter();
+        $variants = ! $variantIds->isEmpty()
+            ? ProductVariant::whereIn('id', $variantIds)->when($lock, fn ($q) => $q->lockForUpdate())->get()->keyBy('id')
+            : collect();
+
+        foreach ($cart->items as $cartItem) {
+            $product = $products->get($cartItem->product_id);
+            $variant = $cartItem->variant_id
+                ? $variants->get($cartItem->variant_id)
+                : null;
+
+            if (! $product || $product->status !== 'active') {
+                throw new OrderException("Sản phẩm \"{$cartItem->product->name}\" hiện không còn kinh doanh.");
+            }
+
+            // Giỏ cũ / giỏ khách vãng lai có thể chứa sản phẩm (nay) có size/màu nhưng chưa chọn biến thể
+            if (! $variant && $product->variants_count > 0) {
+                throw new OrderException("Vui lòng chọn size/màu cho \"{$product->name}\": xóa sản phẩm khỏi giỏ và thêm lại từ trang sản phẩm.");
+            }
+
+            $availableStock = $variant ? $variant->stock : $product->stock;
+            $stockOwnerLabel = $variant
+                ? $product->name.' ('.$variant->label().')'
+                : $product->name;
+
+            if ($availableStock < $cartItem->quantity) {
+                throw new OrderException(
+                    "Sản phẩm \"{$stockOwnerLabel}\" chỉ còn {$availableStock} trong kho, không đủ số lượng yêu cầu."
+                );
+            }
+
+            $unitPrice = $variant ? $variant->unitPrice() : $product->effectivePrice();
+            $lineTotal = $unitPrice * $cartItem->quantity;
+            $subtotal += $lineTotal;
+
+            $itemsToCreate[] = [
+                'cart_item_id' => $cartItem->id,
+                'product_id' => $product->id,
+                'variant_id' => $cartItem->variant_id,
+                'product_name' => $product->name,
+                'size' => $variant?->size,
+                'color' => $variant?->color,
+                'price' => $unitPrice,
+                'cost_price' => $product->cost_price, // snapshot giá vốn tại thời điểm đặt
+                'quantity' => $cartItem->quantity,
+                'subtotal' => $lineTotal,
+            ];
+        }
+
+        return [$itemsToCreate, $subtotal];
     }
 
     /**
