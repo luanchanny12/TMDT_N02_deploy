@@ -150,8 +150,10 @@
 
         {{-- Sold Progress Bar --}}
         @if($soldCount > 0)
-            <div class="sold-progress mb-1.5">
-                <div class="sold-progress-bar" style="width: {{ $soldPercent }}%"></div>
+            <div class="flex items-center gap-2 mb-1.5">
+                <div class="sold-progress flex-1" role="progressbar" aria-valuenow="{{ $soldPercent }}" aria-valuemin="0" aria-valuemax="100">
+                    <div class="sold-progress-bar" style="width: {{ max($soldPercent, 4) }}%"></div>
+                </div>
                 <span class="sold-progress-text">Đã bán {{ $soldCount > 999 ? '1K+' : $soldCount }}</span>
             </div>
         @endif
