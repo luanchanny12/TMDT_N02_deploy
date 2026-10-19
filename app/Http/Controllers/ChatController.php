@@ -25,14 +25,7 @@ class ChatController extends Controller
 
         $history = $this->sanitizeHistory($request->input('history', []));
 
-        // Guest: chỉ FAQ/fallback — không gọi Gemini, không lộ dữ liệu đơn hàng
-        if (! Auth::check()) {
-            return $this->sendSseResponse(function () use ($message, $chatbot) {
-                $text = $chatbot->fallbackResponse($message, null);
-                $this->sendSseEvent(['text' => $text, 'done' => true]);
-            });
-        }
-
+        // Lấy thông tin user nếu đã đăng nhập; guest sẽ có $userId = null (chỉ kèm context sản phẩm, không lộ đơn hàng)
         $userId = Auth::id();
         $contextParts = $chatbot->buildContext($message, $userId);
 

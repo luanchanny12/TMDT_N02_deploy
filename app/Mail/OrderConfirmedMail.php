@@ -22,8 +22,12 @@ class OrderConfirmedMail extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
+        $subject = $this->order->payment_status === 'paid'
+            ? "[SocialShop] Hóa đơn điện tử & Xác nhận thanh toán #{$this->order->order_code}"
+            : "[SocialShop] Hóa đơn & Xác nhận đơn hàng #{$this->order->order_code}";
+
         return new Envelope(
-            subject: "Xác nhận đơn hàng #{$this->order->order_code}",
+            subject: $subject,
         );
     }
 

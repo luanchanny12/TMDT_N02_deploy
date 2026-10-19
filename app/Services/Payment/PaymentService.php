@@ -2,6 +2,7 @@
 
 namespace App\Services\Payment;
 
+use App\Mail\OrderConfirmedMail;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Services\AdminNotifier;
@@ -9,6 +10,7 @@ use App\Services\AuditService;
 use App\Services\BaseService;
 use App\Services\Order\OrderService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class PaymentService extends BaseService
@@ -126,6 +128,16 @@ class PaymentService extends BaseService
                     'order_id' => $order->id,
                 ]);
                 app(AdminNotifier::class)->orderPaid($order);
+
+                // 8. Gửi hóa đơn điện tử xác nhận thanh toán thành công
+                try {
+                    $order->loadMissing(['items.product', 'items.variant', 'user']);
+                    if ($order->user && $order->user->email) {
+                        Mail::to($order->user->email)->queue(new OrderConfirmedMail($order));
+                    }
+                } catch (\Throwable $e) {
+                    \Log::error('Không thể gửi email xác nhận thanh toán VNPay: '.$e->getMessage());
+                }
 
                 return ['RspCode' => '00', 'Message' => 'Confirm Success'];
             } else {
