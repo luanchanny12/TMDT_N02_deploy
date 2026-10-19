@@ -92,7 +92,7 @@
                             @foreach($products as $product)
                                 <td class="p-4 text-center {{ ($winners['cheapest'] ?? null) === $product->id ? 'bg-green-50' : '' }}">
                                     <span class="text-[#b8847e] font-bold text-lg">{{ $money($product->effectivePrice()) }}</span>
-                                    @if($product->sale_price)
+                                    @if($product->isOnSale())
                                         <span class="text-gray-400 line-through text-xs block">{{ $money($product->price) }}</span>
                                     @endif
                                 </td>
@@ -102,7 +102,7 @@
                             <td class="p-4 font-medium text-[#3d3d3d] sticky left-0 bg-white">Giảm giá</td>
                             @foreach($products as $product)
                                 <td class="p-4 text-center">
-                                    @if($product->sale_price)
+                                    @if($product->isOnSale())
                                         <span class="font-semibold text-rose-600">-{{ round(($product->price - $product->sale_price) / max(1, $product->price) * 100) }}%</span>
                                         <span class="block text-xs text-[#9a9490]">Tiết kiệm {{ $money($product->price - $product->sale_price) }}</span>
                                     @else

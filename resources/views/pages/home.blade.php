@@ -180,41 +180,20 @@
         @if(!empty($flashSaleProducts) && $flashSaleProducts->count())
             <div class="mb-14 rounded-3xl bg-gradient-to-r from-[#fff5f5] via-[#fff0f3] to-[#faf7f4] border border-red-100 p-5 sm:p-8"
                  x-data="{
-                     hours: '02',
-                     minutes: '45',
-                     seconds: '30',
+                     endsAt: {{ $flashSaleEndsAt?->getTimestampMs() ?? 0 }},
+                     hours: '--', minutes: '--', seconds: '--', ended: false,
                      init() {
-                         const STORAGE_KEY = 'socialshop_flash_sale_deadline';
-                         const now = Date.now();
-                         let deadline = localStorage.getItem(STORAGE_KEY);
-                         const SESSION_DURATION = (2 * 3600 + 45 * 60 + 30) * 1000;
-
-                         if (!deadline || isNaN(deadline) || parseInt(deadline) <= now) {
-                             deadline = now + SESSION_DURATION;
-                             localStorage.setItem(STORAGE_KEY, deadline);
-                         } else {
-                             deadline = parseInt(deadline);
-                         }
-
+                         // Đếm tới mốc kết thúc thật do admin đặt — F5, tab ẩn danh hay trình duyệt khác đều thấy cùng số
                          const tick = () => {
-                             const current = Date.now();
-                             let diff = Math.max(0, Math.floor((deadline - current) / 1000));
-
-                             if (diff <= 0) {
-                                 deadline = Date.now() + SESSION_DURATION;
-                                 localStorage.setItem(STORAGE_KEY, deadline);
-                                 diff = Math.floor(SESSION_DURATION / 1000);
+                             const diff = Math.max(0, Math.floor((this.endsAt - Date.now()) / 1000));
+                             this.hours = String(Math.floor(diff / 3600)).padStart(2, '0');
+                             this.minutes = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+                             this.seconds = String(diff % 60).padStart(2, '0');
+                             if (diff === 0 && !this.ended) {
+                                 this.ended = true; // hết giờ thì giá về giá gốc → tải lại để cập nhật
+                                 setTimeout(() => window.location.reload(), 3000);
                              }
-
-                             const h = Math.floor(diff / 3600);
-                             const m = Math.floor((diff % 3600) / 60);
-                             const s = diff % 60;
-
-                             this.hours = String(h).padStart(2, '0');
-                             this.minutes = String(m).padStart(2, '0');
-                             this.seconds = String(s).padStart(2, '0');
                          };
-
                          tick();
                          setInterval(tick, 1000);
                      }
@@ -225,11 +204,14 @@
                             <span>🔥 FLASH SALE GIỜ VÀNG</span>
                         </span>
                         <div class="flex items-center gap-1.5 text-xs font-bold text-[#2c2a28]">
-                            <span class="text-[#9a9490] font-normal mr-1">Kết thúc sau:</span>
-                            <span class="bg-[#2c2a28] text-white px-2 py-1 rounded font-mono" x-text="hours">02</span>:
-                            <span class="bg-[#2c2a28] text-white px-2 py-1 rounded font-mono" x-text="minutes">45</span>:
-                            <span class="bg-[#2c2a28] text-white px-2 py-1 rounded font-mono" x-text="seconds">30</span>
+                            <span class="text-[#9a9490] font-normal mr-1" x-text="ended ? 'Ưu đãi đã kết thúc' : 'Kết thúc sau:'">Kết thúc sau:</span>
+                            <span x-show="!ended" class="bg-[#2c2a28] text-white px-2 py-1 rounded font-mono" x-text="hours" x-cloak></span><span x-show="!ended" x-cloak>:</span>
+                            <span x-show="!ended" class="bg-[#2c2a28] text-white px-2 py-1 rounded font-mono" x-text="minutes" x-cloak></span><span x-show="!ended" x-cloak>:</span>
+                            <span x-show="!ended" class="bg-[#2c2a28] text-white px-2 py-1 rounded font-mono" x-text="seconds" x-cloak></span>
                         </div>
+                        <span class="text-[11px] text-[#9a9490]" data-testid="flash-sale-deadline">
+                            Giá ưu đãi áp dụng đến {{ $flashSaleEndsAt?->timezone(config('app.timezone'))->format('H:i d/m/Y') }}, sau đó trở về giá gốc
+                        </span>
                     </div>
                     <a href="{{ route('products.index', ['sort' => 'price_asc']) }}" class="text-xs font-bold text-[#b8847e] hover:text-[#a6736d] flex items-center gap-1 group">
                         <span>Xem tất cả ưu đãi</span>

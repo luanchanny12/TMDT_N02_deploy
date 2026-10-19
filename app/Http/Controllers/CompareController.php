@@ -98,7 +98,7 @@ class CompareController extends Controller
 
         return [
             'cheapest' => $best(fn ($p) => -$p->effectivePrice() + 1_000_000_000),
-            'discount' => $best(fn ($p) => $p->sale_price ? round(($p->price - $p->sale_price) / max(1, $p->price) * 100) : 0),
+            'discount' => $best(fn ($p) => $p->isOnSale() ? round(($p->price - $p->sale_price) / max(1, $p->price) * 100) : 0),
             'rating' => $best(fn ($p) => (float) $p->average_rating * 1000 + (int) $p->reviews_count),
             'bestseller' => $best(fn ($p) => (int) $p->sold_count),
         ];

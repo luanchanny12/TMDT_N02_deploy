@@ -38,19 +38,17 @@ class HomeController extends Controller
         };
         $categories->each(fn (Category $c) => $c->total_products_count = $total($c));
 
-        // Flash sale: Sản phẩm đang có giá khuyến mãi lớn nhất
+        // Flash Sale: chỉ sản phẩm có khuyến mãi thật với mốc kết thúc trong tương lai.
+        // Không có ưu đãi thật thì ẩn cả khu (không lấy sản phẩm giá gốc gắn mác Flash Sale).
         $flashSaleProducts = Product::with('category')->withCardData()
             ->where('status', 'active')
-            ->whereNotNull('sale_price')
-            ->whereColumn('sale_price', '<', 'price')
+            ->flashSale()
+            ->orderBy('sale_ends_at')
             ->orderByRaw('(price - sale_price) / price DESC')
             ->limit(4)
             ->get();
+        $flashSaleEndsAt = $flashSaleProducts->min('sale_ends_at');
 
-        if ($flashSaleProducts->isEmpty()) {
-            $flashSaleProducts = $featuredProducts->take(4);
-        }
-
-        return view('pages.home', compact('featuredProducts', 'recommendTabs', 'newProducts', 'categories', 'flashSaleProducts'));
+        return view('pages.home', compact('featuredProducts', 'recommendTabs', 'newProducts', 'categories', 'flashSaleProducts', 'flashSaleEndsAt'));
     }
 }

@@ -57,6 +57,19 @@
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-[#3d3d3d] mb-1.5">Khuyến mãi kết thúc lúc</label>
+                    <input type="datetime-local" name="sale_ends_at"
+                           value="{{ old('sale_ends_at', isset($product) && $product->sale_ends_at ? $product->sale_ends_at->format('Y-m-d\TH:i') : '') }}"
+                           class="w-full border border-[#efe8e3] rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#c9a9a6] focus:border-transparent transition-all">
+                    <label class="mt-2 flex items-center gap-2 text-xs text-[#6b6560]">
+                        <input type="checkbox" name="flash_sale" value="1" class="rounded border-[#efe8e3] text-[#b8847e]" @checked(old('flash_sale', isset($product) && $product->sale_ends_at))>
+                        Đưa vào Flash Sale (trang chủ đếm ngược tới thời điểm này; hết giờ tự về giá gốc)
+                    </label>
+                    @error('sale_ends_at')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
                 <div class="sm:col-span-2" x-data="{ price: {{ (int) old('price', $product->price ?? 0) }}, sale: @js(old('sale_price', $product->sale_price ?? null)), cost: @js(old('cost_price', $product->cost_price ?? null)), get margin() { const p = Number(this.sale) > 0 ? Number(this.sale) : Number(this.price); return (this.cost === null || this.cost === '' || !p) ? null : Math.round((p - Number(this.cost)) / p * 1000) / 10; } }"
                      @input.window="if ($event.target.name === 'price') price = $event.target.value; if ($event.target.name === 'sale_price') sale = $event.target.value">
                     <label class="block text-sm font-medium text-[#3d3d3d] mb-1.5">Giá vốn (₫)</label>

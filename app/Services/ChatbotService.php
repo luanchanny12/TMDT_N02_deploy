@@ -162,13 +162,13 @@ PROMPT;
             ->with('category:id,name')
             ->orderBy('category_id')
             ->limit($limit)
-            ->get(['id', 'name', 'price', 'sale_price', 'stock', 'category_id']);
+            ->get(['id', 'name', 'price', 'sale_price', 'sale_ends_at', 'stock', 'category_id']);
 
         if ($products->isEmpty()) {
             return '';
         }
 
-        $lines = $products->map(fn ($p) => '- '.$p->name.' | '.number_format($p->sale_price ?? $p->price).'đ | '
+        $lines = $products->map(fn ($p) => '- '.$p->name.' | '.number_format($p->effectivePrice()).'đ | '
             .($p->category->name ?? 'Khác').($p->stock > 0 ? '' : ' | hết hàng'));
 
         return "\n\n[Danh sách sản phẩm của shop]\n".$lines->implode("\n");
@@ -201,7 +201,7 @@ PROMPT;
                 ->get()
                 ->map(fn ($p) => [
                     'name' => $p->name,
-                    'price' => number_format($p->sale_price ?? $p->price).'đ',
+                    'price' => number_format($p->effectivePrice()).'đ',
                     'category' => $p->category->name ?? 'N/A',
                     'in_stock' => $p->stock > 0,
                 ])
@@ -219,7 +219,7 @@ PROMPT;
             ->get()
             ->map(fn ($p) => [
                 'name' => $p->name,
-                'price' => number_format($p->sale_price ?? $p->price).'đ',
+                'price' => number_format($p->effectivePrice()).'đ',
                 'category' => $p->category->name ?? 'N/A',
                 'in_stock' => $p->stock > 0,
             ])

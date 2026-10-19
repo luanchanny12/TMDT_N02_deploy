@@ -11,7 +11,7 @@ class Product extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'slug', 'sku', 'description', 'price', 'sale_price', 'cost_price',
+        'name', 'slug', 'sku', 'description', 'price', 'sale_price', 'sale_ends_at', 'cost_price',
         'stock', 'views_count', 'brand', 'status', 'category_id',
     ];
 
@@ -21,6 +21,7 @@ class Product extends Model
             'price' => 'integer',
             'sale_price' => 'integer',
             'cost_price' => 'integer',
+            'sale_ends_at' => 'datetime',
             'stock' => 'integer',
             'views_count' => 'integer',
         ];
@@ -139,7 +140,7 @@ class Product extends Model
 
     public function effectivePrice(): int
     {
-        return $this->sale_price ?? $this->price;
+        return $this->isOnSale() ? $this->sale_price : $this->price;
     }
 
     /**
@@ -160,9 +161,24 @@ class Product extends Model
         return $this->cost_price === null || $price <= 0 ? null : round(($price - $this->cost_price) / $price * 100, 1);
     }
 
+    /**
+     * Đang khuyến mãi: có giá giảm thấp hơn giá gốc và (nếu có hạn) chưa quá thời điểm kết thúc.
+     */
     public function isOnSale(): bool
     {
-        return $this->sale_price !== null && $this->sale_price < $this->price;
+        return $this->sale_price !== null
+            && $this->sale_price < $this->price
+            && ($this->sale_ends_at === null || $this->sale_ends_at->isFuture());
+    }
+
+    /**
+     * Sản phẩm thuộc Flash Sale: khuyến mãi có mốc kết thúc thật trong tương lai.
+     */
+    public function scopeFlashSale($query)
+    {
+        return $query->whereNotNull('sale_price')
+            ->whereColumn('sale_price', '<', 'price')
+            ->where('sale_ends_at', '>', now());
     }
 
     public function getImageUrlAttribute(): ?string

@@ -11,5 +11,8 @@ Artisan::command('inspire', function () {
 // Sao lưu DB hằng ngày lúc 02:00 (cần `php artisan schedule:work` hoặc Task Scheduler)
 Schedule::command('db:backup')->dailyAt('02:00');
 
+// Khuyến mãi hết hạn → về giá gốc (đồng hồ Flash Sale đếm tới đúng mốc này)
+Schedule::command('products:end-expired-sales')->everyMinute()->withoutOverlapping();
+
 // Hủy đơn VNPay bỏ dở để nhả tồn kho
 Schedule::command('orders:expire-unpaid')->everyFiveMinutes()->withoutOverlapping();

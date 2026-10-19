@@ -54,6 +54,7 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'sale_price' => 'nullable|numeric|min:0|lt:price',
             'cost_price' => 'nullable|integer|min:0',
+            'sale_ends_at' => 'nullable|date|after:now|required_with_all:sale_price,flash_sale',
             'category_id' => 'required|exists:categories,id',
             'stock' => 'required|integer|min:0',
             'brand' => 'nullable|string',
@@ -62,13 +63,15 @@ class ProductController extends Controller
             ...self::VARIANT_RULES,
         ], [
             'image.mimes' => 'Hình ảnh bìa phải là JPG, PNG hoặc WebP.',
+            'sale_ends_at.after' => 'Thời điểm kết thúc khuyến mãi phải ở tương lai.',
+            'sale_ends_at.required_with_all' => 'Flash Sale cần thời điểm kết thúc.',
             'image.max' => 'Hình ảnh bìa tối đa 4MB.',
         ]);
 
         $validated['slug'] = Product::uniqueSlug($validated['name']);
         $validated['status'] = $request->input('status', 'active');
 
-        $product = Product::create(collect($validated)->only(['name', 'slug', 'description', 'price', 'sale_price', 'cost_price', 'category_id', 'stock', 'brand', 'status'])->toArray());
+        $product = Product::create(collect($validated)->only(['name', 'slug', 'description', 'price', 'sale_price', 'sale_ends_at', 'cost_price', 'category_id', 'stock', 'brand', 'status'])->toArray());
 
         $this->syncVariants($product, $request);
 
@@ -102,6 +105,7 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'sale_price' => 'nullable|numeric|min:0|lt:price',
             'cost_price' => 'nullable|integer|min:0',
+            'sale_ends_at' => 'nullable|date|after:now|required_with_all:sale_price,flash_sale',
             'category_id' => 'required|exists:categories,id',
             'stock' => 'required|integer|min:0',
             'brand' => 'nullable|string',
@@ -110,12 +114,14 @@ class ProductController extends Controller
             ...self::VARIANT_RULES,
         ], [
             'image.mimes' => 'Hình ảnh bìa phải là JPG, PNG hoặc WebP.',
+            'sale_ends_at.after' => 'Thời điểm kết thúc khuyến mãi phải ở tương lai.',
+            'sale_ends_at.required_with_all' => 'Flash Sale cần thời điểm kết thúc.',
             'image.max' => 'Hình ảnh bìa tối đa 4MB.',
         ]);
 
         $validated['slug'] = Product::uniqueSlug($validated['name'], $product->id);
 
-        $product->update(collect($validated)->only(['name', 'slug', 'description', 'price', 'sale_price', 'cost_price', 'category_id', 'stock', 'brand', 'status'])->toArray());
+        $product->update(collect($validated)->only(['name', 'slug', 'description', 'price', 'sale_price', 'sale_ends_at', 'cost_price', 'category_id', 'stock', 'brand', 'status'])->toArray());
 
         $this->syncVariants($product, $request);
 
