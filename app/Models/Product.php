@@ -11,7 +11,7 @@ class Product extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'slug', 'sku', 'description', 'price', 'sale_price',
+        'name', 'slug', 'sku', 'description', 'price', 'sale_price', 'cost_price',
         'stock', 'views_count', 'brand', 'status', 'category_id',
     ];
 
@@ -20,6 +20,7 @@ class Product extends Model
         return [
             'price' => 'integer',
             'sale_price' => 'integer',
+            'cost_price' => 'integer',
             'stock' => 'integer',
             'views_count' => 'integer',
         ];
@@ -139,6 +140,24 @@ class Product extends Model
     public function effectivePrice(): int
     {
         return $this->sale_price ?? $this->price;
+    }
+
+    /**
+     * Lợi nhuận gộp trên 1 sản phẩm theo giá bán hiện hành (null khi chưa nhập giá vốn).
+     */
+    public function grossProfit(): ?int
+    {
+        return $this->cost_price === null ? null : $this->effectivePrice() - $this->cost_price;
+    }
+
+    /**
+     * Biên lợi nhuận gộp (%) = (giá bán − giá vốn) / giá bán.
+     */
+    public function grossMarginPercentage(): ?float
+    {
+        $price = $this->effectivePrice();
+
+        return $this->cost_price === null || $price <= 0 ? null : round(($price - $this->cost_price) / $price * 100, 1);
     }
 
     public function isOnSale(): bool

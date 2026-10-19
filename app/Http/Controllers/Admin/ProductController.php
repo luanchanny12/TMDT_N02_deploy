@@ -53,6 +53,7 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'sale_price' => 'nullable|numeric|min:0|lt:price',
+            'cost_price' => 'nullable|integer|min:0',
             'category_id' => 'required|exists:categories,id',
             'stock' => 'required|integer|min:0',
             'brand' => 'nullable|string',
@@ -67,7 +68,7 @@ class ProductController extends Controller
         $validated['slug'] = Product::uniqueSlug($validated['name']);
         $validated['status'] = $request->input('status', 'active');
 
-        $product = Product::create(collect($validated)->only(['name', 'slug', 'description', 'price', 'sale_price', 'category_id', 'stock', 'brand', 'status'])->toArray());
+        $product = Product::create(collect($validated)->only(['name', 'slug', 'description', 'price', 'sale_price', 'cost_price', 'category_id', 'stock', 'brand', 'status'])->toArray());
 
         $this->syncVariants($product, $request);
 
@@ -100,6 +101,7 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'sale_price' => 'nullable|numeric|min:0|lt:price',
+            'cost_price' => 'nullable|integer|min:0',
             'category_id' => 'required|exists:categories,id',
             'stock' => 'required|integer|min:0',
             'brand' => 'nullable|string',
@@ -113,7 +115,7 @@ class ProductController extends Controller
 
         $validated['slug'] = Product::uniqueSlug($validated['name'], $product->id);
 
-        $product->update(collect($validated)->only(['name', 'slug', 'description', 'price', 'sale_price', 'category_id', 'stock', 'brand', 'status'])->toArray());
+        $product->update(collect($validated)->only(['name', 'slug', 'description', 'price', 'sale_price', 'cost_price', 'category_id', 'stock', 'brand', 'status'])->toArray());
 
         $this->syncVariants($product, $request);
 

@@ -104,6 +104,7 @@ class OrderService extends BaseService
                     'size' => $variant?->size,
                     'color' => $variant?->color,
                     'price' => $unitPrice,
+                    'cost_price' => $product->cost_price, // snapshot giá vốn tại thời điểm đặt
                     'quantity' => $cartItem->quantity,
                     'subtotal' => $lineTotal,
                 ];

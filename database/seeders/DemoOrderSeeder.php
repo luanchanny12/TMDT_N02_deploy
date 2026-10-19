@@ -85,6 +85,7 @@ class DemoOrderSeeder extends Seeder
                 'product_id' => $product->id,
                 'product_name' => $product->name,
                 'price' => $price,
+                'cost_price' => $product->cost_price,
                 'quantity' => $quantity,
                 'subtotal' => $price * $quantity,
             ];

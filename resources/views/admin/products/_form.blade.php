@@ -57,6 +57,17 @@
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
+                <div class="sm:col-span-2" x-data="{ price: {{ (int) old('price', $product->price ?? 0) }}, sale: @js(old('sale_price', $product->sale_price ?? null)), cost: @js(old('cost_price', $product->cost_price ?? null)), get margin() { const p = Number(this.sale) > 0 ? Number(this.sale) : Number(this.price); return (this.cost === null || this.cost === '' || !p) ? null : Math.round((p - Number(this.cost)) / p * 1000) / 10; } }"
+                     @input.window="if ($event.target.name === 'price') price = $event.target.value; if ($event.target.name === 'sale_price') sale = $event.target.value">
+                    <label class="block text-sm font-medium text-[#3d3d3d] mb-1.5">Giá vốn (₫)</label>
+                    <input type="number" name="cost_price" x-model="cost" min="0" placeholder="Giá nhập / giá thành — chỉ admin thấy"
+                           class="w-full border border-[#efe8e3] rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#c9a9a6] focus:border-transparent transition-all">
+                    <p class="text-xs mt-1" :class="margin !== null && margin < 0 ? 'text-red-600' : 'text-[#9a9490]'"
+                       x-text="margin === null ? 'Dùng để tính lợi nhuận gộp và ROAS hòa vốn.' : 'Biên lợi nhuận gộp: ' + margin + '%'"></p>
+                    @error('cost_price')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
         </div>
         {{-- Variants (Size/Màu) — dùng cho cả thêm mới và sửa --}}
