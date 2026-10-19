@@ -78,21 +78,36 @@
             </div>
         @endif
 
-        {{-- Featured Products --}}
-        @if($featuredProducts->count())
-            <div class="flex justify-between items-end mb-6">
-                <div>
-                    <h2 class="font-serif text-2xl font-semibold text-[#3d3d3d]">Gợi ý hôm nay</h2>
-                    <p class="text-[#9a9490] text-sm mt-0.5">Sản phẩm nổi bật &amp; đang giảm giá</p>
+        {{-- Gợi ý sản phẩm: đang hot / bán chạy / xem nhiều / đánh giá cao --}}
+        @if($recommendTabs->isNotEmpty())
+            <div x-data="{ tab: @js($recommendTabs->keys()->first()) }" data-testid="recommend-tabs">
+                <div class="flex flex-wrap justify-between items-end gap-3 mb-6">
+                    <div>
+                        <h2 class="font-serif text-2xl font-semibold text-[#3d3d3d]">Gợi ý cho bạn</h2>
+                        @foreach($recommendTabs as $key => [$label, $hint, $items])
+                            <p class="text-[#9a9490] text-sm mt-0.5" x-show="tab === '{{ $key }}'" @if(! $loop->first) x-cloak @endif>{{ $hint }}</p>
+                        @endforeach
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($recommendTabs as $key => [$label, $hint, $items])
+                            <button type="button" @click="tab = '{{ $key }}'"
+                                    class="px-4 py-1.5 rounded-full text-sm font-medium border transition-colors"
+                                    :class="tab === '{{ $key }}' ? 'bg-[#b8847e] border-[#b8847e] text-white' : 'border-[#efe8e3] text-[#3d3d3d] hover:border-[#c9a9a6]'">
+                                {{ $label }}
+                            </button>
+                        @endforeach
+                    </div>
                 </div>
-                <a href="{{ route('products.index') }}" class="text-[#b8847e] text-sm font-semibold hover:text-[#a6736d] transition-colors">
-                    Xem tất cả →
-                </a>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                @foreach($featuredProducts as $product)
-                    <x-product-card :product="$product" />
+                @foreach($recommendTabs as $key => [$label, $hint, $items])
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4" x-show="tab === '{{ $key }}'" @if(! $loop->first) x-cloak @endif>
+                        @foreach($items as $product)
+                            <x-product-card :product="$product" />
+                        @endforeach
+                    </div>
                 @endforeach
+                <div class="text-center mt-6">
+                    <a href="{{ route('products.index', ['sort' => 'popular']) }}" class="text-[#b8847e] text-sm font-semibold hover:text-[#a6736d] transition-colors">Xem tất cả sản phẩm phổ biến →</a>
+                </div>
             </div>
         @endif
     </div>

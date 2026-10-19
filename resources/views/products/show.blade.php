@@ -445,13 +445,28 @@
             @endif
         </div>
 
+        {{-- Thường được mua cùng (từ các đơn hàng thật) --}}
+        @if($boughtTogether->isNotEmpty())
+            <div class="mt-12" data-testid="bought-together">
+                <div class="mb-6">
+                    <h2 class="font-serif text-2xl font-semibold text-[#3d3d3d]">Khách mua sản phẩm này cũng mua</h2>
+                    <p class="text-[#9a9490] text-sm mt-0.5">Dựa trên các đơn hàng thực tế tại SocialShop</p>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    @foreach($boughtTogether as $product)
+                        <x-product-card :product="$product" />
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         {{-- Related Products --}}
         @if($relatedProducts->count())
             <div class="mt-12">
                 <div class="flex justify-between items-end mb-6">
                     <div>
-                        <h2 class="font-serif text-2xl font-semibold text-[#3d3d3d]">Sản phẩm liên quan</h2>
-                        <p class="text-[#9a9490] text-sm mt-0.5">Có thể bạn quan tâm</p>
+                        <h2 class="font-serif text-2xl font-semibold text-[#3d3d3d]">Sản phẩm tương tự</h2>
+                        <p class="text-[#9a9490] text-sm mt-0.5">Cùng danh mục, được quan tâm nhiều</p>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">

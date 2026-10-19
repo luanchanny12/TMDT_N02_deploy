@@ -57,6 +57,10 @@
                     <option value="price_asc" {{ request('sort') === 'price_asc' ? 'selected' : '' }}>Giá tăng dần</option>
                     <option value="price_desc" {{ request('sort') === 'price_desc' ? 'selected' : '' }}>Giá giảm dần</option>
                     <option value="name" {{ request('sort') === 'name' ? 'selected' : '' }}>Tên A-Z</option>
+                    <option value="popular" {{ request('sort') === 'popular' ? 'selected' : '' }}>Phổ biến nhất</option>
+                    <option value="best_selling" {{ request('sort') === 'best_selling' ? 'selected' : '' }}>Bán chạy</option>
+                    <option value="top_rated" {{ request('sort') === 'top_rated' ? 'selected' : '' }}>Đánh giá cao</option>
+                    <option value="most_viewed" {{ request('sort') === 'most_viewed' ? 'selected' : '' }}>Xem nhiều</option>
                 </select>
             </form>
         </div>
