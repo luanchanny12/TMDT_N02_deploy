@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\Analytics\AnalyticsService;
+use App\Services\RecommendationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -53,20 +54,9 @@ class ProductController extends Controller
             $query->where('brand', $request->brand);
         }
 
-        $sortBy = $request->get('sort', 'latest');
-        switch ($sortBy) {
-            case 'price_asc':
-                $query->orderBy('price', 'asc');
-                break;
-            case 'price_desc':
-                $query->orderBy('price', 'desc');
-                break;
-            case 'name':
-                $query->orderBy('name', 'asc');
-                break;
-            default:
-                $query->latest();
-        }
+        // Nút "Sản phẩm nổi bật" (?featured=1) → mặc định sắp theo độ phổ biến
+        $sortBy = $request->get('sort', $request->boolean('featured') ? 'popular' : 'latest');
+        $this->applySort($query, $sortBy);
 
         $products = $query->paginate(12)->withQueryString();
         $categories = Category::where('status', 'active')->get();
@@ -77,51 +67,10 @@ class ProductController extends Controller
             ->pluck('brand');
 
         $suggestedProducts = $products->isEmpty()
-            ? $this->suggestionsFor((string) $search)
+            ? app(RecommendationService::class)->forSearchMiss((string) $search)
             : collect();
 
         return view('products.index', compact('products', 'categories', 'brands', 'suggestedProducts'));
-    }
-
-    /**
-     * Gợi ý khi tìm kiếm không có kết quả: ưu tiên sản phẩm khớp một phần từ khóa
-     * (tên, mô tả, danh mục), sau đó bổ sung sản phẩm được xem nhiều nhất.
-     */
-    private function suggestionsFor(string $search, int $limit = 8)
-    {
-        $words = collect(preg_split('/\s+/u', mb_strtolower(trim($search))))
-            ->filter(fn ($w) => mb_strlen($w) >= 2)
-            ->take(5);
-
-        $base = fn () => Product::with('category')->withCardData()->where('status', 'active');
-
-        $matches = collect();
-        if ($words->isNotEmpty()) {
-            $matches = $base()
-                ->where(function ($q) use ($words) {
-                    foreach ($words as $word) {
-                        $q->orWhere('name', 'like', "%{$word}%")
-                            ->orWhere('description', 'like', "%{$word}%")
-                            ->orWhereHas('category', fn ($c) => $c->where('name', 'like', "%{$word}%"));
-                    }
-                })
-                ->orderByDesc('views_count')
-                ->limit($limit)
-                ->get();
-        }
-
-        if ($matches->count() < $limit) {
-            $popular = $base()
-                ->whereNotIn('id', $matches->pluck('id'))
-                ->orderByDesc('views_count')
-                ->latest()
-                ->limit($limit - $matches->count())
-                ->get();
-
-            $matches = $matches->concat($popular);
-        }
-
-        return $matches;
     }
 
     public function category(Request $request, Category $category)
@@ -187,12 +136,9 @@ class ProductController extends Controller
             'images' => fn ($q) => $q->orderByDesc('is_primary')->orderBy('sort_order'),
             'variants' => fn ($q) => $q->orderBy('size')->orderBy('color'),
         ]);
-        $relatedProducts = Product::with('category')->withCardData()
-            ->where('category_id', $product->category_id)
-            ->where('id', '!=', $product->id)
-            ->where('status', 'active')
-            ->limit(4)
-            ->get();
+        $recommendations = app(RecommendationService::class);
+        $relatedProducts = $recommendations->similarTo($product);
+        $boughtTogether = $recommendations->boughtTogether($product);
 
         $reviews = $product->reviews()
             ->where('status', 'approved')
@@ -256,7 +202,7 @@ class ProductController extends Controller
         ];
 
         return view('products.show', compact(
-            'product', 'relatedProducts', 'reviews', 'canReview', 'hasReviewed',
+            'product', 'relatedProducts', 'boughtTogether', 'reviews', 'canReview', 'hasReviewed',
             'metaTitle', 'metaDescription', 'metaImage', 'jsonLd', 'hasVariants'
         ));
     }
@@ -295,6 +241,20 @@ class ProductController extends Controller
                 break;
             case 'name':
                 $query->orderBy('name', 'asc');
+                break;
+            case 'popular':
+                $query->withSum(['orderItems as sold_count' => fn ($q) => $q->whereHas('order', fn ($o) => $o->where('status', '!=', 'cancelled'))], 'quantity')
+                    ->orderByDesc('sold_count')->orderByDesc('views_count');
+                break;
+            case 'best_selling':
+                $query->withSum(['orderItems as sold_count' => fn ($q) => $q->whereHas('order', fn ($o) => $o->where('status', '!=', 'cancelled'))], 'quantity')
+                    ->orderByDesc('sold_count');
+                break;
+            case 'top_rated':
+                $query->orderByDesc('approved_rating_avg')->orderByDesc('reviews_count');
+                break;
+            case 'most_viewed':
+                $query->orderByDesc('views_count');
                 break;
             default:
                 $query->latest();
