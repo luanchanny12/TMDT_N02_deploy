@@ -2,6 +2,7 @@
     $money = fn ($v) => number_format((int) $v, 0, ',', '.').'₫';
     $th = 'px-4 py-3 text-xs font-semibold text-[#9a9490] uppercase tracking-wide';
     $compact = $compact ?? false;
+    $breakEvenRoas = $breakEvenRoas ?? app(\App\Services\Analytics\FunnelReportService::class)->unitEconomics(\Carbon\CarbonImmutable::now()->subYears(5), \Carbon\CarbonImmutable::now(), ['visit' => 0, 'purchase' => 0])['break_even_roas'];
 @endphp
 <div class="overflow-x-auto">
     <table class="w-full text-sm">
@@ -50,8 +51,11 @@
                     <td class="px-4 py-3 text-right">{{ $money($row['revenue']) }}</td>
                     <td class="px-4 py-3 text-right">{{ number_format($row['conversion_rate'], 2, ',', '.') }}%</td>
                     <td class="px-4 py-3 text-right">{{ $row['cpa'] !== null ? $money($row['cpa']) : '—' }}</td>
-                    <td class="px-4 py-3 text-right font-semibold {{ $row['roas'] === null ? '' : ($row['roas'] >= 1 ? 'text-green-600' : 'text-red-600') }}">
+                    <td class="px-4 py-3 text-right font-semibold {{ $row['roas'] === null ? '' : ($row['roas'] >= ($breakEvenRoas ?? 1) ? 'text-green-600' : 'text-red-600') }}">
                         {{ $row['roas'] !== null ? number_format($row['roas'], 2, ',', '.').'x' : '—' }}
+                        @if($row['roas'] !== null && $breakEvenRoas)
+                            <span class="block text-[11px] font-normal">{{ $row['roas'] >= $breakEvenRoas ? 'Có lãi' : 'Lỗ' }} (hòa vốn {{ number_format($breakEvenRoas, 2, ',', '.') }}x)</span>
+                        @endif
                     </td>
                     @unless($compact)
                         <td class="px-4 py-3 text-right whitespace-nowrap">

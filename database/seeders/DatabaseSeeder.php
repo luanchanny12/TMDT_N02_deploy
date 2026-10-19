@@ -136,8 +136,11 @@ class DatabaseSeeder extends Seeder
 
         // Coupons
         $this->call(ExtraFashionProductSeeder::class); // +10 sản phẩm → 40 (TH11)
+        $this->call(CostPriceSeeder::class); // giá vốn 55–65% giá niêm yết
+        $this->call(FlashSaleSeeder::class); // ưu đãi có mốc kết thúc thật
 
         $this->call(CouponSeeder::class);
+        $this->call(PromoCouponSeeder::class); // WELCOME10 trên thanh ưu đãi
 
         // Chatbot FAQs
         $this->call(ChatbotFaqSeeder::class);

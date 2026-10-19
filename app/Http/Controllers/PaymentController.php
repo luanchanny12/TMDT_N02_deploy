@@ -41,7 +41,7 @@ class PaymentController extends Controller
 
             return view('payment.vnpay-return', [
                 'status' => 'error',
-                'message' => 'Giao dịch không thành công hoặc đã bị hủy. Đơn hàng đã được hủy, bạn có thể đặt lại.',
+                'message' => 'Giao dịch không thành công hoặc đã bị hủy. Đơn hàng đã được hủy và sản phẩm đã được trả lại giỏ hàng để bạn đặt lại.',
             ]);
         }
 

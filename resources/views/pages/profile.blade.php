@@ -36,6 +36,17 @@
                             </div>
                         </div>
 
+                        <input type="hidden" name="marketing_consent" value="0">
+                        <label class="mt-4 flex items-start gap-2 text-sm text-gray-700 cursor-pointer">
+                            <input type="checkbox" name="marketing_consent" value="1" @checked($user->marketing_consent)
+                                   class="mt-1 h-4 w-4 text-[#b8847e] border-gray-300 rounded">
+                            <span>Nhận email về sản phẩm mới, nhắc giỏ hàng và ưu đãi
+                                @if($user->marketing_consent && $user->marketing_consent_at)
+                                    <span class="block text-xs text-gray-500">Đã đồng ý lúc {{ $user->marketing_consent_at->format('H:i d/m/Y') }}</span>
+                                @endif
+                            </span>
+                        </label>
+
                         <button type="submit" class="mt-6 bg-[#b8847e] text-white px-6 py-2 rounded-lg hover:bg-[#a6736d] transition">
                             Cập nhật
                         </button>

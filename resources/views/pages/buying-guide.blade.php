@@ -50,7 +50,7 @@
             <section>
                 <h2 class="font-serif text-xl font-semibold text-[#3d3d3d] mb-3">6. Hỗ trợ</h2>
                 <p>
-                    Nếu bạn gặp bất kỳ vấn đề nào, vui lòng liên hệ hotline <strong class="text-[#3d3d3d]">1900-xxxx-xxx</strong>
+                    Nếu bạn gặp bất kỳ vấn đề nào, vui lòng liên hệ hotline <strong class="text-[#3d3d3d]">077123456</strong>
                     hoặc email <strong class="text-[#3d3d3d]">support@socialshop.vn</strong> trong khung giờ 8:00 &ndash; 21:00 hàng ngày.
                 </p>
             </section>

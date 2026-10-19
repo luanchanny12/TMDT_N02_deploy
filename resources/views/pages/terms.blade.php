@@ -16,7 +16,7 @@
                 <h2 class="font-serif text-xl font-semibold text-[#3d3d3d] mb-3">2. Quy trình giao kết hợp đồng điện tử</h2>
                 <p>Giao dịch điện tử (HĐĐT) được giao kết qua các bước bắt buộc trên website:</p>
                 <ol class="list-decimal list-inside mt-2 space-y-2 ml-1">
-                    <li>Đăng ký / đăng nhập tài khoản;</li>
+                    <li>Đăng nhập, hoặc nhập email khi mua không cần đăng ký (hệ thống tự tạo tài khoản để gửi xác nhận);</li>
                     <li>Chọn sản phẩm, thêm vào giỏ hàng;</li>
                     <li>Nhập thông tin giao hàng và chọn phương thức thanh toán;</li>
                     <li><strong class="text-[#3d3d3d]">Xác nhận đơn hàng</strong> — bước xem lại đơn và <strong class="text-[#3d3d3d]">bắt buộc tick đồng ý</strong> với Điều Kiện Giao Dịch Chung này trước khi đặt hàng;</li>
@@ -24,6 +24,12 @@
                     <li>Giao hàng và hoàn tất giao dịch.</li>
                 </ol>
                 <p class="mt-2">Việc tick đồng ý ở bước xác nhận đơn được ghi nhận là sự chấp thuận của Người mua đối với các điều khoản này.</p>
+                <p class="mt-3 rounded-lg bg-[#faf7f4] border border-[#efe8e3] p-4" data-testid="contract-formation">
+                    <strong class="text-[#3d3d3d]">Thời điểm giao kết hợp đồng:</strong> hợp đồng mua bán được giao kết khi SocialShop gửi xác nhận đơn hàng cho Người mua —
+                    hiển thị trang “Đặt hàng thành công” kèm mã đơn và gửi email xác nhận tới địa chỉ email của Người mua.
+                    Giá, phí vận chuyển, thuế và tổng tiền trong xác nhận là số tiền đã hiển thị ở bước xác nhận đơn (báo giá giữ 15 phút; nếu có thay đổi, hệ thống yêu cầu xác nhận lại trước khi đặt).
+                    Đơn thanh toán VNPay chưa thanh toán trong 30 phút sẽ tự hủy.
+                </p>
             </section>
 
             <section>
@@ -86,11 +92,11 @@
             <section>
                 <h2 class="font-serif text-xl font-semibold text-[#3d3d3d] mb-3">8. Căn cứ pháp lý</h2>
                 <ul class="list-disc list-inside space-y-1 ml-1">
+                    <li>Luật Thương mại điện tử số 122/2025/QH15 (thông qua 10/12/2025, hiệu lực 01/7/2026);</li>
                     <li>Luật Giao dịch điện tử số 20/2023/QH15;</li>
-                    <li>Nghị định 52/2013/NĐ-CP về Thương mại điện tử (đã sửa đổi, bổ sung bởi NĐ 85/2021/NĐ-CP);</li>
-                    <li>Luật Bảo vệ quyền lợi người tiêu dùng số 19/2023/QH15.</li>
+                    <li>Luật Bảo vệ quyền lợi người tiêu dùng số 19/2023/QH15;</li>
+                    <li>Luật Bảo vệ dữ liệu cá nhân số 91/2025/QH15 (hiệu lực 01/01/2026).</li>
                 </ul>
-                <p class="mt-2 text-sm italic text-[#9a9490]">[Cần kiểm chứng] tự tra cứu hiệu lực của văn bản tại thời điểm nộp bài.</p>
             </section>
         </div>
     </div>

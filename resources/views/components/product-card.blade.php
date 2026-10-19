@@ -2,7 +2,7 @@
 
 @php
     $discountPercent = 0;
-    if(isset($product->sale_price) && $product->sale_price && $product->sale_price < $product->price) {
+    if($product->isOnSale()) {
         $discountPercent = round((1 - $product->sale_price / $product->price) * 100);
     }
     $displayPrice = $discountPercent > 0 ? $product->sale_price : $product->price;

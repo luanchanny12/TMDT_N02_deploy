@@ -25,6 +25,13 @@ class ChatController extends Controller
 
         $history = $this->sanitizeHistory($request->input('history', []));
 
+        // Câu hỏi chính sách (đổi trả, hoàn tiền, bảo hành, khiếu nại): trả lời cố định, không gọi AI
+        if ($policy = $chatbot->policyAnswer($message)) {
+            return $this->sendSseResponse(function () use ($policy) {
+                $this->sendSseEvent(['text' => $policy, 'done' => true]);
+            });
+        }
+
         // Lấy thông tin user nếu đã đăng nhập; guest sẽ có $userId = null (chỉ kèm context sản phẩm, không lộ đơn hàng)
         $userId = Auth::id();
         $contextParts = $chatbot->buildContext($message, $userId);

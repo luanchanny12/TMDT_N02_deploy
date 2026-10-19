@@ -45,7 +45,7 @@
                         $firstImage = $galleryImages->first();
 
                         $discountPercent = 0;
-                        if(isset($product->sale_price) && $product->sale_price && $product->sale_price < $product->price) {
+                        if($product->isOnSale()) {
                             $discountPercent = round((1 - $product->sale_price / $product->price) * 100);
                         }
                         $displayPrice = $discountPercent > 0 ? $product->sale_price : $product->price;
@@ -516,7 +516,7 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
                                 </div>
                                 <div>
-                                    <h4 class="text-xs font-bold text-[#2c2a28]">Freeship từ 500K</h4>
+                                    <h4 class="text-xs font-bold text-[#2c2a28]">Freeship từ {{ number_format(app(\App\Services\Order\PricingService::class)->nationwideFreeShippingThreshold(), 0, ',', '.') }}₫</h4>
                                     <p class="text-[10px] text-[#9a9490]">Toàn quốc</p>
                                 </div>
                             </div>

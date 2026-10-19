@@ -28,6 +28,8 @@ class AuthService extends BaseService
             'password' => Hash::make($data['password']),
             'role' => 'customer',
             'referral_code' => $this->generateUniqueReferralCode(),
+            'marketing_consent' => ! empty($data['marketing_consent']),
+            'marketing_consent_at' => ! empty($data['marketing_consent']) ? now() : null,
         ]);
 
         // Nạp giá trị mặc định của DB (is_active = true...) để không bị coi là tài khoản bị khóa

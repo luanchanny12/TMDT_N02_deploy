@@ -11,5 +11,14 @@ Artisan::command('inspire', function () {
 // Sao lưu DB hằng ngày lúc 02:00 (cần `php artisan schedule:work` hoặc Task Scheduler)
 Schedule::command('db:backup')->dailyAt('02:00');
 
+// Khuyến mãi hết hạn → về giá gốc (đồng hồ Flash Sale đếm tới đúng mốc này)
+Schedule::command('products:end-expired-sales')->everyMinute()->withoutOverlapping();
+
+// Xóa thống kê truy cập (24 tháng) và nhật ký bảo mật (12 tháng) quá hạn — đúng thời hạn công bố
+Schedule::command('data:prune')->dailyAt('03:00');
+
+// Chuỗi email giữ chân (+1h chào mừng, +24h nhắc giỏ, +72h ưu đãi) — chỉ cho khách đã đồng ý
+Schedule::command('marketing:send-retention')->everyFifteenMinutes()->withoutOverlapping();
+
 // Hủy đơn VNPay bỏ dở để nhả tồn kho
 Schedule::command('orders:expire-unpaid')->everyFiveMinutes()->withoutOverlapping();

@@ -30,6 +30,7 @@ Nếu hỏi về giao hàng, giao toàn quốc, phí ship theo khu vực, miễn
 Nếu hỏi về đổi trả hoặc hoàn tiền, chính sách của shop là hỗ trợ đổi trả trong vòng 7 ngày kể từ khi nhận hàng (sản phẩm nguyên tem mác). Với các yêu cầu hoàn tiền đặc biệt hoặc ngoài chính sách, mời khách liên hệ hotline 077123456 hoặc email support@socialshop.vn để nhân viên hỗ trợ trực tiếp.
 Nếu hỏi về thanh toán, hỗ trợ COD và VNPay.
 Nếu hỏi về liên hệ, hotline 077123456, email support@socialshop.vn.
+Với câu hỏi về đổi trả, hoàn tiền, bảo hành hoặc khiếu nại: không tự đặt ra điều kiện, thời hạn hay cam kết; chỉ nhắc lại chính sách đã công bố, dẫn link trang Chính sách đổi trả và hotline 077123456.
 Không trả lời các câu hỏi ngoài phạm vi cửa hàng.
 PROMPT;
         $this->systemPrompt = str_replace(':free_ship', $this->freeShipText(), $this->systemPrompt);
@@ -59,8 +60,64 @@ PROMPT;
         return $this->systemPrompt;
     }
 
+    /**
+     * Guardrail: câu hỏi về đổi trả / hoàn tiền / bảo hành / khiếu nại được trả lời bằng nội dung chính sách cố định,
+     * không qua AI, để trợ lý không "hứa" sai điều kiện so với chính sách đã công bố.
+     */
+    public function policyAnswer(string $message): ?string
+    {
+        $lower = mb_strtolower($message);
+        $has = fn (array $words) => collect($words)->contains(fn ($w) => str_contains($lower, $w));
+
+        $topic = match (true) {
+            $has(['khiếu nại', 'khieu nai', 'phàn nàn', 'tố cáo']) => 'complaint',
+            $has(['hoàn tiền', 'hoàn lại tiền', 'hoan tien', 'refund', 'trả tiền lại']) => 'refund',
+            $has(['bảo hành', 'bao hanh', 'warranty']) => 'warranty',
+            $has(['đổi trả', 'doi tra', 'trả hàng', 'tra hang', 'trả lại', 'đổi hàng', 'doi hang', 'đổi size', 'đổi mẫu', 'đổi màu']) => 'return',
+            default => null,
+        };
+
+        if ($topic === null) {
+            return null;
+        }
+
+        $link = route('pages.return-policy');
+        $contact = 'Hotline 077123456 hoặc email support@socialshop.vn (kèm mã đơn hàng và hình ảnh sản phẩm).';
+
+        $body = match ($topic) {
+            'return' => 'Chính sách đổi trả của SocialShop:
+'
+                .'- Đổi/trả trong vòng 7 ngày kể từ ngày nhận hàng.
+'
+                .'- Hàng lỗi nhà sản xuất, giao sai size/màu, hư hỏng khi vận chuyển hoặc không đúng mô tả: miễn phí vận chuyển đổi trả.
+'
+                .'- Đổi size, đổi mẫu hoặc trả do đổi ý: sản phẩm còn nguyên tem, nhãn, chưa sử dụng; khách chịu phí gửi lại.',
+            'refund' => 'Hoàn tiền tại SocialShop:
+'
+                .'- Sau khi shop nhận và kiểm tra hàng trả, tiền được hoàn trong 3–5 ngày làm việc.
+'
+                .'- Đơn VNPay hoàn về tài khoản ngân hàng; đơn COD shop chuyển khoản tới tài khoản bạn cung cấp.',
+            'warranty' => 'Về bảo hành:
+'
+                .'- Sản phẩm lỗi do nhà sản xuất được đổi/trả miễn phí trong 7 ngày kể từ ngày nhận hàng theo chính sách đổi trả.
+'
+                .'- Ngoài thời hạn này, vui lòng liên hệ CSKH để được hướng dẫn cụ thể cho từng sản phẩm.',
+            'complaint' => 'Rất tiếc vì trải nghiệm chưa tốt của bạn. Để gửi khiếu nại:
+'
+                .'- CSKH phản hồi trong vòng 24 giờ làm việc và hướng dẫn các bước tiếp theo.',
+        };
+
+        return "{$body}
+Xem đầy đủ: {$link}
+Liên hệ: {$contact}";
+    }
+
     public function sendMessage(string $userMessage, array $history = [], ?int $userId = null): string
     {
+        if ($policy = $this->policyAnswer($userMessage)) {
+            return $policy;
+        }
+
         if (empty($this->apiKey) || $this->apiKey === 'test') {
             return $this->fallbackResponse($userMessage, $userId);
         }
@@ -163,13 +220,13 @@ PROMPT;
             ->with('category:id,name')
             ->orderBy('category_id')
             ->limit($limit)
-            ->get(['id', 'name', 'price', 'sale_price', 'stock', 'category_id']);
+            ->get(['id', 'name', 'price', 'sale_price', 'sale_ends_at', 'stock', 'category_id']);
 
         if ($products->isEmpty()) {
             return '';
         }
 
-        $lines = $products->map(fn ($p) => '- '.$p->name.' | '.number_format($p->sale_price ?? $p->price).'đ | '
+        $lines = $products->map(fn ($p) => '- '.$p->name.' | '.number_format($p->effectivePrice()).'đ | '
             .($p->category->name ?? 'Khác').($p->stock > 0 ? '' : ' | hết hàng'));
 
         return "\n\n[Danh sách sản phẩm của shop]\n".$lines->implode("\n");
@@ -202,7 +259,7 @@ PROMPT;
                 ->get()
                 ->map(fn ($p) => [
                     'name' => $p->name,
-                    'price' => number_format($p->sale_price ?? $p->price).'đ',
+                    'price' => number_format($p->effectivePrice()).'đ',
                     'category' => $p->category->name ?? 'N/A',
                     'in_stock' => $p->stock > 0,
                 ])
@@ -220,7 +277,7 @@ PROMPT;
             ->get()
             ->map(fn ($p) => [
                 'name' => $p->name,
-                'price' => number_format($p->sale_price ?? $p->price).'đ',
+                'price' => number_format($p->effectivePrice()).'đ',
                 'category' => $p->category->name ?? 'N/A',
                 'in_stock' => $p->stock > 0,
             ])
@@ -308,6 +365,10 @@ PROMPT;
 
     public function fallbackResponse(string $message, ?int $userId = null): string
     {
+        if ($policy = $this->policyAnswer($message)) {
+            return $policy;
+        }
+
         $lower = mb_strtolower($message);
 
         if ($userId) {

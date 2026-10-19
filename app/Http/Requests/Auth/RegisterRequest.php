@@ -19,6 +19,7 @@ class RegisterRequest extends FormRequest
             'email' => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::min(8)],
             'referral_code' => ['nullable', 'string', 'max:50'],
+            'marketing_consent' => ['nullable', 'boolean'],
         ];
     }
 

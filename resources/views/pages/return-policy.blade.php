@@ -13,6 +13,7 @@
                     <li>Sản phẩm không đúng size, màu sắc so với đơn đặt hàng</li>
                     <li>Sản phẩm bị hư hỏng trong quá trình vận chuyển</li>
                     <li>Sản phẩm không đúng với mô tả trên trang</li>
+                    <li>Đổi size, đổi mẫu hoặc trả hàng do đổi ý — sản phẩm còn nguyên tem, nhãn, chưa qua sử dụng (khách chịu phí gửi lại)</li>
                 </ul>
             </section>
 
@@ -27,7 +28,7 @@
             <section>
                 <h2 class="font-serif text-xl font-semibold text-[#3d3d3d] mb-3">Quy trình đổi trả</h2>
                 <ol class="list-decimal list-inside mt-2 space-y-2 ml-1">
-                    <li>Liên hệ hotline <strong class="text-[#3d3d3d]">1900-xxxx-xxx</strong> hoặc gửi email đến <strong class="text-[#3d3d3d]">support@socialshop.vn</strong> kèm mã đơn hàng và hình ảnh sản phẩm lỗi.</li>
+                    <li>Liên hệ hotline <strong class="text-[#3d3d3d]">077123456</strong> hoặc gửi email đến <strong class="text-[#3d3d3d]">support@socialshop.vn</strong> kèm mã đơn hàng và hình ảnh sản phẩm lỗi.</li>
                     <li>Đội ngũ CSKH sẽ phản hồi trong vòng 24 giờ làm việc và hướng dẫn bạn các bước tiếp theo.</li>
                     <li>Gửi lại sản phẩm theo hướng dẫn (sản phẩm phải còn nguyên tem, nhãn, chưa qua sử dụng).</li>
                     <li>Sau khi kiểm tra và chấp nhận, SocialShop sẽ tiến hành đổi sản phẩm mới hoặc hoàn tiền trong vòng 3&ndash;5 ngày làm việc.</li>

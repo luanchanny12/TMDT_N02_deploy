@@ -22,6 +22,8 @@ class User extends Authenticatable
         'role',
         'is_active',
         'referral_code',
+        'marketing_consent',
+        'marketing_consent_at',
     ];
 
     protected $hidden = [
@@ -34,6 +36,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'marketing_consent' => 'boolean',
+            'marketing_consent_at' => 'datetime',
         ];
     }
 
@@ -44,11 +48,31 @@ class User extends Authenticatable
         return $this->role === 'admin';
     }
 
+    /** Bật/tắt đồng ý nhận email tiếp thị, lưu thời điểm thay đổi làm bằng chứng. */
+    public function setMarketingConsent(bool $consent): void
+    {
+        if ($this->marketing_consent === $consent) {
+            return;
+        }
+
+        $this->forceFill(['marketing_consent' => $consent, 'marketing_consent_at' => now()])->save();
+    }
+
     // ─── Relationships ────────────────────────────────────────────────────────
 
     public function orders()
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function cart()
+    {
+        return $this->hasOne(Cart::class);
+    }
+
+    public function retentionEmails()
+    {
+        return $this->hasMany(RetentionEmail::class);
     }
 
     public function wishlist()

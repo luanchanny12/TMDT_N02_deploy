@@ -2,8 +2,8 @@
     <div class="max-w-3xl mx-auto px-4 sm:px-6 py-12">
         <h1 class="font-serif text-3xl font-bold text-[#3d3d3d] mb-8">Chính sách bảo vệ dữ liệu cá nhân</h1>
         <p class="text-sm text-[#9a9490] mb-8">
-            Căn cứ Nghị định 13/2023/NĐ-CP về bảo vệ dữ liệu cá nhân; Luật Giao dịch điện tử 20/2023/QH15.
-            <span class="italic">[Cần kiểm chứng] tự tra cứu hiệu lực tại thời điểm nộp bài.</span>
+            Căn cứ Luật Bảo vệ dữ liệu cá nhân số 91/2025/QH15 (hiệu lực từ 01/01/2026); Luật Giao dịch điện tử số 20/2023/QH15.
+            Danh mục chi tiết từng loại dữ liệu: <a href="{{ route('pages.data-inventory') }}" class="text-[#b8847e] underline">Bảng đăng ký dữ liệu cá nhân</a>.
         </p>
 
         <div class="space-y-10 text-[#6b6560] leading-relaxed text-[15px]">
@@ -44,10 +44,10 @@
             <section>
                 <h2 class="font-serif text-xl font-semibold text-[#3d3d3d] mb-3">4. Thời hạn lưu trữ</h2>
                 <p>
-                    Dữ liệu được lưu trong thời gian tài khoản còn hoạt động. Sau khi xóa tài khoản, dữ liệu liên quan
-                    được xử lý theo yêu cầu của bạn và theo thời hạn lưu trữ bắt buộc (nếu có) của pháp luật
-                    <span class="italic">[Cần kiểm chứng — mức thời hạn cụ thể theo quy định ngành/thể loại dữ liệu]</span>.
-                    Nhật ký bảo mật (audit log) được giữ để phục vụ kiểm soát truy cập và khiếu nại.
+                    Dữ liệu tài khoản được lưu trong thời gian tài khoản còn hoạt động; dữ liệu đơn hàng, thanh toán lưu theo thời hạn
+                    lưu trữ chứng từ kế toán. Thống kê truy cập tự xóa sau {{ \App\Console\Commands\PrunePersonalData::ANALYTICS_MONTHS }} tháng,
+                    nhật ký bảo mật (audit log) tự xóa sau {{ \App\Console\Commands\PrunePersonalData::AUDIT_MONTHS }} tháng.
+                    Thời hạn từng loại dữ liệu: <a href="{{ route('pages.data-inventory') }}" class="text-[#b8847e] underline">Bảng đăng ký dữ liệu cá nhân</a>.
                 </p>
             </section>
 
@@ -63,7 +63,7 @@
             </section>
 
             <section>
-                <h2 class="font-serif text-xl font-semibold text-[#3d3d3d] mb-3">6. Quyền của chủ thể dữ liệu (NĐ 13/2023)</h2>
+                <h2 class="font-serif text-xl font-semibold text-[#3d3d3d] mb-3">6. Quyền của chủ thể dữ liệu (Luật BVDLCN 91/2025)</h2>
                 <ul class="list-disc list-inside space-y-1 ml-1">
                     <li>Được <strong class="text-[#3d3d3d]">biết</strong> dữ liệu nào về mình đang được xử lý;</li>
                     <li>Được <strong class="text-[#3d3d3d]">truy cập, yêu cầu sửa</strong> dữ liệu không chính xác;</li>
@@ -73,7 +73,7 @@
                 </ul>
                 <p class="mt-2">
                     Cách thực hiện: gửi yêu cầu tới email <strong class="text-[#3d3d3d]">support@socialshop.vn</strong>
-                    hoặc hotline <strong class="text-[#3d3d3d]">1900-xxxx-xxx</strong> — phản hồi trong thời gian hợp lý theo quy định.
+                    hoặc hotline <strong class="text-[#3d3d3d]">077123456</strong> — phản hồi trong thời gian hợp lý theo quy định.
                 </p>
             </section>
 
@@ -94,7 +94,7 @@
                 <h2 class="font-serif text-xl font-semibold text-[#3d3d3d] mb-3">8. Đầu mối khiếu nại / phụ trách bảo vệ dữ liệu</h2>
                 <ul class="list-disc list-inside space-y-1 ml-1">
                     <li>Email: <strong class="text-[#3d3d3d]">support@socialshop.vn</strong></li>
-                    <li>Hotline: <strong class="text-[#3d3d3d]">1900-xxxx-xxx</strong></li>
+                    <li>Hotline: <strong class="text-[#3d3d3d]">077123456</strong></li>
                     <li>Địa chỉ: 123 Đường Thời Trang, Quận 1, TP.HCM</li>
                 </ul>
             </section>
@@ -102,10 +102,10 @@
             <section>
                 <h2 class="font-serif text-xl font-semibold text-[#3d3d3d] mb-3">9. Căn cứ pháp lý</h2>
                 <ul class="list-disc list-inside space-y-1 ml-1">
-                    <li>Nghị định 13/2023/NĐ-CP về bảo vệ dữ liệu cá nhân;</li>
+                    <li>Luật Bảo vệ dữ liệu cá nhân số 91/2025/QH15 (thông qua 26/6/2025, hiệu lực 01/01/2026);</li>
+                    <li>Luật Thương mại điện tử số 122/2025/QH15 (thông qua 10/12/2025, hiệu lực 01/7/2026);</li>
                     <li>Luật Giao dịch điện tử số 20/2023/QH15.</li>
                 </ul>
-                <p class="mt-2 text-sm italic text-[#9a9490]">[Cần kiểm chứng] tự tra cứu hiệu lực tại thời điểm nộp.</p>
             </section>
 
             <section>

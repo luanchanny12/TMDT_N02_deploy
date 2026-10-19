@@ -11,16 +11,25 @@ class OrderItem extends Model
 
     protected $fillable = [
         'order_id', 'product_id', 'variant_id', 'product_name', 'size', 'color',
-        'price', 'quantity', 'subtotal',
+        'price', 'cost_price', 'quantity', 'subtotal',
     ];
 
     protected function casts(): array
     {
         return [
             'price' => 'integer',
+            'cost_price' => 'integer',
             'quantity' => 'integer',
             'subtotal' => 'integer',
         ];
+    }
+
+    /**
+     * Lợi nhuận gộp của dòng đơn theo giá vốn đã chụp lúc đặt hàng.
+     */
+    public function grossProfit(): ?int
+    {
+        return $this->cost_price === null ? null : ($this->price - $this->cost_price) * $this->quantity;
     }
 
     public function order()

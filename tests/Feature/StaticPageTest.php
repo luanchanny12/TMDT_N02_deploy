@@ -32,11 +32,11 @@ class StaticPageTest extends TestCase
             ->assertSee('Phạm vi kinh doanh');
     }
 
-    public function test_privacy_page_contains_nd13_items(): void
+    public function test_privacy_page_contains_required_items(): void
     {
         $this->get('/chinh-sach-bao-mat')
             ->assertOk()
-            ->assertSee('13/2023')
+            ->assertSee('91/2025/QH15') // Luật BVDLCN thay căn cứ NĐ 13/2023
             ->assertSee('Quyền của chủ thể')
             ->assertSee('Biện pháp bảo mật')
             ->assertSee('Đầu mối khiếu nại');

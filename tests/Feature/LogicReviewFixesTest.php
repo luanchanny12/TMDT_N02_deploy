@@ -48,10 +48,15 @@ class LogicReviewFixesTest extends TestCase
         // Admin thêm size sau khi khách đã bỏ sản phẩm vào giỏ
         ProductVariant::create(['product_id' => $product->id, 'size' => 'M', 'color' => 'Đen', 'stock' => 5]);
 
-        $this->checkout($user);
+        // Bị chặn ngay khi gửi thông tin giao hàng (báo giá không định giá được dòng thiếu size)
+        $this->actingAs($user)->post('/checkout/review', [
+            'shipping_name' => 'A', 'shipping_phone' => '0901234567', 'shipping_address' => 'số 1',
+            'shipping_province' => 'Quảng Ninh', 'payment_method' => 'cod',
+        ])->assertRedirect(route('cart.index'))
+            ->assertSessionHas('error', fn ($m) => str_contains($m, 'Vui lòng chọn size/màu'));
 
+        $this->actingAs($user)->post('/checkout/confirm', ['agree_terms' => '1']);
         $this->assertSame(0, Order::count());
-        $this->assertStringContainsString('Vui lòng chọn size/màu', (string) session('error'));
     }
 
     public function test_variant_order_decrements_variant_and_product_stock(): void

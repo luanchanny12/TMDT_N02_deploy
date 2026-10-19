@@ -1,41 +1,49 @@
+# Cấu hình dùng chung cho 3 container PHP (app, queue-worker, scheduler): sửa một chỗ, không bị lệch nhau
+x-php-env: &php-env
+  APP_ENV: local
+  # Mặc định tắt debug để trang lỗi không lộ secrets; bật bằng DOCKER_APP_DEBUG=true khi cần dev
+  APP_DEBUG: ${DOCKER_APP_DEBUG:-false}
+  APP_URL: ${APP_URL:-http://localhost:8081}
+  DB_CONNECTION: mysql
+  DB_HOST: mysql
+  DB_PORT: "3306"
+  DB_DATABASE: social_commerce
+  DB_USERNAME: social
+  DB_PASSWORD: social_secret
+  CACHE_STORE: database
+  SESSION_DRIVER: database
+  QUEUE_CONNECTION: database
+  MAIL_MAILER: smtp
+  MAIL_HOST: mailpit
+  MAIL_PORT: "1025"
+  MAIL_USERNAME: ""
+  MAIL_PASSWORD: ""
+  # VNPAY_TMN_CODE / VNPAY_HASH_SECRET đọc từ file .env (không hardcode secret trong git)
+  VNPAY_URL: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+  VNPAY_RETURN_URL: ${APP_URL:-http://localhost:8081}/payment/vnpay/return
+  GOOGLE_REDIRECT_URI: ${APP_URL:-http://localhost:8081}/auth/google/callback
+  FACEBOOK_REDIRECT_URI: ${APP_URL:-http://localhost:8081}/auth/facebook/callback
+  # Chatbot gọi microservice ai-service qua mạng nội bộ Docker
+  AI_SERVICE_URL: http://ai-service:3000
+  AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN:-local-dev-ai-token}
+
+x-php-service: &php-service
+  build:
+    context: ./docker/php
+  image: socialshop-php:8.2
+  restart: unless-stopped
+  working_dir: /var/www
+  volumes:
+    - .:/var/www
+    - vendor_volume:/var/www/vendor
+  environment: *php-env
+
 services:
   app:
-    build:
-      context: ./docker/php
-    image: socialshop-php:8.2
+    <<: *php-service
     container_name: socialshop-app
-    restart: unless-stopped
-    working_dir: /var/www
-    volumes:
-      - .:/var/www
-      - vendor_volume:/var/www/vendor
-    environment:
-      APP_ENV: local
-      # Mặc định tắt debug để trang lỗi không lộ secrets; bật bằng DOCKER_APP_DEBUG=true khi cần dev
-      APP_DEBUG: ${DOCKER_APP_DEBUG:-false}
-      APP_URL: ${APP_URL:-http://localhost:8081}
-      DB_CONNECTION: mysql
-      DB_HOST: mysql
-      DB_PORT: "3306"
-      DB_DATABASE: social_commerce
-      DB_USERNAME: social
-      DB_PASSWORD: social_secret
-      CACHE_STORE: database
-      SESSION_DRIVER: database
-      QUEUE_CONNECTION: database
-      MAIL_MAILER: smtp
-      MAIL_HOST: mailpit
-      MAIL_PORT: "1025"
-      MAIL_USERNAME: ""
-      MAIL_PASSWORD: ""
-      # VNPAY_TMN_CODE / VNPAY_HASH_SECRET đọc từ file .env (không hardcode secret trong git)
-      VNPAY_URL: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
-      VNPAY_RETURN_URL: ${APP_URL:-http://localhost:8081}/payment/vnpay/return
-      GOOGLE_REDIRECT_URI: ${APP_URL:-http://localhost:8081}/auth/google/callback
-      FACEBOOK_REDIRECT_URI: ${APP_URL:-http://localhost:8081}/auth/facebook/callback
-      # Chatbot gọi microservice ai-service qua mạng nội bộ Docker
-      AI_SERVICE_URL: http://ai-service:3000
-      AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN:-local-dev-ai-token}
+    # Khởi động: chạy migration còn thiếu + tạo mã khuyến mãi WELCOME10 nếu chưa có (không xóa dữ liệu), rồi chạy php-fpm
+    command: sh -c "php artisan migrate --force && php artisan db:seed --class=PromoCouponSeeder --force; exec php-fpm"
     depends_on:
       mysql:
         condition: service_healthy
@@ -94,9 +102,8 @@ services:
     container_name: socialshop-vite
     restart: unless-stopped
     working_dir: /var/www
+    # Chỉ build lại asset khi sửa file (không chạy dev server nên không cần mở cổng)
     command: sh -c "npm install && npx vite build --watch"
-    ports:
-      - "5173:5173"
     environment:
       APP_URL: ${APP_URL:-http://localhost:8081}
     volumes:
@@ -112,35 +119,9 @@ services:
       - "1025:1025"
 
   queue-worker:
-    build:
-      context: ./docker/php
-    image: socialshop-php:8.2
+    <<: *php-service
     container_name: socialshop-queue-worker
-    restart: unless-stopped
-    working_dir: /var/www
     command: php artisan queue:work --tries=3 --sleep=3
-    volumes:
-      - .:/var/www
-      - vendor_volume:/var/www/vendor
-    environment:
-      APP_ENV: local
-      # Mặc định tắt debug để trang lỗi không lộ secrets; bật bằng DOCKER_APP_DEBUG=true khi cần dev
-      APP_DEBUG: ${DOCKER_APP_DEBUG:-false}
-      APP_URL: ${APP_URL:-http://localhost:8081}
-      DB_CONNECTION: mysql
-      DB_HOST: mysql
-      DB_PORT: "3306"
-      DB_DATABASE: social_commerce
-      DB_USERNAME: social
-      DB_PASSWORD: social_secret
-      CACHE_STORE: database
-      SESSION_DRIVER: database
-      QUEUE_CONNECTION: database
-      MAIL_MAILER: smtp
-      MAIL_HOST: mailpit
-      MAIL_PORT: "1025"
-      MAIL_USERNAME: ""
-      MAIL_PASSWORD: ""
     depends_on:
       mysql:
         condition: service_healthy
@@ -148,33 +129,10 @@ services:
         condition: service_started
 
   scheduler:
-    build:
-      context: ./docker/php
-    image: socialshop-php:8.2
+    <<: *php-service
     container_name: socialshop-scheduler
-    restart: unless-stopped
-    working_dir: /var/www
-    # Chạy Laravel scheduler: hủy đơn VNPay quá hạn, backup DB hằng ngày
+    # Laravel scheduler: hủy đơn VNPay quá hạn, kết thúc Flash Sale, email giữ chân, dọn dữ liệu, backup DB
     command: php artisan schedule:work
-    volumes:
-      - .:/var/www
-      - vendor_volume:/var/www/vendor
-    environment:
-      APP_ENV: local
-      APP_DEBUG: ${DOCKER_APP_DEBUG:-false}
-      APP_URL: ${APP_URL:-http://localhost:8081}
-      DB_CONNECTION: mysql
-      DB_HOST: mysql
-      DB_PORT: "3306"
-      DB_DATABASE: social_commerce
-      DB_USERNAME: social
-      DB_PASSWORD: social_secret
-      CACHE_STORE: database
-      SESSION_DRIVER: database
-      QUEUE_CONNECTION: database
-      MAIL_MAILER: smtp
-      MAIL_HOST: mailpit
-      MAIL_PORT: "1025"
     depends_on:
       mysql:
         condition: service_healthy

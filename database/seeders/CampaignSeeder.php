@@ -66,6 +66,10 @@ class CampaignSeeder extends Seeder
 
                     if (mt_rand(1, 100) <= 30) {
                         $rows[] = $base + ['type' => 'add_to_cart', 'product_id' => $product, 'path' => null, 'value' => 1, 'created_at' => $at->copy()->addMinutes(3)];
+
+                        if (mt_rand(1, 100) <= 35) {
+                            $rows[] = $base + ['type' => 'begin_checkout', 'product_id' => null, 'path' => null, 'created_at' => $at->copy()->addMinutes(6)];
+                        }
                     }
                 }
             }
@@ -103,6 +107,10 @@ class CampaignSeeder extends Seeder
                     'is_demo' => true,
                 ];
                 $rows[] = $base + ['type' => 'visit', 'order_id' => null, 'value' => null, 'path' => '/', 'created_at' => $order->created_at->copy()->subMinutes(15)];
+                // Phiên mua hàng đi đủ 5 bước của phễu
+                $rows[] = $base + ['type' => 'product_view', 'order_id' => null, 'value' => null, 'path' => null, 'created_at' => $order->created_at->copy()->subMinutes(12)];
+                $rows[] = $base + ['type' => 'add_to_cart', 'order_id' => null, 'value' => 1, 'path' => null, 'created_at' => $order->created_at->copy()->subMinutes(8)];
+                $rows[] = $base + ['type' => 'begin_checkout', 'order_id' => null, 'value' => $order->total, 'path' => null, 'created_at' => $order->created_at->copy()->subMinutes(4)];
                 $rows[] = $base + ['type' => 'purchase', 'order_id' => $order->id, 'value' => $order->total, 'path' => null, 'created_at' => $order->created_at];
             });
 
@@ -110,6 +118,6 @@ class CampaignSeeder extends Seeder
             AnalyticsEvent::insert($chunk);
         }
 
-        return intdiv(count($rows), 2);
+        return intdiv(count($rows), 5);
     }
 }
