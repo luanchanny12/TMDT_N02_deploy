@@ -73,6 +73,32 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class);
     }
 
+    /** Chỉ hiện lượt xem khi đủ lớn — sản phẩm mới vài lượt xem hiện ra dễ phản tác dụng. */
+    public const MIN_VIEWS_TO_DISPLAY = 20;
+
+    public function showsViewCount(): bool
+    {
+        return (int) $this->views_count >= self::MIN_VIEWS_TO_DISPLAY;
+    }
+
+    /**
+     * 489 → "489", 1.250 → "1,2K", 15.000 → "15K".
+     */
+    public function formattedViews(): string
+    {
+        $views = (int) $this->views_count;
+
+        if ($views < 1000) {
+            return (string) $views;
+        }
+
+        // Làm tròn xuống để không phóng đại số liệu (1.250 → 1,2K)
+        $k = $views / 1000;
+        $short = $k < 10 ? floor($k * 10) / 10 : floor($k);
+
+        return str_replace('.', ',', rtrim(rtrim(number_format($short, 1, '.', ''), '0'), '.')).'K';
+    }
+
     public function hasVariants(): bool
     {
         return $this->variants()->exists();

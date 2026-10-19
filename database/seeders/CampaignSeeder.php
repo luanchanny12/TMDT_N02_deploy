@@ -32,13 +32,16 @@ class CampaignSeeder extends Seeder
 
         // Gán khoảng một nửa đơn demo cho các chiến dịch / nguồn tự nhiên
         $sources = ['google', 'zalo', null, null];
-        Order::query()->orderBy('id')->get()->each(function (Order $order, int $i) use ($campaigns, $sources) {
-            $campaign = $i % 2 === 0 ? $campaigns[$i % 3] : null;
-            $order->forceFill([
-                'campaign_id' => $campaign?->id,
-                'traffic_source' => $campaign?->utm_source ?? $sources[$i % count($sources)],
-            ])->saveQuietly();
-        });
+        // Bỏ qua đơn thật (đã có sự kiện mua hàng không phải demo) để không ghi đè nguồn truy cập thật
+        Order::query()
+            ->whereDoesntHave('analyticsEvents', fn ($q) => $q->where('type', 'purchase')->where('is_demo', false))
+            ->orderBy('id')->get()->each(function (Order $order, int $i) use ($campaigns, $sources) {
+                $campaign = $i % 2 === 0 ? $campaigns[$i % 3] : null;
+                $order->forceFill([
+                    'campaign_id' => $campaign?->id,
+                    'traffic_source' => $campaign?->utm_source ?? $sources[$i % count($sources)],
+                ])->saveQuietly();
+            });
 
         $productIds = Product::where('status', 'active')->pluck('id')->all();
         $rows = [];

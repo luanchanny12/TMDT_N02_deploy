@@ -174,11 +174,6 @@ class AnalyticsReportService extends BaseService
             ->whereHas('analyticsEvents', fn ($q) => $q->where('type', 'purchase'));
     }
 
-    public function hasDemoData(): bool
-    {
-        return AnalyticsEvent::where('is_demo', true)->exists() || Campaign::where('is_demo', true)->exists();
-    }
-
     private function ratio(int|float $a, int|float $b): float
     {
         return $b > 0 ? $a / $b : 0.0;
