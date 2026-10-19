@@ -144,11 +144,15 @@ class OrderService extends BaseService
             // 11. Xóa coupon khỏi session
             session()->forget('coupon_code');
 
-            // 12. Gửi email xác nhận đơn hàng
-            try {
-                Mail::to($user->email)->queue(new OrderConfirmedMail($order));
-            } catch (\Exception $e) {
-                \Log::error('Không thể gửi email xác nhận đơn hàng: '.$e->getMessage());
+            // 12. Gửi email xác nhận đơn hàng / hóa đơn
+            // Với COD: gửi ngay khi đặt hàng thành công
+            // Với VNPay: PaymentService sẽ gửi hóa đơn thanh toán sau khi khách thanh toán thành công
+            if (($data['payment_method'] ?? 'cod') === 'cod') {
+                try {
+                    Mail::to($user->email)->queue(new OrderConfirmedMail($order));
+                } catch (\Exception $e) {
+                    \Log::error('Không thể gửi email xác nhận đơn hàng: '.$e->getMessage());
+                }
             }
 
             return $order;
