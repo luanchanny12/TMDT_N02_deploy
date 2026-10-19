@@ -35,9 +35,14 @@ class ProfileController extends Controller
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string',
+            'marketing_consent' => 'nullable|boolean',
         ]);
 
-        Auth::user()->update($validated);
+        $user = Auth::user();
+        $user->update(collect($validated)->except('marketing_consent')->all());
+        if ($request->has('marketing_consent')) {
+            $user->setMarketingConsent($request->boolean('marketing_consent'));
+        }
 
         return redirect()->route('profile')->with('success', 'Cập nhật thông tin thành công!');
     }

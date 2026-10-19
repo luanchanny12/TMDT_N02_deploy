@@ -194,6 +194,11 @@ class OrderController extends Controller
                 ->with('error', 'Vui lòng đồng ý Điều kiện giao dịch chung');
         }
 
+        // Chỉ ghi nhận khi khách tự tích; bỏ trống không thu hồi đồng ý đã có
+        if ($request->boolean('marketing_consent')) {
+            Auth::user()->setMarketingConsent(true);
+        }
+
         $quote = session('checkout_quote');
         if (! $quote || $quote['expires_at'] < now()->getTimestamp()) {
             return redirect()->route('checkout.review.show')

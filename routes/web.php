@@ -25,6 +25,7 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CompareController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\MarketingUnsubscribeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
@@ -33,6 +34,7 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StaticPageController;
 use App\Http\Controllers\WishlistController;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -59,6 +61,10 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap')
 // Static Pages
 Route::get('/huong-dan-mua-hang', [StaticPageController::class, 'buyingGuide'])->name('pages.buying-guide');
 Route::get('/chinh-sach-doi-tra', [StaticPageController::class, 'returnPolicy'])->name('pages.return-policy');
+// Hủy nhận email tiếp thị bằng link ký số trong thư (không cần đăng nhập)
+Route::match(['get', 'post'], '/huy-dang-ky-email/{user}', MarketingUnsubscribeController::class)
+    ->middleware('signed')->name('marketing.unsubscribe')
+    ->withoutMiddleware([ValidateCsrfToken::class]);
 Route::get('/chinh-sach-bao-mat', [StaticPageController::class, 'privacy'])->name('pages.privacy');
 Route::get('/bang-dang-ky-du-lieu-ca-nhan', [StaticPageController::class, 'dataInventory'])->name('pages.data-inventory');
 Route::get('/dieu-khoan-giao-dich', [StaticPageController::class, 'terms'])->name('pages.terms');

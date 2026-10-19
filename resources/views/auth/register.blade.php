@@ -133,6 +133,12 @@
                                        class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#c9a9a6] focus:border-transparent transition-all bg-gray-50 focus:bg-white">
                             </div>
 
+                            <label class="flex items-start gap-2 text-xs text-gray-600 cursor-pointer">
+                                <input type="checkbox" name="marketing_consent" value="1" @checked(old('marketing_consent'))
+                                       class="mt-0.5 h-4 w-4 text-[#b8847e] border-gray-300 rounded focus:ring-[#c9a9a6]">
+                                <span>Tôi đồng ý nhận email về sản phẩm mới và ưu đãi (không bắt buộc, có thể hủy bất cứ lúc nào).</span>
+                            </label>
+
                             <button type="submit"
                                     class="w-full bg-[#b8847e] text-white py-3 rounded-xl font-bold hover:bg-[#a6736d] transition-all shadow-lg shadow-[#e8c4c4] btn-shine">
                                 Đăng ký
