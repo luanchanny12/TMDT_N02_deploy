@@ -9,7 +9,7 @@
     @if($hasDemoData)
         <div class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4" data-testid="demo-data-notice">
             <p class="text-sm text-amber-800">
-                Trang đang gồm <strong>dữ liệu mẫu</strong> (lượt truy cập, chiến dịch demo) để minh họa.
+                Trang đang gồm <strong>dữ liệu mẫu</strong> (lượt truy cập, lượt xem sản phẩm, chiến dịch demo) để minh họa.
                 Mọi thao tác thật của khách vẫn được cộng thêm. Xóa dữ liệu mẫu để chỉ xem số liệu thật.
             </p>
             <form method="POST" action="{{ route('admin.analytics.clear-demo') }}"

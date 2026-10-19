@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AnalyticsEvent;
 use App\Models\Campaign;
 use App\Models\Order;
+use App\Models\Product;
 use App\Services\Analytics\AnalyticsReportService;
 use App\Services\AuditService;
 use Carbon\CarbonImmutable;
@@ -47,6 +48,12 @@ class AnalyticsController extends Controller
             AnalyticsEvent::where('is_demo', true)->delete();
             Order::whereIn('campaign_id', $campaignIds)->update(['campaign_id' => null]);
             Campaign::whereIn('id', $campaignIds)->delete();
+
+            // Lượt xem hiển thị trên sản phẩm (thẻ, trang chi tiết, "Xem nhiều", Dashboard) cũng chứa số mẫu
+            // → tính lại bằng đúng số lượt xem thật đã ghi nhận
+            Product::query()->update([
+                'views_count' => DB::raw("(SELECT COUNT(*) FROM analytics_events WHERE analytics_events.product_id = products.id AND analytics_events.type = 'product_view')"),
+            ]);
         });
 
         AuditService::log('analytics_demo_cleared', 'AnalyticsEvent', null, ['events' => $events, 'campaigns' => $campaignIds->count()]);

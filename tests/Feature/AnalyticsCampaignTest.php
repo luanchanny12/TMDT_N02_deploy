@@ -161,6 +161,23 @@ class AnalyticsCampaignTest extends TestCase
         $this->actingAs($admin)->get(route('admin.analytics.index'))->assertDontSee('data-testid="demo-data-notice"', false);
     }
 
+    public function test_clear_demo_data_recomputes_product_view_counts(): void
+    {
+        $product = $this->product();
+        $product->update(['views_count' => 480]); // số mẫu do seeder tạo
+        AnalyticsEvent::create(['type' => 'product_view', 'session_hash' => 'd1', 'product_id' => $product->id, 'is_demo' => true]);
+        foreach (['r1', 'r2'] as $s) {
+            AnalyticsEvent::create(['type' => 'product_view', 'session_hash' => $s, 'product_id' => $product->id]);
+        }
+        $other = $this->product();
+        $other->update(['views_count' => 300]);
+
+        $this->actingAs(User::factory()->create(['role' => 'admin']))->delete(route('admin.analytics.clear-demo'));
+
+        $this->assertSame(2, $product->fresh()->views_count); // chỉ còn 2 lượt xem thật
+        $this->assertSame(0, $other->fresh()->views_count);
+    }
+
     public function test_customer_cannot_clear_demo_data(): void
     {
         AnalyticsEvent::create(['type' => 'visit', 'session_hash' => 'demo1', 'is_demo' => true]);
