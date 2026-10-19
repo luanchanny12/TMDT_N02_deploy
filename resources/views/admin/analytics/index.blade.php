@@ -169,13 +169,15 @@
         </div>
     </div>
 
+    @include('admin.analytics._funnel')
+
     {{-- Chiến dịch --}}
     <div class="{{ $card }} overflow-hidden">
         <div class="flex items-center justify-between px-6 pt-6 pb-3">
             <h2 class="font-serif text-lg font-semibold text-[#3d3d3d]">Hiệu quả chiến dịch quảng cáo</h2>
             <span class="text-xs text-[#9a9490]">Tính trên toàn thời gian chạy chiến dịch</span>
         </div>
-        @include('admin.campaigns._table', ['campaigns' => $campaigns, 'compact' => true])
+        @include('admin.campaigns._table', ['campaigns' => $campaigns, 'compact' => true, 'breakEvenRoas' => $unitEconomics['break_even_roas']])
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>

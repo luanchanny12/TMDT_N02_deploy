@@ -6,6 +6,7 @@ use App\Exceptions\CouponException;
 use App\Exceptions\OrderException;
 use App\Exceptions\PriceChangedException;
 use App\Models\ShippingZone;
+use App\Services\Analytics\AnalyticsService;
 use App\Services\Cart\CartService;
 use App\Services\Order\GuestCheckoutService;
 use App\Services\Order\OrderService;
@@ -77,10 +78,13 @@ class OrderController extends Controller
         session(['checkout' => $validated]);
 
         try {
-            $this->storeQuote($validated);
+            $quote = $this->storeQuote($validated);
         } catch (OrderException $e) {
             return redirect()->route('cart.index')->with('error', $e->getMessage());
         }
+
+        // TH13: bước "bắt đầu thanh toán" (GA4 begin_checkout) của phễu
+        app(AnalyticsService::class)->track('begin_checkout', ['value' => $quote['total']]);
 
         return redirect()->route('checkout.review.show');
     }
