@@ -6,6 +6,7 @@ use App\Models\Category;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -24,6 +25,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Render/CDN đặt scheme http phía proxy; ép https để asset()/url() không
+        // sinh link mixed-content (browser chặn CSS → trang hiện HTML trần).
+        if (str_starts_with((string) config('app.url'), 'https://')) {
+            URL::forceScheme('https');
+        }
+
         // Giới hạn đăng nhập sai: 5 lần / 5 phút theo email + IP (TC-01),
         // thêm 20 lần / 5 phút theo IP để chặn dò nhiều email từ 1 máy
         RateLimiter::for('login', function (Request $request) {
