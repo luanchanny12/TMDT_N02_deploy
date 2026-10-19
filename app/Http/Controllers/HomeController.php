@@ -4,18 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\RecommendationService;
 
 class HomeController extends Controller
 {
     public function index()
     {
-        // Nổi bật: SP đang giảm giá trước, sau đó theo giá cao (khác với "mới nhất")
-        $featuredProducts = Product::with('category')->withCardData()
-            ->where('status', 'active')
-            ->orderByRaw('CASE WHEN sale_price IS NOT NULL AND sale_price < price THEN 0 ELSE 1 END')
-            ->orderByDesc('price')
-            ->limit(8)
-            ->get();
+        // Gợi ý theo dữ liệu thật: đang hot, bán chạy, xem nhiều, đánh giá cao
+        $recommendations = app(RecommendationService::class);
+        $recommendTabs = collect([
+            'hot' => ['Đang hot', 'Kết hợp lượt bán, lượt xem và đánh giá', $recommendations->hot()],
+            'best' => ['Bán chạy', 'Nhiều khách mua nhất', $recommendations->bestSellers()],
+            'viewed' => ['Xem nhiều', 'Được quan tâm nhiều nhất', $recommendations->mostViewed()],
+            'rated' => ['Đánh giá cao', 'Khách hàng hài lòng nhất', $recommendations->topRated()],
+        ])->filter(fn ($tab) => $tab[2]->isNotEmpty());
+        $featuredProducts = $recommendTabs->first()[2] ?? collect();
 
         $newProducts = Product::with('category')->withCardData()
             ->where('status', 'active')
@@ -40,6 +43,6 @@ class HomeController extends Controller
             $flashSaleProducts = $featuredProducts->take(4);
         }
 
-        return view('pages.home', compact('featuredProducts', 'newProducts', 'categories', 'flashSaleProducts'));
+        return view('pages.home', compact('featuredProducts', 'recommendTabs', 'newProducts', 'categories', 'flashSaleProducts'));
     }
 }

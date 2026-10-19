@@ -196,6 +196,15 @@
                             {{ $product->name }}
                         </h1>
 
+                        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-[#6b6560] mb-4" data-testid="product-stats">
+                            @if($soldCount > 0)
+                                <span>Đã bán <strong class="text-[#3d3d3d]">{{ number_format($soldCount, 0, ',', '.') }}</strong></span>
+                            @endif
+                            @if($product->showsViewCount())
+                                <span class="inline-flex items-center gap-1" title="Số lượt xem trang sản phẩm" data-testid="view-count"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>{{ number_format($product->views_count, 0, ',', '.') }} lượt xem</span>
+                            @endif
+                        </div>
+
                         {{-- Rating & Sold Statistics --}}
                         <div class="flex items-center gap-3 sm:gap-4 flex-wrap pb-4 mb-5 border-b border-[#efe8e3]">
                             <a href="#reviews" class="flex items-center gap-1.5 text-sm group">
@@ -780,6 +789,21 @@
                 </div>
             @endif
         </div>
+
+        {{-- Thường được mua cùng (từ các đơn hàng thật) --}}
+        @if($boughtTogether->isNotEmpty())
+            <div class="mt-12" data-testid="bought-together">
+                <div class="mb-6">
+                    <h2 class="font-serif text-2xl font-semibold text-[#3d3d3d]">Khách mua sản phẩm này cũng mua</h2>
+                    <p class="text-[#9a9490] text-sm mt-0.5">Dựa trên các đơn hàng thực tế tại SocialShop</p>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    @foreach($boughtTogether as $product)
+                        <x-product-card :product="$product" />
+                    @endforeach
+                </div>
+            </div>
+        @endif
 
         {{-- Related Products --}}
         @if($relatedProducts->count())

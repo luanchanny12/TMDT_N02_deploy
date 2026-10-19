@@ -6,20 +6,33 @@
         $th = 'px-4 py-3 text-xs font-semibold text-[#9a9490] uppercase tracking-wide';
     @endphp
 
-    @if($hasDemoData)
-        <div class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4" data-testid="demo-data-notice">
-            <p class="text-sm text-amber-800">
-                Trang đang gồm <strong>dữ liệu mẫu</strong> (lượt truy cập, chiến dịch demo) để minh họa.
-                Mọi thao tác thật của khách vẫn được cộng thêm. Xóa dữ liệu mẫu để chỉ xem số liệu thật.
+    {{-- Công tắc dữ liệu mẫu --}}
+    <form method="POST" action="{{ route('admin.analytics.demo') }}" data-testid="demo-toggle"
+          class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border px-5 py-4 {{ $demoEnabled ? 'border-amber-200 bg-amber-50' : 'border-[#efe8e3] bg-white' }}"
+          onsubmit="return confirm(@js($demoEnabled
+              ? 'Tắt dữ liệu mẫu? Lượt truy cập, chiến dịch demo bị xóa; lượt xem sản phẩm về đúng số thật. Đơn hàng giữ nguyên.'
+              : 'Bật dữ liệu mẫu? Hệ thống tạo chiến dịch demo và lượt truy cập 14 ngày để minh họa (cộng thêm vào số liệu thật).'))">
+        @csrf
+        <input type="hidden" name="enabled" value="{{ $demoEnabled ? 0 : 1 }}">
+        <input type="hidden" name="days" value="{{ $days }}">
+        <div class="text-sm {{ $demoEnabled ? 'text-amber-800' : 'text-[#6b6560]' }}">
+            <p class="font-semibold">Dữ liệu mẫu: {{ $demoEnabled ? 'Đang bật' : 'Đang tắt' }}</p>
+            <p>
+                @if($demoEnabled)
+                    Số liệu đang gồm lượt truy cập, lượt xem và chiến dịch demo để minh họa; thao tác thật của khách vẫn được cộng thêm.
+                @else
+                    Trang chỉ hiển thị số liệu thật. Bật để có dữ liệu minh họa khi demo / chụp ảnh báo cáo.
+                @endif
             </p>
-            <form method="POST" action="{{ route('admin.analytics.clear-demo') }}"
-                  onsubmit="return confirm('Xóa toàn bộ dữ liệu mẫu? Số liệu thật và đơn hàng được giữ nguyên.')">
-                @csrf
-                @method('DELETE')
-                <button class="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700">Xóa dữ liệu mẫu</button>
-            </form>
         </div>
-    @endif
+        <button type="submit" role="switch" aria-checked="{{ $demoEnabled ? 'true' : 'false' }}"
+                class="flex items-center gap-3 text-sm font-semibold {{ $demoEnabled ? 'text-amber-800' : 'text-[#3d3d3d]' }}">
+            <span class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors {{ $demoEnabled ? 'bg-amber-500' : 'bg-gray-300' }}">
+                <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform {{ $demoEnabled ? 'translate-x-5' : 'translate-x-0.5' }}"></span>
+            </span>
+            {{ $demoEnabled ? 'Tắt dữ liệu mẫu' : 'Bật dữ liệu mẫu' }}
+        </button>
+    </form>
 
     {{-- Bộ lọc thời gian --}}
     <div class="flex flex-wrap items-center justify-between gap-3 mb-6">

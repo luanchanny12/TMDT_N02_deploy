@@ -165,7 +165,8 @@ class AdminProductTest extends TestCase
             'image_path' => 'images/products/abc123.jpg',
         ]);
 
-        $this->assertSame(asset('storage/images/products/abc123.jpg'), $image->url);
+        $this->assertSame(asset('storage/images/products/abc123.jpg'), Str::before($image->url, '?v='));
+        $this->assertMatchesRegularExpression('/\?v=\d+$/', $image->url);
     }
 
     public function test_seeded_image_url_stays_relative_to_public_root(): void
@@ -174,7 +175,8 @@ class AdminProductTest extends TestCase
             'image_path' => 'product-images/macbook-air-m3.jpg',
         ]);
 
-        $this->assertSame(asset('product-images/macbook-air-m3.jpg'), $image->url);
+        $this->assertSame(asset('product-images/macbook-air-m3.jpg'), Str::before($image->url, '?v='));
+        $this->assertMatchesRegularExpression('/\?v=\d+$/', $image->url);
     }
 
     public function test_remote_image_url_is_returned_unchanged(): void

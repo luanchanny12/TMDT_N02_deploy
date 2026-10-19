@@ -167,8 +167,10 @@
 
         {{-- Sold Progress Bar --}}
         @if($soldCount > 0)
-            <div class="sold-progress mb-1.5">
-                <div class="sold-progress-bar" style="width: {{ $soldPercent }}%"></div>
+            <div class="flex items-center gap-2 mb-1.5">
+                <div class="sold-progress flex-1" role="progressbar" aria-valuenow="{{ $soldPercent }}" aria-valuemin="0" aria-valuemax="100">
+                    <div class="sold-progress-bar" style="width: {{ max($soldPercent, 4) }}%"></div>
+                </div>
                 <span class="sold-progress-text">Đã bán {{ $soldCount > 999 ? '1K+' : $soldCount }}</span>
             </div>
         @endif
@@ -188,10 +190,16 @@
                     @endfor
                 </div>
                 <span>{{ number_format($rating, 1) }} ({{ $product->reviews_count }})</span>
+                @if($product->showsViewCount())
+                    <span class="ml-auto inline-flex items-center gap-1 text-gray-400" title="{{ number_format($product->views_count, 0, ',', '.') }} lượt xem" data-testid="view-count"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>{{ $product->formattedViews() }}</span>
+                @endif
             </div>
         @else
             <div class="flex items-center gap-1 text-xs text-gray-400 mb-2">
                 <span>Chưa có đánh giá</span>
+                @if($product->showsViewCount())
+                    <span class="ml-auto inline-flex items-center gap-1" title="{{ number_format($product->views_count, 0, ',', '.') }} lượt xem" data-testid="view-count"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>{{ $product->formattedViews() }}</span>
+                @endif
             </div>
         @endif
 
@@ -205,7 +213,7 @@
                 </a>
                 <a href="{{ route('products.show', $product->slug) }}"
                    class="border border-[#efe8e3] text-[#3d3d3d] hover:border-[#b8847e] hover:text-[#b8847e] bg-white text-xs font-semibold py-2 rounded-lg transition-all flex items-center justify-center gap-1">
-                    <span>Chọn size</span>
+                    <span>Chọn size/màu</span>
                 </a>
             </div>
         @elseif($product->stock > 0)
