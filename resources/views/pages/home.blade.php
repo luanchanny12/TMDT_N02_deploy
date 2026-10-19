@@ -169,7 +169,7 @@
                             {{ $category->name }}
                         </span>
                         <span class="text-[11px] text-[#9a9490] mt-0.5">
-                            {{ $category->products_count ?? $category->products->count() }} sản phẩm
+                            {{ $category->total_products_count ?? $category->products_count }} sản phẩm
                         </span>
                     </a>
                 @endforeach

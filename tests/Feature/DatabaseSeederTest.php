@@ -40,6 +40,10 @@ class DatabaseSeederTest extends TestCase
         $this->assertFalse(Product::where('name', 'like', '%iPhone%')->exists());
         $this->assertSame(0, Product::doesntHave('images')->count());
 
+        // TH11: tối thiểu 40 sản phẩm trong >= 4 danh mục
+        $this->assertGreaterThanOrEqual(40, Product::where('status', 'active')->count());
+        $this->assertSame('ao-nu', Product::where('slug', 'ao-so-mi-nu-tay-bong')->firstOrFail()->category->slug);
+
         // Chatbot AI được cung cấp danh sách sản phẩm thật của shop để tư vấn
         $context = app(ChatbotService::class)->buildContext('gợi ý quà tặng');
         $this->assertStringContainsString('Đầm Dạ Hội', $context);

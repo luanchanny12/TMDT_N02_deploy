@@ -30,6 +30,13 @@ class ProductVariantSeeder extends Seeder
         'ao-so-mi-nu' => [['S', 'M', 'L'], ['Trắng', 'Hồng phấn'], 0],
         'quan-jean-nu' => [['26', '27', '28', '29', '30'], ['Xanh nhạt', 'Xanh đậm'], 0],
         'dam-da-hoi' => [['S', 'M', 'L'], ['Đỏ', 'Đen'], 0],
+        'ao-so-mi-nu-tay-bong' => [['S', 'M', 'L'], ['Trắng'], 0],
+        'ao-so-mi-nu-that-no' => [['S', 'M', 'L'], ['Hồng phấn'], 0],
+        'ao-thun-nu-co-tron' => [['S', 'M', 'L'], ['Xanh navy'], 0],
+        'quan-jean-nu-rach-goi' => [['26', '27', '28', '29', '30'], ['Xanh nhạt'], 0],
+        'ao-phao-nam-co-mu' => [['M', 'L', 'XL'], ['Đen'], 30000],
+        'ao-polo-nam-vien-co' => [self::TOPS, ['Xanh navy'], 20000],
+        'ao-thun-nam-basic' => [self::TOPS, ['Xám'], 20000],
         // Giày dép
         'nike-air-max-90' => [self::SHOES, ['Trắng', 'Đen'], 0],
         'adidas-ultraboost-light' => [self::SHOES, ['Trắng', 'Đen'], 0],

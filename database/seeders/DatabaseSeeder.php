@@ -135,6 +135,8 @@ class DatabaseSeeder extends Seeder
         Setting::put(['free_shipping_threshold' => 300000, 'shipping_fee' => 30000]);
 
         // Coupons
+        $this->call(ExtraFashionProductSeeder::class); // +10 sản phẩm → 40 (TH11)
+
         $this->call(CouponSeeder::class);
 
         // Chatbot FAQs

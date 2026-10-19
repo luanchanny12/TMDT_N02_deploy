@@ -26,9 +26,17 @@ class HomeController extends Controller
             ->limit(8)
             ->get();
 
-        $categories = Category::withCount('products')
+        $categories = Category::withCount(['products' => fn ($q) => $q->where('status', 'active')])
             ->where('status', 'active')
             ->get();
+
+        // Danh mục cha hiển thị tổng sản phẩm của chính nó + mọi danh mục con (sản phẩm nằm ở cấp con)
+        $byParent = $categories->groupBy('parent_id');
+        $total = function (Category $category) use (&$total, $byParent): int {
+            return $category->products_count
+                + $byParent->get($category->id, collect())->sum(fn (Category $child) => $total($child));
+        };
+        $categories->each(fn (Category $c) => $c->total_products_count = $total($c));
 
         // Flash sale: Sản phẩm đang có giá khuyến mãi lớn nhất
         $flashSaleProducts = Product::with('category')->withCardData()
