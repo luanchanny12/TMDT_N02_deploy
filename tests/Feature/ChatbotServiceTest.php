@@ -188,8 +188,8 @@ class ChatbotServiceTest extends TestCase
         $response = $this->chatbotService->fallbackResponse('Áo sơ mi');
         $this->assertStringContainsString('Áo sơ mi', $response);
 
-        ChatbotFaq::create(['question' => 'faq 1', 'answer' => 'faq answer 1', 'keywords' => 'hoàn tiền', 'sort_order' => 1, 'is_active' => true]);
-        $response = $this->chatbotService->fallbackResponse('hoàn tiền');
+        ChatbotFaq::create(['question' => 'faq 1', 'answer' => 'faq answer 1', 'keywords' => 'giờ mở cửa', 'sort_order' => 1, 'is_active' => true]);
+        $response = $this->chatbotService->fallbackResponse('giờ mở cửa');
         $this->assertStringContainsString('faq answer 1', $response);
 
         // Clear products to avoid searchProducts returning top 5 products when query becomes empty

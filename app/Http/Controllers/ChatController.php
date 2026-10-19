@@ -25,6 +25,13 @@ class ChatController extends Controller
 
         $history = $this->sanitizeHistory($request->input('history', []));
 
+        // Câu hỏi chính sách (đổi trả, hoàn tiền, bảo hành, khiếu nại): trả lời cố định, không gọi AI
+        if ($policy = $chatbot->policyAnswer($message)) {
+            return $this->sendSseResponse(function () use ($policy) {
+                $this->sendSseEvent(['text' => $policy, 'done' => true]);
+            });
+        }
+
         // Guest: chỉ FAQ/fallback — không gọi Gemini, không lộ dữ liệu đơn hàng
         if (! Auth::check()) {
             return $this->sendSseResponse(function () use ($message, $chatbot) {
