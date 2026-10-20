@@ -141,9 +141,9 @@ class RecommendationService
         $matchedIds = $words->isEmpty() ? collect() : Product::where('status', 'active')
             ->where(function ($q) use ($words) {
                 foreach ($words as $word) {
-                    $q->orWhere('name', 'like', "%{$word}%")
-                        ->orWhere('description', 'like', "%{$word}%")
-                        ->orWhereHas('category', fn ($c) => $c->where('name', 'like', "%{$word}%"));
+                    $q->orWhereLike('name', "%{$word}%")
+                        ->orWhereLike('description', "%{$word}%")
+                        ->orWhereHas('category', fn ($c) => $c->whereLike('name', "%{$word}%"));
                 }
             })
             ->pluck('id');

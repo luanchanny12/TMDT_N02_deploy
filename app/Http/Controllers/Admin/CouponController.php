@@ -14,7 +14,7 @@ class CouponController extends Controller
         $query = Coupon::withCount('usages');
 
         if ($search = $request->input('search')) {
-            $query->where('code', 'like', "%{$search}%");
+            $query->whereLike('code', "%{$search}%");
         }
 
         if ($type = $request->input('type')) {

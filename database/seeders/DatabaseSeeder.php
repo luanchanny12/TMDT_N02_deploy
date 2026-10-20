@@ -13,6 +13,11 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // DB bền (Postgres) thì deploy nào cũng gọi db:seed — đã seed demo rồi thì bỏ qua, tránh tạo trùng
+        if (User::where('email', 'admin@socialshop.vn')->exists()) {
+            return;
+        }
+
         // Admin
         User::create([
             'name' => 'Admin',

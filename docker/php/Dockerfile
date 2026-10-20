@@ -1,7 +1,7 @@
 FROM php:8.2-fpm-bookworm
 
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
-RUN install-php-extensions pdo_mysql mbstring zip gd intl bcmath exif opcache sockets
+RUN install-php-extensions pdo_mysql pdo_pgsql mbstring zip gd intl bcmath exif opcache sockets
 
 # mysqldump / mysql client cho lệnh `php artisan db:backup` và phục hồi DB
 RUN apt-get update \

@@ -26,7 +26,7 @@ class ProductController extends Controller
         $query = Product::with('category', 'images');
 
         if ($search = $request->input('search')) {
-            $query->where('name', 'like', "%{$search}%");
+            $query->whereLike('name', "%{$search}%");
         }
 
         if ($categoryId = $request->input('category')) {

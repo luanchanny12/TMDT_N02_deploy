@@ -15,9 +15,9 @@ class ReviewController extends Controller
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
-                $q->where('comment', 'like', "%{$search}%")
-                    ->orWhereHas('product', fn ($pq) => $pq->where('name', 'like', "%{$search}%"))
-                    ->orWhereHas('user', fn ($uq) => $uq->where('name', 'like', "%{$search}%"));
+                $q->whereLike('comment', "%{$search}%")
+                    ->orWhereHas('product', fn ($pq) => $pq->whereLike('name', "%{$search}%"))
+                    ->orWhereHas('user', fn ($uq) => $uq->whereLike('name', "%{$search}%"));
             });
         }
 

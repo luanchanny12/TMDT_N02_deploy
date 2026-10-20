@@ -14,9 +14,9 @@ class ChatbotFaqController extends Controller
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
-                $q->where('question', 'like', "%{$search}%")
-                    ->orWhere('answer', 'like', "%{$search}%")
-                    ->orWhere('keywords', 'like', "%{$search}%");
+                $q->whereLike('question', "%{$search}%")
+                    ->orWhereLike('answer', "%{$search}%")
+                    ->orWhereLike('keywords', "%{$search}%");
             });
         }
 

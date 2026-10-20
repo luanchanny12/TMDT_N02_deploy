@@ -13,6 +13,7 @@ FROM dunglas/frankenphp:1-php8.2-alpine
 RUN install-php-extensions \
     pdo_sqlite \
     pdo_mysql \
+    pdo_pgsql \
     bcmath \
     intl \
     zip \

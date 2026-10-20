@@ -6,6 +6,8 @@ use App\Models\Category;
 use App\Models\Coupon;
 use App\Services\Order\PricingService;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
@@ -32,6 +34,35 @@ class AppServiceProvider extends ServiceProvider
         if (str_starts_with((string) config('app.url'), 'https://')) {
             URL::forceScheme('https');
         }
+
+        // Macro whereLike tương thích đa CSDL (PostgreSQL dùng ILIKE không phân biệt hoa thường, MySQL/SQLite dùng LIKE)
+        QueryBuilder::macro('whereLike', function ($column, $value) {
+            /** @var QueryBuilder $this */
+            $operator = $this->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+
+            return $this->where($column, $operator, $value);
+        });
+
+        QueryBuilder::macro('orWhereLike', function ($column, $value) {
+            /** @var QueryBuilder $this */
+            $operator = $this->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+
+            return $this->orWhere($column, $operator, $value);
+        });
+
+        EloquentBuilder::macro('whereLike', function ($column, $value) {
+            /** @var EloquentBuilder $this */
+            $operator = $this->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+
+            return $this->where($column, $operator, $value);
+        });
+
+        EloquentBuilder::macro('orWhereLike', function ($column, $value) {
+            /** @var EloquentBuilder $this */
+            $operator = $this->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+
+            return $this->orWhere($column, $operator, $value);
+        });
 
         // Giới hạn đăng nhập sai: 5 lần / 5 phút theo email + IP (TC-01),
         // thêm 20 lần / 5 phút theo IP để chặn dò nhiều email từ 1 máy

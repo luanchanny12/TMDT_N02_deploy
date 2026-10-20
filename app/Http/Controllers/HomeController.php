@@ -44,7 +44,7 @@ class HomeController extends Controller
             ->where('status', 'active')
             ->flashSale()
             ->orderBy('sale_ends_at')
-            ->orderByRaw('(price - sale_price) / price DESC')
+            ->orderByRaw('(CASE WHEN price > 0 THEN (price - sale_price) / price ELSE 0 END) DESC')
             ->limit(4)
             ->get();
         $flashSaleEndsAt = $flashSaleProducts->min('sale_ends_at');

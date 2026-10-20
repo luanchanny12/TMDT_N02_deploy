@@ -22,8 +22,8 @@ class OrderController extends Controller
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
-                $q->where('order_code', 'like', "%{$search}%")
-                    ->orWhere('shipping_name', 'like', "%{$search}%");
+                $q->whereLike('order_code', "%{$search}%")
+                    ->orWhereLike('shipping_name', "%{$search}%");
             });
         }
 

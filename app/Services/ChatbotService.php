@@ -268,9 +268,9 @@ Liên hệ: {$contact}";
 
         return Product::where('status', 'active')
             ->where(function ($q) use ($cleanQuery) {
-                $q->where('name', 'LIKE', "%{$cleanQuery}%")
-                    ->orWhere('brand', 'LIKE', "%{$cleanQuery}%")
-                    ->orWhere('description', 'LIKE', "%{$cleanQuery}%");
+                $q->whereLike('name', "%{$cleanQuery}%")
+                    ->orWhereLike('brand', "%{$cleanQuery}%")
+                    ->orWhereLike('description', "%{$cleanQuery}%");
             })
             ->with('category')
             ->limit(5)
