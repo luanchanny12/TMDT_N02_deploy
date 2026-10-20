@@ -39,6 +39,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
+// Health check cho Render (không đụng DB — luôn trả về nhanh)
+Route::get('/health', fn () => response()->json(['status' => 'ok']))->name('health');
+
 // Home
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
