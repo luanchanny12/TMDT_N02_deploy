@@ -95,8 +95,10 @@ class FacebookControllerTest extends TestCase
     public function test_facebook_button_shown_only_when_configured(): void
     {
         $this->get(route('login'))->assertSee('Đăng nhập với Facebook');
+        $this->get(route('register'))->assertSee('Đăng ký với Facebook');
 
         config(['services.facebook.client_id' => null]);
         $this->get(route('login'))->assertDontSee('Đăng nhập với Facebook');
+        $this->get(route('register'))->assertDontSee('Đăng ký với Facebook');
     }
 }
