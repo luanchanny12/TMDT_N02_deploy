@@ -64,6 +64,8 @@ services:
     image: mysql:8.0
     container_name: socialshop-mysql
     restart: unless-stopped
+    # utf8mb4_unicode_ci (chuẩn Laravel) — image mysql:8.0 không nhận env MYSQL_CHARSET/MYSQL_COLLATION nên phải set qua tham số mysqld
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     ports:
       - "3307:3306"
     environment:
@@ -71,8 +73,6 @@ services:
       MYSQL_USER: social
       MYSQL_PASSWORD: social_secret
       MYSQL_ROOT_PASSWORD: root_secret
-      MYSQL_CHARSET: utf8mb4
-      MYSQL_COLLATION: utf8mb4_unicode_ci
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -102,8 +102,8 @@ services:
     container_name: socialshop-vite
     restart: unless-stopped
     working_dir: /var/www
-    # Chỉ build lại asset khi sửa file (không chạy dev server nên không cần mở cổng)
-    command: sh -c "npm install && npx vite build --watch"
+    # npm ci: cài đúng theo package-lock.json, không sửa lockfile, tái lập được môi trường
+    command: sh -c "npm ci && npx vite build --watch"
     environment:
       APP_URL: ${APP_URL:-http://localhost:8081}
     volumes:
@@ -111,7 +111,7 @@ services:
       - vite_node_modules:/var/www/node_modules
 
   mailpit:
-    image: axllent/mailpit:latest
+    image: axllent/mailpit:v1.31.2
     container_name: socialshop-mailpit
     restart: unless-stopped
     ports:
@@ -121,7 +121,7 @@ services:
   queue-worker:
     <<: *php-service
     container_name: socialshop-queue-worker
-    command: php artisan queue:work --tries=3 --sleep=3
+    command: php artisan queue:work --tries=3 --sleep=3 --max-time=3600
     depends_on:
       mysql:
         condition: service_healthy
