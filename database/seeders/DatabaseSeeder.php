@@ -139,6 +139,8 @@ class DatabaseSeeder extends Seeder
         // Chính sách vận chuyển của shop: freeship toàn quốc cho đơn từ 300.000đ (chỉnh tại Admin → Cài đặt)
         Setting::put(['free_shipping_threshold' => 300000, 'shipping_fee' => 30000]);
 
+        $this->call(TaxSettingSeeder::class); // VAT 8% mặc định
+
         // Coupons
         $this->call(ExtraFashionProductSeeder::class); // +10 sản phẩm → 40 (TH11)
         $this->call(CostPriceSeeder::class); // giá vốn 55–65% giá niêm yết
