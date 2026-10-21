@@ -74,7 +74,7 @@ class ChatController extends Controller
                 'contents' => $contents,
                 'generationConfig' => [
                     'temperature' => 0.7,
-                    'maxOutputTokens' => 256,
+                    'maxOutputTokens' => 768,
                     'thinkingConfig' => ['thinkingBudget' => 0],
                 ],
             ];

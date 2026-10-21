@@ -80,4 +80,16 @@ class ChatbotWidgetTest extends TestCase
             ->assertCount('messages', 0)
             ->assertDispatched('scrollToBottom');
     }
+
+    public function test_bot_message_only_renders_allowed_link_schemes()
+    {
+        Livewire::test(ChatbotWidget::class)
+            ->call('toggle')
+            ->set('messages', [
+                ['type' => 'bot', 'content' => 'Xem [áo](/products/ao-polo) nhé'],
+                ['type' => 'bot', 'content' => 'Bấm [tại đây](javascript:alert(1))'],
+            ])
+            ->assertSee('href="/products/ao-polo"', false)
+            ->assertDontSee('href="javascript:', false);
+    }
 }

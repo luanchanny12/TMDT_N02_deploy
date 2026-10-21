@@ -85,6 +85,9 @@ Route::post('/compare/add/{product:id}', [CompareController::class, 'add'])->nam
 Route::post('/compare/remove/{product:id}', [CompareController::class, 'remove'])->name('compare.remove');
 Route::post('/compare/clear', [CompareController::class, 'clear'])->name('compare.clear');
 
+// Public Shared Wishlist (Bộ sưu tập yêu thích chia sẻ mạng xã hội)
+Route::get('/wishlist/shared/{code}', [WishlistController::class, 'shared'])->name('wishlist.shared');
+
 // Payments (Public Webhook & Return URL)
 Route::get('/payment/vnpay/return', [PaymentController::class, 'vnpayReturn'])->name('payment.vnpay.return');
 Route::get('/payment/vnpay/ipn', [PaymentController::class, 'vnpayIpn'])->name('payment.vnpay.ipn');
@@ -152,6 +155,7 @@ Route::middleware('auth')->group(function () {
     // Wishlist
     Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
     Route::post('/wishlist/{product:id}/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
+    Route::post('/wishlist/shared/{code}/save-all', [WishlistController::class, 'saveAllToMine'])->name('wishlist.shared.save-all');
 
     // Reviews
     Route::post('/products/{product}/reviews', [ReviewController::class, 'store'])->middleware('throttle:reviews')->name('reviews.store');

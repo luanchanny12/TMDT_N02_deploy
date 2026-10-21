@@ -22,16 +22,35 @@ class ChatbotService
         $this->apiKey = config('services.gemini.key', '');
         $this->model = config('services.gemini.model', 'gemini-3.5-flash');
         $this->systemPrompt = <<<'PROMPT'
-Bạn là trợ lý ảo của SocialShop — cửa hàng trực tuyến chuyên thời trang và phụ kiện: quần áo nam nữ, giày dép, túi xách, đồng hồ, mỹ phẩm & nước hoa.
-Hãy trả lời ngắn gọn, thân thiện bằng tiếng Việt.
-Khi khách cần tư vấn hoặc gợi ý, chỉ giới thiệu sản phẩm có trong danh sách sản phẩm của shop (kèm giá) và mời khách xem chi tiết trên website.
-Nếu khách hỏi mặt hàng shop không kinh doanh (ví dụ điện thoại, laptop), hãy nói rõ shop chưa bán và gợi ý sản phẩm thời trang phù hợp.
-Nếu hỏi về giao hàng, giao toàn quốc, phí ship theo khu vực, miễn phí ship cho đơn từ :free_ship.
-Nếu hỏi về đổi trả hoặc hoàn tiền, chính sách của shop là hỗ trợ đổi trả trong vòng 7 ngày kể từ khi nhận hàng (sản phẩm nguyên tem mác). Với các yêu cầu hoàn tiền đặc biệt hoặc ngoài chính sách, mời khách liên hệ hotline 077123456 hoặc email support@socialshop.vn để nhân viên hỗ trợ trực tiếp.
-Nếu hỏi về thanh toán, hỗ trợ COD và VNPay.
-Nếu hỏi về liên hệ, hotline 077123456, email support@socialshop.vn.
-Với câu hỏi về đổi trả, hoàn tiền, bảo hành hoặc khiếu nại: không tự đặt ra điều kiện, thời hạn hay cam kết; chỉ nhắc lại chính sách đã công bố, dẫn link trang Chính sách đổi trả và hotline 077123456.
-Không trả lời các câu hỏi ngoài phạm vi cửa hàng.
+Bạn là trợ lý ảo của SocialShop kiêm Stylist thời trang thông minh — cửa hàng thời trang và phụ kiện cao cấp: quần áo nam nữ, giày dép, túi xách, đồng hồ, mỹ phẩm.
+Hãy trả lời ngắn gọn, nhiệt tình, chuyên nghiệp bằng tiếng Việt.
+
+TƯ VẤN SẢN PHẨM & LIÊN KẾT:
+- Khi giới thiệu hoặc gợi ý sản phẩm, hãy chọn các sản phẩm có trong danh sách của shop (kèm giá) và tạo link xem sản phẩm dạng Markdown theo mẫu: [Tên sản phẩm](/products/slug).
+
+TƯ VẤN KÍCH CỠ NHÂN TRẮC HỌC (SIZE ADVISOR):
+- Khi khách hỏi chọn size hoặc cung cấp chiều cao, cân nặng:
+  + Dưới 1m60 hoặc dưới 50kg: Size S
+  + 1m60 - 1m68, 50 - 62kg: Size M
+  + 1m68 - 1m75, 62 - 72kg: Size L
+  + 1m75 - 1m82, 72 - 82kg: Size XL
+  + Trên 1m82 hoặc trên 82kg: Size XXL
+- Đưa ra lời khuyên thực tế: Khuyên chọn đúng size nếu thích mặc vừa vặn, tôn dáng; khuyên tăng 1 size nếu thích phong cách rộng rãi thoải mái (Oversize) hoặc có bờ vai/bụng lớn.
+- Nếu khách chỉ đưa chiều cao hoặc chỉ đưa cân nặng, hãy lịch sự hỏi thêm số đo còn lại để tư vấn chuẩn xác nhất.
+
+TƯ VẤN PHONG CÁCH & PHỐI ĐỒ (MIX & MATCH STYLIST):
+- Khi khách hỏi trang phục theo sự kiện (đi tiệc, đám cưới, công sở/đi làm, hẹn hò, dạo phố, du lịch):
+  + Chủ động gợi ý một set đồ (outfit) hoàn chỉnh gồm 2-3 món từ danh mục của shop (ví dụ: Đầm dạ hội + Túi xách; hoặc Áo polo/sơ mi + Quần + Giày sneaker).
+  + Nêu rõ tên sản phẩm, giá bán và link Markdown [Tên sản phẩm](/products/slug).
+  + Giải thích ngắn gọn lý do phối đồ phù hợp với ngữ cảnh đó (tôn dáng, lịch thiệp, sang trọng).
+
+CHÍNH SÁCH BÁN HÀNG & PHÁP LÝ:
+- Giao hàng toàn quốc, miễn phí ship cho đơn từ :free_ship.
+- Thanh toán hỗ trợ COD và VNPay.
+- Chính sách đổi trả trong vòng 7 ngày kể từ khi nhận hàng (sản phẩm nguyên tem mác).
+- Với câu hỏi về đổi trả, hoàn tiền, bảo hành hoặc khiếu nại: không tự đặt ra điều kiện ngoài chính sách; dẫn link trang Chính sách đổi trả và hotline 077123456.
+- Nếu khách hỏi mặt hàng shop không kinh doanh (ví dụ điện thoại, laptop), hãy nói rõ shop chưa bán và gợi ý sản phẩm thời trang phù hợp.
+- Không trả lời các câu hỏi ngoài phạm vi cửa hàng.
 PROMPT;
         $this->systemPrompt = str_replace(':free_ship', $this->freeShipText(), $this->systemPrompt);
     }
@@ -220,21 +239,28 @@ Liên hệ: {$contact}";
             ->with('category:id,name')
             ->orderBy('category_id')
             ->limit($limit)
-            ->get(['id', 'name', 'price', 'sale_price', 'sale_ends_at', 'stock', 'category_id']);
+            ->get(['id', 'name', 'slug', 'price', 'sale_price', 'sale_ends_at', 'stock', 'category_id']);
 
         if ($products->isEmpty()) {
             return '';
         }
 
         $lines = $products->map(fn ($p) => '- '.$p->name.' | '.number_format($p->effectivePrice()).'đ | '
-            .($p->category->name ?? 'Khác').($p->stock > 0 ? '' : ' | hết hàng'));
+            .($p->category->name ?? 'Khác').($p->stock > 0 ? '' : ' | hết hàng')
+            .' | link: /products/'.$p->slug);
 
         return "\n\n[Danh sách sản phẩm của shop]\n".$lines->implode("\n");
     }
 
     public function searchProducts(string $query): array
     {
-        $productKeywords = ['giá', 'price', 'bao nhiêu', 'còn hàng', 'hết hàng', 'có không', 'sản phẩm', 'áo', 'quần', 'giày', 'dép', 'váy', 'túi', 'phụ kiện', 'thời trang', 'size', 'màu'];
+        $productKeywords = [
+            'giá', 'price', 'bao nhiêu', 'còn hàng', 'hết hàng', 'có không', 'sản phẩm',
+            'áo', 'quần', 'giày', 'dép', 'váy', 'túi', 'phụ kiện', 'thời trang', 'size', 'màu',
+            'tiệc', 'cưới', 'dự tiệc', 'dạ hội', 'công sở', 'đi làm', 'hẹn hò', 'dạo phố',
+            'du lịch', 'phối đồ', 'mix', 'match', 'outfit', 'set đồ', 'thanh lịch', 'sang trọng',
+            'năng động', 'quyến rũ', 'thể thao', 'polo', 'sơ mi', 'tote', 'sneaker',
+        ];
 
         $hasProductKeyword = false;
         foreach ($productKeywords as $kw) {
@@ -259,6 +285,7 @@ Liên hệ: {$contact}";
                 ->get()
                 ->map(fn ($p) => [
                     'name' => $p->name,
+                    'slug' => $p->slug,
                     'price' => number_format($p->effectivePrice()).'đ',
                     'category' => $p->category->name ?? 'N/A',
                     'in_stock' => $p->stock > 0,
@@ -277,6 +304,7 @@ Liên hệ: {$contact}";
             ->get()
             ->map(fn ($p) => [
                 'name' => $p->name,
+                'slug' => $p->slug,
                 'price' => number_format($p->effectivePrice()).'đ',
                 'category' => $p->category->name ?? 'N/A',
                 'in_stock' => $p->stock > 0,
@@ -363,6 +391,36 @@ Liên hệ: {$contact}";
             ." | Sản phẩm: {$items}";
     }
 
+    public function recommendSizeText(?int $height, ?int $weight): string
+    {
+        $h = $height ?? 168;
+        $w = $weight ?? 60;
+
+        $size = 'M';
+        if ($h < 160 || $w < 50) {
+            $size = 'S';
+        } elseif ($h <= 168 && $w <= 62) {
+            $size = 'M';
+        } elseif ($h <= 175 && $w <= 72) {
+            $size = 'L';
+        } elseif ($h <= 182 && $w <= 82) {
+            $size = 'XL';
+        } else {
+            $size = 'XXL';
+        }
+
+        $hText = $height ? "cao {$height}cm" : '';
+        $wText = $weight ? "nặng {$weight}kg" : '';
+        $profile = trim("{$hText} {$wText}");
+        $profileText = $profile ? " với số đo {$profile}" : '';
+
+        return "Dựa trên số đo nhân trắc học của bạn{$profileText}, SocialShop tư vấn kích cỡ chuẩn nhất như sau:\n\n"
+            ."👉 **Size đề xuất: Size {$size}** (Vừa vặn, tôn dáng nhất)\n"
+            ."- **Thích mặc ôm (Slim-fit):** Có thể chọn size nhỏ hơn 1 nấc nếu nằm ở ngưỡng đầu size.\n"
+            ."- **Thích mặc rộng rãi (Oversize / Thoải mái) hoặc có vai/bụng lớn:** Khuyên bạn nên tăng thêm 1 size.\n\n"
+            ."💡 *Mẹo:* Bạn cũng có thể mở bất kỳ sản phẩm nào và bấm vào nút **'Gợi ý size thông minh'** trên trang sản phẩm để kéo thước đo tự động nhé!";
+    }
+
     public function fallbackResponse(string $message, ?int $userId = null): string
     {
         if ($policy = $this->policyAnswer($message)) {
@@ -378,16 +436,87 @@ Liên hệ: {$contact}";
             }
         }
 
+        // 1. Nhận diện câu hỏi tư vấn kích cỡ (chiều cao, cân nặng, size)
+        if (preg_match('/(\d{1,2}(?:[m\.,]\d{1,2})?|\d{3})\s*(?:cm|m)?.*?(\d{2,3})\s*(?:kg)?/iu', $message)
+            || str_contains($lower, 'size') || str_contains($lower, 'kích cỡ') || str_contains($lower, 'chọn size') || str_contains($lower, 'mặc vừa')) {
+            $height = null;
+            $weight = null;
+
+            if (preg_match('/(\d{1})[m\.,](\d{1,2})/i', $message, $hm)) {
+                $height = (int) $hm[1] * 100 + (int) str_pad($hm[2], 2, '0', STR_PAD_RIGHT);
+            } elseif (preg_match('/(\d{3})\s*cm\b/i', $message, $hm)) {
+                $height = (int) $hm[1];
+            } elseif (preg_match('/(?:cao|dài|height)[^0-9]{0,12}(\d{3})\b/i', $message, $hm)) {
+                $height = (int) $hm[1];
+            }
+
+            if (preg_match('/(\d{2,3})\s*(?:kg|kí|cân|kilo)/i', $message, $wm)) {
+                $weight = (int) $wm[1];
+            }
+
+            if ($height || $weight) {
+                return $this->recommendSizeText($height, $weight);
+            }
+        }
+
+        // 2. Nhận diện câu hỏi phối đồ / đi tiệc / sự kiện
+        if (str_contains($lower, 'tiệc') || str_contains($lower, 'cưới') || str_contains($lower, 'dạ hội')) {
+            $partyProduct = Product::where('status', 'active')
+                ->where(function ($q) {
+                    $q->whereLike('name', '%dạ hội%')
+                        ->orWhereLike('name', '%đầm%')
+                        ->orWhereLike('name', '%váy%');
+                })->first();
+
+            $bagProduct = Product::where('status', 'active')
+                ->where(function ($q) {
+                    $q->whereLike('name', '%túi%')
+                        ->orWhereLike('name', '%coach%')
+                        ->orWhereLike('name', '%tote%');
+                })->first();
+
+            $resp = "Để đi dự tiệc cưới/dạ hội thanh lịch và sang trọng, SocialShop gợi ý bạn set đồ cực kỳ tôn dáng này nhé:\n\n";
+            if ($partyProduct) {
+                $resp .= "1. [{$partyProduct->name}](/products/{$partyProduct->slug}) - ".number_format($partyProduct->effectivePrice())."đ (Thiết kế thanh lịch, chất vải cao cấp)\n";
+            }
+            if ($bagProduct) {
+                $resp .= "2. [{$bagProduct->name}](/products/{$bagProduct->slug}) - ".number_format($bagProduct->effectivePrice())."đ (Phụ kiện hoàn hảo tôn nét quý phái)\n";
+            }
+            $resp .= "\n💡 **Gợi ý phối đồ (Stylist Tip):** Kết hợp cùng giày cao gót màu nude hoặc ánh kim và trang sức tối giản để tạo vẻ đẹp thanh lịch, nổi bật.\n"
+                .'Bạn bấm vào link sản phẩm ở trên để xem chi tiết và đặt hàng nhé!';
+
+            return $resp;
+        }
+
+        if (str_contains($lower, 'công sở') || str_contains($lower, 'đi làm') || str_contains($lower, 'lịch lãm') || str_contains($lower, 'phối đồ')) {
+            $workProduct = Product::where('status', 'active')
+                ->where(function ($q) {
+                    $q->whereLike('name', '%sơ mi%')
+                        ->orWhereLike('name', '%polo%');
+                })->first();
+
+            $resp = "Đối với trang phục công sở / đi làm lịch sự, SocialShop gợi ý set đồ chuẩn phong cách Smart Casual:\n\n";
+            if ($workProduct) {
+                $resp .= "- [{$workProduct->name}](/products/{$workProduct->slug}) - ".number_format($workProduct->effectivePrice())."đ\n";
+            }
+            $resp .= "\n💡 **Gợi ý phối đồ:** Kết hợp cùng quần âu hoặc quần kaki màu be/xám và giày da hoặc sneaker trắng thanh lịch.\n"
+                .'Mời bạn bấm vào tên sản phẩm để xem chi tiết!';
+
+            return $resp;
+        }
+
         $products = $this->searchProducts($message);
         if (! empty($products)) {
             $lines = [];
             foreach ($products as $p) {
                 $stock = $p['in_stock'] ? 'còn hàng' : 'hết hàng';
-                $lines[] = "- {$p['name']}: {$p['price']} ({$stock})";
+                $slug = $p['slug'] ?? '';
+                $link = $slug ? " [Xem ngay](/products/{$slug})" : '';
+                $lines[] = "- {$p['name']}: {$p['price']} ({$stock}){$link}";
             }
 
-            return "Các sản phẩm tìm thấy:\n".implode("\n", $lines)
-                ."\nBạn có thể xem chi tiết tại trang sản phẩm.";
+            return "Các sản phẩm tìm thấy phù hợp với yêu cầu của bạn:\n".implode("\n", $lines)
+                ."\n\nBạn có thể bấm vào link sản phẩm để xem ảnh chi tiết và đặt hàng nhé!";
         }
 
         $faqs = $this->searchFaqs($message);
@@ -403,12 +532,12 @@ Liên hệ: {$contact}";
         }
 
         return match (true) {
-            str_contains($lower, 'xin chào') || str_contains($lower, 'hello') || str_contains($lower, 'hi') => 'Xin chào! Rất vui được hỗ trợ bạn. Bạn cần tìm sản phẩm nào?',
+            str_contains($lower, 'xin chào') || str_contains($lower, 'hello') || str_contains($lower, 'hi') => 'Xin chào! Rất vui được hỗ trợ bạn. Bạn cần tư vấn chọn size, gợi ý phối đồ hay tìm sản phẩm nào?',
             str_contains($lower, 'giá') || str_contains($lower, 'price') => 'Bạn có thể xem giá sản phẩm trên trang chi tiết sản phẩm. Chúng tôi có nhiều ưu đãi hấp dẫn!',
             str_contains($lower, 'giao hàng') || str_contains($lower, 'ship') => 'Chúng tôi giao hàng toàn quốc. Miễn phí ship cho đơn từ '.$this->freeShipText().'!',
             str_contains($lower, 'thanh toán') || str_contains($lower, 'payment') => 'Chúng tôi hỗ trợ thanh toán COD và VNPay. Bạn chọn phương thức nào phù hợp nhất!',
             str_contains($lower, 'liên hệ') => 'Bạn có thể liên hệ hotline 077123456 hoặc email support@socialshop.vn.',
-            default => 'Cảm ơn bạn đã nhắn tin! Hiện tại tôi là trợ lý demo. Vui lòng xem thêm thông tin trên trang web hoặc liên hệ hỗ trợ.',
+            default => 'Cảm ơn bạn đã nhắn tin! Tôi có thể giúp bạn tư vấn chọn size theo chiều cao/cân nặng, gợi ý phối đồ đi tiệc, đi làm, hoặc kiểm tra tình trạng đơn hàng. Bạn cần hỗ trợ gì ạ?',
         };
     }
 }

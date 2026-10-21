@@ -85,4 +85,27 @@ class SearchAndShareTest extends TestCase
             ->assertOk()
             ->assertSee('?ref=REFQUAN1', false);
     }
+
+    public function test_guest_visiting_referral_link_sees_welcome_banner(): void
+    {
+        $referrer = User::factory()->create(['name' => 'Nguyễn Văn Quân', 'referral_code' => 'REFQUAN99']);
+        $product = $this->product('Túi Tote');
+
+        $this->get(route('products.show', ['product' => $product->slug, 'ref' => 'REFQUAN99']))
+            ->assertOk()
+            ->assertSee('Bạn được bạn')
+            ->assertSee('Nguyễn Văn Quân')
+            ->assertSee('Đăng ký nhận quà');
+    }
+
+    public function test_register_page_prefills_referral_code_and_shows_referrer_info(): void
+    {
+        $referrer = User::factory()->create(['name' => 'Trần Thị Mai', 'referral_code' => 'REFMAI88']);
+
+        $this->get(route('register', ['ref' => 'REFMAI88']))
+            ->assertOk()
+            ->assertSee('value="REFMAI88"', false)
+            ->assertSee('Được giới thiệu bởi bạn')
+            ->assertSee('Trần Thị Mai');
+    }
 }

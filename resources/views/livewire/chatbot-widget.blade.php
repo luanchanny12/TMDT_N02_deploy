@@ -38,17 +38,17 @@
                     <p class="text-[#9a9490] text-xs leading-relaxed">Tôi là trợ lý của SocialShop.<br>Bạn cần giúp gì?</p>
 
                     <div class="flex flex-wrap gap-2 justify-center mt-4">
-                        <button wire:click="sendQuick('Giá cả các sản phẩm như thế nào?')"
-                                class="bg-white text-[#b8847e] text-xs font-medium px-3 py-1.5 rounded-full border border-[#efe8e3] hover:bg-[#e8c4c4] hover:text-[#3d3d3d] hover:border-[#e8c4c4] transition-colors cursor-pointer">
-                            Giá cả
+                        <button wire:click="sendQuick('Mình cao 1m70, nặng 65kg thì nên chọn size gì vừa đẹp?')"
+                                class="bg-white text-[#b8847e] text-xs font-medium px-3 py-1.5 rounded-full border border-[#efe8e3] hover:bg-[#b8847e] hover:text-white hover:border-[#b8847e] transition-colors cursor-pointer shadow-xs">
+                            📏 Tư vấn size (1m70, 65kg)
                         </button>
-                        <button wire:click="sendQuick('Chính sách giao hàng như thế nào?')"
-                                class="bg-white text-[#b8847e] text-xs font-medium px-3 py-1.5 rounded-full border border-[#efe8e3] hover:bg-[#e8c4c4] hover:text-[#3d3d3d] hover:border-[#e8c4c4] transition-colors cursor-pointer">
-                            Giao hàng
+                        <button wire:click="sendQuick('Shop có đầm nào đi tiệc cưới thanh lịch không?')"
+                                class="bg-white text-[#b8847e] text-xs font-medium px-3 py-1.5 rounded-full border border-[#efe8e3] hover:bg-[#b8847e] hover:text-white hover:border-[#b8847e] transition-colors cursor-pointer shadow-xs">
+                            👗 Đầm đi tiệc cưới
                         </button>
-                        <button wire:click="sendQuick('Làm thế nào để liên hệ hỗ trợ?')"
-                                class="bg-white text-[#b8847e] text-xs font-medium px-3 py-1.5 rounded-full border border-[#efe8e3] hover:bg-[#e8c4c4] hover:text-[#3d3d3d] hover:border-[#e8c4c4] transition-colors cursor-pointer">
-                            Liên hệ
+                        <button wire:click="sendQuick('Gợi ý cho mình set đồ công sở lịch sự nhé')"
+                                class="bg-white text-[#b8847e] text-xs font-medium px-3 py-1.5 rounded-full border border-[#efe8e3] hover:bg-[#b8847e] hover:text-white hover:border-[#b8847e] transition-colors cursor-pointer shadow-xs">
+                            👔 Phối đồ công sở
                         </button>
                     </div>
                 </div>
@@ -64,7 +64,7 @@
                     @endif
                     <div class="{{ $msg['type'] === 'user'
                                     ? 'bg-[#b8847e] text-white rounded-xl rounded-br-sm'
-                                    : 'bg-white text-[#3d3d3d] border border-[#efe8e3] rounded-xl rounded-bl-sm' }} px-3 py-2 max-w-[75%] text-sm leading-relaxed whitespace-pre-wrap">{{ $msg['content'] }}</div>
+                                    : 'bg-white text-[#3d3d3d] border border-[#efe8e3] rounded-xl rounded-bl-sm' }} px-3 py-2 max-w-[75%] text-sm leading-relaxed whitespace-pre-wrap">@if($msg['type'] === 'user'){{ $msg['content'] }}@else{!! preg_replace(['/\[(.*?)\]\(((?:\/|https?:\/\/)[^\)]+)\)/', '/\*\*(.*?)\*\*/'], ['<a href="$2" class="text-[#b8847e] font-bold underline hover:text-[#a6736d]">$1</a>', '<strong>$1</strong>'], e($msg['content'])) !!}@endif</div>
                 </div>
             @endforeach
             </div>
@@ -155,12 +155,21 @@
         let fullText = '';
         let finalized = false;
 
+        function renderMarkdown(text) {
+            let escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+            escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            return escaped.replace(/\[(.*?)\]\(((?:\/|https?:\/\/)[^\)]+)\)/g, '<a href="$2" class="text-[#b8847e] font-bold underline hover:text-[#a6736d]">$1</a>');
+        }
+
         function finalizeStream() {
             if (finalized) return;
             finalized = true;
 
             if (!fullText) {
                 fullText = 'Xin lỗi, có lỗi xảy ra. Vui lòng thử lại.';
+            }
+            if (bubble) {
+                bubble.innerHTML = renderMarkdown(fullText);
             }
             Livewire.dispatch('receiveBotResponse', fullText);
         }

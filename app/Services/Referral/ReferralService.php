@@ -48,7 +48,27 @@ class ReferralService extends BaseService
             ->where('status', 'pending')
             ->first();
 
+        // Nếu khách chưa từng được giới thiệu, kiểm tra xem có mua qua link Giỏ hàng trưng bày / Cookie của người khác không
         if (! $referral) {
+            $cookieCode = request()->cookie(config('referral.cookie_name', 'referral_code'));
+            if ($cookieCode) {
+                $referrer = User::where('referral_code', $cookieCode)->first();
+                if ($referrer && $referrer->id !== $order->user_id && ! Referral::where('referred_user_id', $order->user_id)->exists()) {
+                    $percent = config('referral.commission_percent', 5);
+                    $baseAmount = max(0, $order->subtotal - $order->discount);
+                    $commission = (int) round($baseAmount * ($percent / 100));
+
+                    Referral::create([
+                        'referrer_id' => $referrer->id,
+                        'referred_user_id' => $order->user_id,
+                        'referral_code' => $cookieCode,
+                        'order_id' => $order->id,
+                        'commission' => $commission,
+                        'status' => 'pending',
+                    ]);
+                }
+            }
+
             return;
         }
 

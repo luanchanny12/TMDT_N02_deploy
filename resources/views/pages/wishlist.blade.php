@@ -1,5 +1,5 @@
 <x-layouts.app :title="'Sản phẩm yêu thích'">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10" x-data="{ openShareModal: false }">
 
         {{-- Page Header --}}
         <div class="flex items-center justify-between flex-wrap gap-4 mb-8 pb-5 border-b border-[#efe8e3]">
@@ -20,12 +20,77 @@
             </div>
 
             @if($products->count())
-                <a href="{{ route('products.index') }}"
-                   class="text-xs sm:text-sm font-semibold text-[#b8847e] hover:text-[#a6736d] flex items-center gap-1.5 transition-colors bg-[#faf7f4] border border-[#efe8e3] px-4 py-2 rounded-xl shadow-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                    Khám phá thêm sản phẩm
-                </a>
+                <div class="flex items-center gap-2.5">
+                    <button type="button" @click="openShareModal = true"
+                            class="text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-[#b8847e] to-[#a6736d] hover:shadow-md hover:shadow-[#b8847e]/25 flex items-center gap-1.5 transition-all px-4 py-2 rounded-xl shadow-xs btn-shine">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12s-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                        <span>🎁 Chia sẻ danh sách này</span>
+                    </button>
+
+                    <a href="{{ route('products.index') }}"
+                       class="text-xs sm:text-sm font-semibold text-[#b8847e] hover:text-[#a6736d] flex items-center gap-1.5 transition-colors bg-[#faf7f4] border border-[#efe8e3] px-4 py-2 rounded-xl shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                        <span>Khám phá thêm</span>
+                    </a>
+                </div>
             @endif
+        </div>
+
+        {{-- Share Wishlist Modal --}}
+        @php
+            $currentRefCode = $referralCode ?? Auth::user()->referral_code;
+            $shareUrl = route('wishlist.shared', ['code' => $currentRefCode]);
+        @endphp
+        <div x-show="openShareModal" x-cloak
+             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs transition-opacity"
+             @keydown.escape.window="openShareModal = false">
+            <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-[#efe8e3] relative animate-fade-in-up"
+                 @click.outside="openShareModal = false">
+                <button type="button" @click="openShareModal = false"
+                        class="absolute top-5 right-5 text-[#9a9490] hover:text-[#2c2a28] text-xl font-bold transition-colors">
+                    &times;
+                </button>
+
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="w-10 h-10 rounded-2xl bg-[#faf7f4] border border-[#efe8e3] flex items-center justify-center text-[#b8847e]">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12s-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                    </span>
+                    <div>
+                        <h3 class="font-serif text-xl sm:text-2xl font-bold text-[#2c2a28]">Chia sẻ bộ sưu tập yêu thích</h3>
+                        <p class="text-xs text-[#9a9490]">Gửi gu thời trang của bạn đến bạn bè trên mạng xã hội</p>
+                    </div>
+                </div>
+
+                <div class="bg-[#faf7f4] border border-[#efe8e3] p-3.5 rounded-2xl mb-5 text-xs text-[#7d7571] flex items-start gap-2.5">
+                    <svg class="w-4 h-4 text-[#b8847e] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>Link chia sẻ đã được tự động gắn mã giới thiệu của bạn. Khi bạn bè xem bộ sưu tập và mua sắm, bạn sẽ nhận <strong>5% hoa hồng</strong> vào tài khoản!</span>
+                </div>
+
+                {{-- Copy Link Box --}}
+                <div class="mb-5">
+                    <label class="block text-xs font-semibold text-[#2c2a28] mb-1.5 uppercase tracking-wider">Đường link công khai của bạn:</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" readonly id="my-wishlist-share-link" value="{{ $shareUrl }}"
+                               class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-700 truncate focus:outline-none">
+                        <button type="button" onclick="copyMyWishlistLink()" id="btn-copy-my-wishlist"
+                                class="px-4 py-2.5 bg-[#b8847e] hover:bg-[#a6736d] text-white text-xs font-semibold rounded-xl transition-colors shadow-xs flex items-center gap-1">
+                            <span>Sao chép</span>
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Social Share Buttons --}}
+                <div>
+                    <label class="block text-xs font-semibold text-[#2c2a28] mb-2 uppercase tracking-wider">Chia sẻ 1 chạm lên mạng xã hội:</label>
+                    <div class="grid grid-cols-3 sm:grid-cols-5 gap-2 text-center text-xs">
+                        <button type="button" onclick="shareWishlistTo('facebook')" class="p-2.5 rounded-xl border border-[#efe8e3] bg-[#faf7f4] hover:bg-[#b8847e] hover:text-white font-medium transition-colors">Facebook</button>
+                        <button type="button" onclick="shareWishlistTo('messenger')" class="p-2.5 rounded-xl border border-[#efe8e3] bg-[#faf7f4] hover:bg-[#b8847e] hover:text-white font-medium transition-colors">Messenger</button>
+                        <button type="button" onclick="shareWishlistTo('zalo')" class="p-2.5 rounded-xl border border-[#efe8e3] bg-[#faf7f4] hover:bg-[#b8847e] hover:text-white font-medium transition-colors">Zalo</button>
+                        <button type="button" onclick="shareWishlistTo('x')" class="p-2.5 rounded-xl border border-[#efe8e3] bg-[#faf7f4] hover:bg-[#b8847e] hover:text-white font-medium transition-colors">X (Twitter)</button>
+                        <button type="button" onclick="shareWishlistTo('telegram')" class="p-2.5 rounded-xl border border-[#efe8e3] bg-[#faf7f4] hover:bg-[#b8847e] hover:text-white font-medium transition-colors">Telegram</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         @if($products->count())
@@ -62,4 +127,48 @@
             </div>
         @endif
     </div>
+
+    @push('scripts')
+    <script>
+        const myWishlistUrl = "{{ $shareUrl }}";
+        const myWishlistTitle = "Khám phá bộ sưu tập thời trang yêu thích của tôi trên SocialShop!";
+
+        function copyMyWishlistLink() {
+            const btn = document.getElementById('btn-copy-my-wishlist');
+            const done = () => {
+                btn.innerHTML = '<span>Đã chép ✓</span>';
+                setTimeout(() => {
+                    btn.innerHTML = '<span>Sao chép</span>';
+                }, 2000);
+            };
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(myWishlistUrl).then(done);
+            } else {
+                const tmp = document.createElement('textarea');
+                tmp.value = myWishlistUrl;
+                document.body.appendChild(tmp);
+                tmp.select();
+                document.execCommand('copy');
+                tmp.remove();
+                done();
+            }
+        }
+
+        function shareWishlistTo(network) {
+            const u = encodeURIComponent(myWishlistUrl);
+            const t = encodeURIComponent(myWishlistTitle);
+            const targets = {
+                facebook: `https://www.facebook.com/sharer/sharer.php?u=${u}`,
+                messenger: `https://www.messenger.com/share?link=${u}`,
+                zalo: `https://zalo.me/share/?url=${u}`,
+                x: `https://twitter.com/intent/tweet?url=${u}&text=${t}`,
+                telegram: `https://t.me/share/url?url=${u}&text=${t}`
+            };
+            if (targets[network]) {
+                window.open(targets[network], '_blank', 'noopener,width=640,height=560');
+            }
+        }
+    </script>
+    @endpush
 </x-layouts.app>

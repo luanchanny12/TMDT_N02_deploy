@@ -128,9 +128,19 @@
 
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Mã giới thiệu <span class="text-gray-400 font-normal">(tùy chọn)</span></label>
-                                <input type="text" name="referral_code" value="{{ old('referral_code', request()->cookie(config('referral.cookie_name', 'referral_code'))) }}"
+                                @php
+                                    $initialRefCode = old('referral_code', request()->query('ref', request()->cookie(config('referral.cookie_name', 'referral_code'))));
+                                    $referrerModel = $initialRefCode ? \App\Models\User::where('referral_code', $initialRefCode)->first() : null;
+                                @endphp
+                                <input type="text" name="referral_code" value="{{ $initialRefCode }}"
                                        placeholder="Nhập mã nếu có"
                                        class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#c9a9a6] focus:border-transparent transition-all bg-gray-50 focus:bg-white">
+                                @if($referrerModel)
+                                    <p class="text-xs text-emerald-700 font-medium mt-1.5 flex items-center gap-1.5 bg-emerald-50 p-2 rounded-lg border border-emerald-200">
+                                        <svg class="w-4 h-4 flex-shrink-0 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                        <span>Được giới thiệu bởi bạn <strong class="font-bold">{{ $referrerModel->name }}</strong> (Ưu đãi thành viên mới được kích hoạt)</span>
+                                    </p>
+                                @endif
                             </div>
 
                             <label class="flex items-start gap-2 text-xs text-gray-600 cursor-pointer">

@@ -116,6 +116,28 @@
         </div>
     </div>
 
+    {{-- Referral Welcome Banner (Hiển thị khi khách được mời qua link giới thiệu) --}}
+    @php
+        $refCodeFromReq = request()->query('ref') ?: request()->cookie(config('referral.cookie_name', 'referral_code'));
+        $activeReferrer = (!Auth::check() && $refCodeFromReq) ? \App\Models\User::where('referral_code', $refCodeFromReq)->first() : null;
+    @endphp
+    @if($activeReferrer)
+        <div x-data="{ dismissed: false }" x-show="!dismissed" class="bg-[#2c2a28] text-white py-2 px-4 text-xs border-b border-[#b8847e]/30 transition-all">
+            <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2">
+                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#b8847e] text-white text-[11px] font-bold">🎁</span>
+                    <span>Bạn được bạn <strong class="text-[#e8c4c4] font-semibold">{{ $activeReferrer->name }}</strong> giới thiệu đến SocialShop! Đăng ký ngay để nhận ưu đãi thành viên.</span>
+                </div>
+                <div class="flex items-center gap-3 flex-shrink-0">
+                    <a href="{{ route('register', ['ref' => $refCodeFromReq]) }}" class="bg-[#b8847e] hover:bg-[#a6736d] text-white px-3 py-1 rounded-full font-semibold transition-colors text-[11px]">
+                        Đăng ký nhận quà →
+                    </a>
+                    <button type="button" @click="dismissed = true" class="text-white/60 hover:text-white text-base leading-none">&times;</button>
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- Header --}}
     <header class="sticky top-0 z-[60] bg-[#faf7f4]/95 backdrop-blur-md border-b border-[#efe8e3]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

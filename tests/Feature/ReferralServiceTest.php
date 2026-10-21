@@ -172,4 +172,29 @@ class ReferralServiceTest extends TestCase
         $this->assertEquals(50000, $stats['completed_commission']);
         $this->assertCount(2, $stats['history']);
     }
+
+    public function test_attach_order_creates_showcase_referral_when_cookie_present(): void
+    {
+        $referrer = User::factory()->create(['referral_code' => 'SHOWCASE99']);
+        $buyer = User::factory()->create();
+
+        // Simulate cookie present on request
+        request()->cookies->set(config('referral.cookie_name', 'referral_code'), 'SHOWCASE99');
+
+        $order = Order::factory()->create([
+            'user_id' => $buyer->id,
+            'subtotal' => 1000000,
+            'discount' => 0,
+        ]);
+
+        $this->referralService->attachOrderToReferral($order);
+
+        $this->assertDatabaseHas('referrals', [
+            'referrer_id' => $referrer->id,
+            'referred_user_id' => $buyer->id,
+            'order_id' => $order->id,
+            'commission' => 50000,
+            'status' => 'pending',
+        ]);
+    }
 }

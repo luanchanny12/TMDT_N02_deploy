@@ -282,17 +282,122 @@
                                         sizes: {{ json_encode($product->variants->pluck('size')->filter()->unique()->values()) }},
                                         colors: {{ json_encode($product->variants->pluck('color')->filter()->unique()->values()) }},
                                         variants: {{ json_encode($product->variants->map(fn($v) => ['id'=>$v->id,'size'=>$v->size,'color'=>$v->color,'stock'=>$v->stock,'price'=>$v->unitPrice()])->values()) }},
+                                        showSizeGuide: false,
+                                        userHeight: 168,
+                                        userWeight: 62,
                                         get current() { return this.variants.find(v => v.id === Number(this.selected)) || null },
-                                        get available() { return this.variants.filter(v => v.stock > 0) }
+                                        get available() { return this.variants.filter(v => v.stock > 0) },
+                                        get recommendedSize() {
+                                            const h = Number(this.userHeight);
+                                            const w = Number(this.userWeight);
+                                            if (h < 160 || w < 50) return 'S';
+                                            if (h <= 168 && w <= 62) return 'M';
+                                            if (h <= 175 && w <= 72) return 'L';
+                                            if (h <= 182 && w <= 82) return 'XL';
+                                            return 'XXL';
+                                        },
+                                        get bmi() {
+                                            const hMeter = Number(this.userHeight) / 100;
+                                            if (!hMeter) return 0;
+                                            return (Number(this.userWeight) / (hMeter * hMeter)).toFixed(1);
+                                        },
+                                        get bmiStatus() {
+                                            const val = Number(this.bmi);
+                                            if (val < 18.5) return 'Gầy / Thon gọn';
+                                            if (val < 23) return 'Cân đối / Chuẩn';
+                                            if (val < 25) return 'Hơi đầy đặn';
+                                            return 'Đậm người';
+                                        },
+                                        applyRecommendedSize() {
+                                            const target = this.recommendedSize;
+                                            const matchingSize = this.sizes.find(s => s.toString().toUpperCase() === target || s.toString().toUpperCase().includes(target)) || this.sizes[0];
+                                            if (matchingSize) {
+                                                const match = this.variants.find(v => v.size === matchingSize && (!this.colors.length || v.color === (this.current?.color ?? this.variants.find(v=>v.size===matchingSize && v.stock>0)?.color)));
+                                                this.selected = (match || this.variants.find(v => v.size === matchingSize))?.id ?? '';
+                                            }
+                                        }
                                     }">
                                         <label class="text-xs uppercase tracking-wider font-semibold text-[#2c2a28] mb-3 block">Phân loại:</label>
                                         {{-- Size Options --}}
                                         @if($product->variants->pluck('size')->filter()->isNotEmpty())
                                             <div class="mb-4">
                                                 <div class="flex items-center justify-between mb-2">
-                                                    <label class="text-xs uppercase tracking-wider font-semibold text-[#2c2a28]">Kích cỡ (Size):</label>
-                                                    <span class="text-xs text-[#b8847e] font-medium" x-show="current?.size" x-text="'Đã chọn: ' + current?.size"></span>
+                                                    <div class="flex items-center gap-2">
+                                                        <label class="text-xs uppercase tracking-wider font-semibold text-[#2c2a28]">Kích cỡ (Size):</label>
+                                                        <span class="text-xs text-[#b8847e] font-medium" x-show="current?.size" x-text="'Đã chọn: ' + current?.size"></span>
+                                                    </div>
+                                                    <button type="button"
+                                                            @click="showSizeGuide = !showSizeGuide"
+                                                            class="inline-flex items-center gap-1.5 text-xs font-semibold text-[#b8847e] hover:text-[#9c6a64] bg-white px-2.5 py-1 rounded-full border border-[#b8847e]/30 shadow-xs transition-all">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                                        <span x-text="showSizeGuide ? 'Đóng gợi ý size' : '📐 Gợi ý size AI (Nhân trắc học)'"></span>
+                                                    </button>
                                                 </div>
+
+                                                {{-- Anthropometric Size Advisor Drawer / Card --}}
+                                                <div x-show="showSizeGuide"
+                                                     x-transition:enter="transition ease-out duration-200"
+                                                     x-transition:enter-start="opacity-0 -translate-y-2"
+                                                     x-transition:enter-end="opacity-100 translate-y-0"
+                                                     class="mb-3 p-3.5 rounded-xl bg-white border border-[#b8847e]/40 shadow-xs text-xs space-y-3">
+                                                    <div class="flex items-center justify-between border-b border-[#efe8e3] pb-2">
+                                                        <div class="flex items-center gap-1.5 font-semibold text-[#2c2a28]">
+                                                            <span class="w-2 h-2 rounded-full bg-[#b8847e] animate-pulse"></span>
+                                                            Tư vấn kích cỡ nhân trắc học AI
+                                                        </div>
+                                                        <span class="text-[11px] text-[#9a9490]">Kéo thanh để AI tính size & BMI</span>
+                                                    </div>
+
+                                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                        {{-- Height Slider --}}
+                                                        <div class="bg-[#faf7f4] p-2.5 rounded-lg border border-[#efe8e3]">
+                                                            <div class="flex justify-between items-center mb-1">
+                                                                <span class="text-[#7d7571] font-medium">Chiều cao:</span>
+                                                                <span class="font-bold text-[#2c2a28] font-mono text-xs" x-text="userHeight + ' cm'"></span>
+                                                            </div>
+                                                            <input type="range" min="145" max="195" step="1" x-model.number="userHeight"
+                                                                   class="w-full accent-[#b8847e] cursor-pointer">
+                                                            <div class="flex justify-between text-[10px] text-[#9a9490] mt-0.5">
+                                                                <span>145cm</span>
+                                                                <span>170cm</span>
+                                                                <span>195cm</span>
+                                                            </div>
+                                                        </div>
+
+                                                        {{-- Weight Slider --}}
+                                                        <div class="bg-[#faf7f4] p-2.5 rounded-lg border border-[#efe8e3]">
+                                                            <div class="flex justify-between items-center mb-1">
+                                                                <span class="text-[#7d7571] font-medium">Cân nặng:</span>
+                                                                <span class="font-bold text-[#2c2a28] font-mono text-xs" x-text="userWeight + ' kg'"></span>
+                                                            </div>
+                                                            <input type="range" min="40" max="100" step="1" x-model.number="userWeight"
+                                                                   class="w-full accent-[#b8847e] cursor-pointer">
+                                                            <div class="flex justify-between text-[10px] text-[#9a9490] mt-0.5">
+                                                                <span>40kg</span>
+                                                                <span>70kg</span>
+                                                                <span>100kg</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- AI Recommendation Result & Apply Action --}}
+                                                    <div class="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-2 border-t border-[#efe8e3]">
+                                                        <div class="flex items-center gap-2">
+                                                            <div class="bg-[#b8847e]/10 text-[#b8847e] px-2.5 py-1 rounded-md font-bold text-xs flex items-center gap-1">
+                                                                <span>Gợi ý:</span>
+                                                                <span class="text-sm font-black" x-text="'Size ' + recommendedSize"></span>
+                                                            </div>
+                                                            <span class="text-[11px] text-[#7d7571]" x-text="'BMI: ' + bmi + ' (' + bmiStatus + ')'"></span>
+                                                        </div>
+                                                        <button type="button"
+                                                                @click="applyRecommendedSize()"
+                                                                class="w-full sm:w-auto px-3.5 py-1.5 bg-[#b8847e] hover:bg-[#a6736d] text-white rounded-lg font-medium text-xs shadow-xs transition-colors flex items-center justify-center gap-1.5">
+                                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                            <span>Áp dụng size này</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+
                                                 <div class="flex flex-wrap gap-2">
                                                     <template x-for="size in sizes" :key="size">
                                                         <button type="button"

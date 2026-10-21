@@ -85,4 +85,71 @@ class WishlistTest extends TestCase
             'product_id' => $product->id,
         ]);
     }
+
+    public function test_guest_can_view_public_shared_wishlist_and_receives_referral_cookie(): void
+    {
+        $owner = User::factory()->create([
+            'name' => 'Nguyễn Minh Anh',
+            'referral_code' => 'REFANH123',
+        ]);
+        $category = Category::factory()->create();
+        $product = Product::factory()->create([
+            'name' => 'Đầm Dạ Hội Shared',
+            'category_id' => $category->id,
+            'status' => 'active',
+        ]);
+
+        $wishlist = Wishlist::create(['user_id' => $owner->id]);
+        WishlistItem::create([
+            'wishlist_id' => $wishlist->id,
+            'product_id' => $product->id,
+        ]);
+
+        $response = $this->get(route('wishlist.shared', ['code' => 'REFANH123']));
+
+        $response->assertOk()
+            ->assertSee('Nguyễn Minh Anh')
+            ->assertSee('Đầm Dạ Hội Shared')
+            ->assertSee('Bộ sưu tập thời trang yêu thích')
+            ->assertCookie('referral_code', 'REFANH123');
+    }
+
+    public function test_user_can_save_all_shared_items_to_own_wishlist(): void
+    {
+        $owner = User::factory()->create(['referral_code' => 'REFANH456']);
+        $category = Category::factory()->create();
+        $p1 = Product::factory()->create(['category_id' => $category->id, 'status' => 'active']);
+        $p2 = Product::factory()->create(['category_id' => $category->id, 'status' => 'active']);
+
+        $ownerWishlist = Wishlist::create(['user_id' => $owner->id]);
+        WishlistItem::create(['wishlist_id' => $ownerWishlist->id, 'product_id' => $p1->id]);
+        WishlistItem::create(['wishlist_id' => $ownerWishlist->id, 'product_id' => $p2->id]);
+
+        $viewer = User::factory()->create();
+
+        $response = $this->actingAs($viewer)
+            ->post(route('wishlist.shared.save-all', ['code' => 'REFANH456']));
+
+        $response->assertRedirect();
+
+        $viewerWishlist = $viewer->wishlist()->first();
+        $this->assertNotNull($viewerWishlist);
+        $this->assertDatabaseHas('wishlist_items', ['wishlist_id' => $viewerWishlist->id, 'product_id' => $p1->id]);
+        $this->assertDatabaseHas('wishlist_items', ['wishlist_id' => $viewerWishlist->id, 'product_id' => $p2->id]);
+    }
+
+    public function test_shared_wishlist_returns_404_for_invalid_code(): void
+    {
+        $this->get(route('wishlist.shared', ['code' => 'INVALID_CODE_999']))
+            ->assertNotFound();
+    }
+
+    public function test_shared_wishlist_renders_when_owner_wishlist_is_empty(): void
+    {
+        User::factory()->create(['referral_code' => 'REFEMPTY01']);
+
+        $this->get(route('wishlist.shared', ['code' => 'REFEMPTY01']))
+            ->assertOk()
+            ->assertSee('Bộ sưu tập hiện đang trống');
+    }
 }

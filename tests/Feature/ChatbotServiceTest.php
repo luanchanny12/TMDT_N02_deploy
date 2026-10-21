@@ -32,7 +32,7 @@ class ChatbotServiceTest extends TestCase
     {
         $this->assertEquals('test_api_key', $this->chatbotService->getApiKey());
         $this->assertEquals('gemini-3.5-flash', $this->chatbotService->getModel());
-        $this->assertStringContainsString('Bạn là trợ lý ảo của SocialShop', $this->chatbotService->getSystemPrompt());
+        $this->assertStringContainsString('SocialShop', $this->chatbotService->getSystemPrompt());
     }
 
     public function test_send_message_uses_fallback_if_no_api_key()
@@ -209,5 +209,45 @@ class ChatbotServiceTest extends TestCase
 
         $response = $this->chatbotService->fallbackResponse('random question');
         $this->assertStringContainsString('Cảm ơn bạn đã nhắn tin', $response);
+    }
+
+    public function test_anthropometric_size_recommendation_in_fallback(): void
+    {
+        $responseM = $this->chatbotService->fallbackResponse('Tôi cao 1m65 nặng 58kg nên mặc size nào?');
+        $this->assertStringContainsString('nhân trắc học', $responseM);
+        $this->assertStringContainsString('Size M', $responseM);
+
+        $responseL = $this->chatbotService->fallbackResponse('Mình cao 172cm nặng 68kg chọn size gì');
+        $this->assertStringContainsString('nhân trắc học', $responseL);
+        $this->assertStringContainsString('Size L', $responseL);
+
+        $responseS = $this->chatbotService->fallbackResponse('Em cao 1m58 nặng 47kg');
+        $this->assertStringContainsString('nhân trắc học', $responseS);
+        $this->assertStringContainsString('Size S', $responseS);
+    }
+
+    public function test_mix_and_match_stylist_in_fallback(): void
+    {
+        $category = Category::factory()->create(['name' => 'Váy Đầm']);
+        Product::factory()->create([
+            'name' => 'Đầm Dạ Hội Cao Cấp',
+            'price' => 500000,
+            'category_id' => $category->id,
+            'status' => 'active',
+            'stock' => 10,
+        ]);
+
+        $response = $this->chatbotService->fallbackResponse('Shop có đầm nào đi tiệc thanh lịch không?');
+        $this->assertStringContainsString('tiệc cưới/dạ hội thanh lịch', $response);
+        $this->assertStringContainsString('Đầm Dạ Hội Cao Cấp', $response);
+    }
+
+    public function test_size_advice_requires_real_body_measurements(): void
+    {
+        $orderResponse = $this->chatbotService->fallbackResponse('Đơn hàng 123456 của tôi đang ở đâu?');
+        $this->assertStringNotContainsString('Size đề xuất', $orderResponse);
+
+        $priceResponse = $this->chatbotService->fallbackResponse('Áo này giá 350000 size XL chưa?');
+        $this->assertStringNotContainsString('Size đề xuất', $priceResponse);
     }
 }
