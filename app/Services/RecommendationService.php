@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 /**
  * Gợi ý sản phẩm từ dữ liệu thật của shop:
@@ -137,13 +138,39 @@ class RecommendationService
             ->filter(fn ($w) => mb_strlen($w) >= 2)
             ->take(5);
 
-        // So khớp bằng SQL LIKE để giữ đặc tính không phân biệt dấu của collation MySQL ("ao" → "Áo")
         $matchedIds = $words->isEmpty() ? collect() : Product::where('status', 'active')
             ->where(function ($q) use ($words) {
                 foreach ($words as $word) {
+                    $title = mb_convert_case($word, MB_CASE_TITLE, 'UTF-8');
+                    $upper = mb_strtoupper($word, 'UTF-8');
+                    $slugWord = Str::slug($word);
+
                     $q->orWhereLike('name', "%{$word}%")
-                        ->orWhereLike('description', "%{$word}%")
-                        ->orWhereHas('category', fn ($c) => $c->whereLike('name', "%{$word}%"));
+                        ->orWhereLike('name', "%{$title}%")
+                        ->orWhereLike('name', "%{$upper}%");
+
+                    if (! empty($slugWord)) {
+                        $q->orWhere('slug', 'like', "%{$slugWord}%");
+                    }
+
+                    $q->orWhereHas('category', function ($cq) use ($word, $title, $slugWord) {
+                        $cq->whereLike('name', "%{$word}%")
+                            ->orWhereLike('name', "%{$title}%");
+                        if (! empty($slugWord)) {
+                            $cq->orWhere('slug', 'like', "%{$slugWord}%");
+                        }
+                    });
+
+                    // Tránh từ ngắn (<= 3 ký tự) khớp bừa trong mô tả (ví dụ "áo" khớp vào "thông báo")
+                    if (mb_strlen($word) <= 3) {
+                        $q->orWhereLike('description', "{$word} %")
+                            ->orWhereLike('description', "% {$word} %")
+                            ->orWhereLike('description', "{$title} %")
+                            ->orWhereLike('description', "% {$title} %");
+                    } else {
+                        $q->orWhereLike('description', "%{$word}%")
+                            ->orWhereLike('description', "%{$title}%");
+                    }
                 }
             })
             ->pluck('id');

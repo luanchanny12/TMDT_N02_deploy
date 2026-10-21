@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Services\Order\PricingService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class ChatbotService
 {
@@ -275,7 +276,8 @@ Liên hệ: {$contact}";
         }
 
         $cleanQuery = mb_strtolower($query);
-        $cleanQuery = str_replace(['giá', 'price', 'bao nhiêu', 'tiền', 'còn hàng', 'hết hàng', 'có không', 'không', 'sản phẩm', 'áo', 'quần', 'giày', 'dép', 'váy', 'túi', 'phụ kiện', 'thời trang'], '', $cleanQuery);
+        $stopWords = ['giá', 'price', 'bao nhiêu', 'tiền', 'còn hàng', 'hết hàng', 'có không', 'không', 'sản phẩm', 'shop ơi', 'bạn ơi', 'cho mình hỏi', 'tư vấn', 'tìm'];
+        $cleanQuery = str_replace($stopWords, '', $cleanQuery);
         $cleanQuery = preg_replace('/\s+/', ' ', trim($cleanQuery));
 
         if (empty($cleanQuery)) {
@@ -293,11 +295,36 @@ Liên hệ: {$contact}";
                 ->toArray();
         }
 
+        $title = mb_convert_case($cleanQuery, MB_CASE_TITLE, 'UTF-8');
+        $slugTerm = Str::slug($cleanQuery);
+
         return Product::where('status', 'active')
-            ->where(function ($q) use ($cleanQuery) {
+            ->where(function ($q) use ($cleanQuery, $title, $slugTerm) {
                 $q->whereLike('name', "%{$cleanQuery}%")
-                    ->orWhereLike('brand', "%{$cleanQuery}%")
-                    ->orWhereLike('description', "%{$cleanQuery}%");
+                    ->orWhereLike('name', "%{$title}%")
+                    ->orWhereLike('brand', "%{$cleanQuery}%");
+
+                if (! empty($slugTerm)) {
+                    $q->orWhere('slug', 'like', "%{$slugTerm}%");
+                }
+
+                $q->orWhereHas('category', function ($cq) use ($cleanQuery, $title, $slugTerm) {
+                    $cq->whereLike('name', "%{$cleanQuery}%")
+                        ->orWhereLike('name', "%{$title}%");
+                    if (! empty($slugTerm)) {
+                        $cq->orWhere('slug', 'like', "%{$slugTerm}%");
+                    }
+                });
+
+                if (mb_strlen($cleanQuery) <= 3) {
+                    $q->orWhereLike('description', "{$cleanQuery} %")
+                        ->orWhereLike('description', "% {$cleanQuery} %")
+                        ->orWhereLike('description', "{$title} %")
+                        ->orWhereLike('description', "% {$title} %");
+                } else {
+                    $q->orWhereLike('description', "%{$cleanQuery}%")
+                        ->orWhereLike('description', "%{$title}%");
+                }
             })
             ->with('category')
             ->limit(5)

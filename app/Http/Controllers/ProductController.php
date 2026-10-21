@@ -18,9 +18,58 @@ class ProductController extends Controller
         $search = $request->input('search') ?: $request->input('q');
 
         if ($search !== null && $search !== '') {
-            $query->where(function ($q) use ($search) {
-                $q->whereLike('name', '%'.$search.'%')
-                    ->orWhereLike('description', '%'.$search.'%');
+            $trimmed = trim($search);
+            $variations = array_unique(array_filter([
+                $trimmed,
+                mb_strtolower($trimmed, 'UTF-8'),
+                mb_strtoupper($trimmed, 'UTF-8'),
+                mb_convert_case($trimmed, MB_CASE_TITLE, 'UTF-8'),
+            ]));
+            $slugTerm = Str::slug($trimmed);
+
+            $query->where(function ($q) use ($variations, $slugTerm, $trimmed) {
+                // 1. Khớp tên sản phẩm (hỗ trợ có dấu, không dấu, chữ hoa, chữ thường)
+                foreach ($variations as $var) {
+                    $q->orWhereLike('name', "%{$var}%");
+                }
+
+                // 2. Khớp mã định danh slug (ao-polo-nam, ao-thun-unisex...)
+                if (! empty($slugTerm)) {
+                    $q->orWhere('slug', 'like', "{$slugTerm}-%")
+                        ->orWhere('slug', 'like', "%-{$slugTerm}-%")
+                        ->orWhere('slug', 'like', "%-{$slugTerm}")
+                        ->orWhere('slug', '=', $slugTerm);
+                }
+
+                // 3. Khớp tên hoặc slug của Danh mục (Áo nam, Áo nữ, Đồng hồ, Giày dép...)
+                $q->orWhereHas('category', function ($cq) use ($variations, $slugTerm) {
+                    $cq->where(function ($sub) use ($variations, $slugTerm) {
+                        foreach ($variations as $var) {
+                            $sub->orWhereLike('name', "%{$var}%");
+                        }
+                        if (! empty($slugTerm)) {
+                            $sub->orWhere('slug', 'like', "{$slugTerm}-%")
+                                ->orWhere('slug', 'like', "%-{$slugTerm}-%")
+                                ->orWhere('slug', 'like', "%-{$slugTerm}")
+                                ->orWhere('slug', '=', $slugTerm);
+                        }
+                    });
+                });
+
+                // 4. Khớp mô tả chi tiết: từ khóa ngắn (<= 3 ký tự như "áo", "ao") phải khớp trọn vẹn từ
+                // tránh hiện tượng "áo" bị khớp nhầm vào chữ "thông báo" trong mô tả đồng hồ
+                if (mb_strlen($trimmed) <= 3) {
+                    foreach ($variations as $var) {
+                        $q->orWhereLike('description', "{$var} %")
+                            ->orWhereLike('description', "% {$var} %")
+                            ->orWhereLike('description', "% {$var},%")
+                            ->orWhereLike('description', "% {$var}.%");
+                    }
+                } else {
+                    foreach ($variations as $var) {
+                        $q->orWhereLike('description', "%{$var}%");
+                    }
+                }
             });
         }
 

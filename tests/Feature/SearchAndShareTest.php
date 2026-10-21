@@ -108,4 +108,44 @@ class SearchAndShareTest extends TestCase
             ->assertSee('Được giới thiệu bởi bạn')
             ->assertSee('Trần Thị Mai');
     }
+
+    public function test_searching_ao_returns_clothing_and_not_watches(): void
+    {
+        $catAo = Category::factory()->create(['name' => 'Áo nam', 'slug' => 'ao-nam']);
+        $catDongHo = Category::factory()->create(['name' => 'Đồng hồ', 'slug' => 'dong-ho']);
+
+        Product::factory()->create([
+            'name' => 'Áo Polo Nam Classic',
+            'slug' => 'ao-polo-nam-classic',
+            'description' => 'Áo polo chất liệu cotton cao cấp',
+            'category_id' => $catAo->id,
+            'status' => 'active',
+        ]);
+
+        Product::factory()->create([
+            'name' => 'Đồng Hồ Thông Minh Dây Silicone Trắng',
+            'slug' => 'dong-ho-thong-minh-silicone',
+            'description' => 'Đồng hồ thông minh có tính năng nhận thông báo và đo nhịp tim',
+            'category_id' => $catDongHo->id,
+            'status' => 'active',
+        ]);
+
+        // 1. Tìm "áo" (có dấu)
+        $responseWithAccent = $this->get(route('products.index', ['search' => 'áo']));
+        $responseWithAccent->assertOk()
+            ->assertSee('Áo Polo Nam Classic')
+            ->assertDontSee('Đồng Hồ Thông Minh Dây Silicone Trắng');
+
+        // 2. Tìm "ao" (không dấu)
+        $responseNoAccent = $this->get(route('products.index', ['search' => 'ao']));
+        $responseNoAccent->assertOk()
+            ->assertSee('Áo Polo Nam Classic')
+            ->assertDontSee('Đồng Hồ Thông Minh Dây Silicone Trắng');
+
+        // 3. Tìm "đồng hồ"
+        $responseWatch = $this->get(route('products.index', ['search' => 'đồng hồ']));
+        $responseWatch->assertOk()
+            ->assertSee('Đồng Hồ Thông Minh Dây Silicone Trắng')
+            ->assertDontSee('Áo Polo Nam Classic');
+    }
 }
