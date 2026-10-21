@@ -8,15 +8,33 @@ use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Review;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\ChatbotService;
+use App\Services\Order\PricingService;
 use Database\Seeders\DatabaseSeeder;
+use Database\Seeders\TaxSettingSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class DatabaseSeederTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_fresh_database_applies_vat_but_keeps_admin_choice_on_reseed(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        $pricing = app(PricingService::class);
+        $this->assertTrue($pricing->taxEnabled());
+        $this->assertSame(8.0, $pricing->taxRate());
+        $this->assertSame(80000, $pricing->breakdown(1000000, 0, 'Quảng Ninh')['tax_amount']);
+
+        // Admin tắt thuế rồi seed lại → giữ lựa chọn của admin
+        Setting::put(['tax_enabled' => 0]);
+        $this->seed(TaxSettingSeeder::class);
+        $this->assertFalse($pricing->taxEnabled());
+    }
 
     public function test_seeder_creates_demo_orders_and_reviews_for_dashboard(): void
     {
