@@ -100,7 +100,13 @@ class AuthService extends BaseService
      */
     public function sendResetLink(string $email): string
     {
-        return Password::sendResetLink(['email' => $email]);
+        try {
+            return Password::sendResetLink(['email' => $email]);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return Password::RESET_LINK_SENT;
+        }
     }
 
     /**

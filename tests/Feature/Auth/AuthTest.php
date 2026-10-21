@@ -164,6 +164,21 @@ class AuthTest extends TestCase
             ->assertSessionHas('success');
     }
 
+    public function test_send_reset_link_email_survives_mail_transport_failure(): void
+    {
+        config([
+            'mail.default' => 'smtp',
+            'mail.mailers.smtp.host' => '127.0.0.1',
+            'mail.mailers.smtp.port' => 1,
+            'mail.mailers.smtp.timeout' => 1,
+        ]);
+
+        $user = User::factory()->create();
+        $this->post('/forgot-password', ['email' => $user->email])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+    }
+
     public function test_reset_password_page_loads(): void
     {
         $this->get('/reset-password/sample-token?email=test@example.com')
